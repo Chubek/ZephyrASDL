@@ -350,7 +350,11 @@ next_param(void)
 	return param_iter;
 }
 
-#define IS_LHS_BUILTIN		lhs_ter->BuiltinType
+#define LHS_IS_NULL		lhs_iter 	== NULL
+#define RHS_IS_NULL		rhs_iter 	== NULL
+#define PARAM_IS_NULL		param_iter 	== NULL
+
+#define IS_LHS_BUILTIN		lhs_ter->BuiltinType != NOT_BUILTIN
 
 #define CURR_PARAM_NAME		param_iter->name
 #define CURR_PARAM_TYPE		param_iter->type
@@ -374,58 +378,172 @@ next_param(void)
 #define OUT(file, fmt, ...)	fprintf(file, fmt, __VA_ARGS__)
 
 
-FILE* typedefs_stream = NULL;
-FILE* structs_stream  = NULL;
-FILE* enums_stream    = NULL;
-FILE* funcs_stream    = NULL;
+FILE* typedefs_stm = NULL;
+FILE* structs_stm  = NULL;
+FILE* enums_stm    = NULL;
+FILE* funcs_stm    = NULL;
 
-static void
+static inline void
 open_outputs(void)
 {
-	typedefs_stream = tmpfile();
-	structs_stream  = tmpfile();
-	enums_stream    = tmpfile();
-	funcs_stream	= tmpfile();
+	typedefs_stm = tmpfile();
+	structs_stm  = tmpfile();
+	enums_stm    = tmpfile();
+	funcs_stm    = tmpfile();
 }
 
-static void
+static inline void
 close_outputs(void)
 {
-	fclose(typedefs_stream);
-	fclose(structs_stream);
-	fclose(enums_stream);
-	fclose(funcs_stream);
+	fclose(typedefs_stm);
+	fclose(structs_stm);
+	fclose(enums_stm);
+	fclose(funcs_stm);
+}
+
+#ifdef __unix__
+#define NEWLINE "\n"
+#else
+#define NEWLINE "\r\n"
+#endif
+
+static inline void
+cat_outputs_to_stdout(char* init_txt)
+{
+	puts(init_txt);
+	puts(NEWLINE);
+
+	FILE* stms[] = { 
+				typedefs_stm, 
+				structs_stm,
+				enums_stm,
+				funcs_stm,
+				NULL
+			  };
+	FILE** stms_ptr = &stms[0];
+	for (FILE* stm = *stms_ptr; 
+			stm != NULL;
+			stm  = *stms_ptr++)
+	{
+		char*  line  = NULL;
+		size_t len   = 0;
+
+		while (getline(&line, &len, stm) > 0)
+			puts(line);
+
+		free(line);
+	}
+}
+
+jmp_buf lhs_walker_jmp;
+jmp_buf	rhs_walker_jmp;
+jmp_buf cons_jmp;
+jmp_buf enum_jmp;
+jmp_buf typedef_jmp;
+jmp_buf function_jmp;
+jmp_buf tuple_jmp;
+jmp_buf printer_jmp;
+
+#define MAX_ARG		4096
+
+char*	curr_macro_name 		= NULL;
+char*	curr_macro_args[MAX_ARG] 	= {NULL};
+size_t  curr_macro_argn 		= 0;
+
+static inline 
+add_arg(char* arg)
+{
+	curr_macro_args[curr_macro_argn++] = duplicate_string(arg);
+}
+
+enum MacPP { GPP, M4 } pp;
+
+static void
+macro_printer(void)
+{
+	int jret 	= setjmp(printer_jmp);
+	FILE* stm 	= NULL;
+	
+	switch (jret)
+	{
+		case JRET_TYPEDEFS:
+			stm 	= typedefs_stm;
+			break;
+		case JRET_STRUCTS:
+			stm 	= structs_stm;
+			break;
+		case JRET_ENUMS:
+			stm	= enums_stm;
+			break;
+		case JRET_FUNCS:
+			stm 	= funcs_stm;
+		default:
+			return;
+	}
+
+	OUTPUT(stm, "%s(", curr_macro_name);
+	while (--curr_macro_argn)
+	{
+		OUTPUT(stm, pp == GPP
+				? "%s"
+				: "[%s]", 
+				curr_macro_args[curr_macro_argn]);
+	}
+
+	OUTPUT(stm, "__TERMARG__)%s", NEWLINE);
+}
+
+
+static void
+tuple_walker(void)
+{
+	int jret = setjmp(tuple_jmp);
+
+	if (!jret)
+		return;
+
+	curr_macro_name = "asdl_tuple";
+	
+	add_arg(CURR_TUPLE_TYPE_A->name);
+	add_arg(CURR_TUPLe_TYPE_B->name);
+
+	add_arg(CURR_TUPLE_NAME_A);
+	add_arg(CURR_TUPLE_NAME_B);
+
+	if (CURR_TUPLE_OPT_A == OPTIONAL)
+		add_arg("OPT1");
+	if (CURR_TUPLE_OPT_B == OPTIONAL);
+		add_arg("OPT2");
+	
+	if (CURR_TUPLE_OPT_A == SEQUENCE)
+		add_arg("SEQ1");
+	if (CURR_TUPLE_OPT_B == SEQUENCE)
+		add_arg("SEQ2");
+
 }
 
 static void
-concat_outputs(char* path, char* init_txt){
-	FILE* 	concat_stream 	= fopen(path, "w");
-	int	concat_fd	= fileno(concat_stream);
-	fputs(init_txt, concat);
 
-	FILE* streams[] = { 
-				typedefs_stream, 
-				structs_stream,
-				enums_stream,
-				funcs_stream,
-				NULL
-			  };
-	FILE** streams_ptr = &streams[0];
-	for (FILE* stream = *streams_ptr; 
-			stream != NULL;
-			stream  = *streams_ptr++)
-	{
-		fseek(stream, 0, SEEK_END);
-		long len = ftell(stream);
-		rewind(stream);
-		if (tee(concat_fd, fileno(stream),
-					len, 
-					SPLICE_F_NONBLOCK) < 0) 
-		{
-			perror("tee");
-		}
-	} 
 
-	fclose(concat_stream);
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
