@@ -1,3 +1,5 @@
+#!/usr/bin/awk -f
+
 BEGIN {
     # Define variables to store heap name and function names
     heap_name = ""
@@ -26,9 +28,9 @@ BEGIN {
     if (in_specs) {
         if ($1 == "HeapName:") {
             heap_name = $2
-        } else if ($1 == "HeapType")
-	    heap_type $2;
-	else if ($1 == "HeapAlloc:") {
+        } else if ($1 == "HeapType:") {
+            heap_type = $2
+        } else if ($1 == "HeapAlloc:") {
             alloc_func = $2
         } else if ($1 == "HeapRealloc:") {
             realloc_func = $2
@@ -61,60 +63,68 @@ BEGIN {
 # Generate output
 END {
     # Emit macros
-    print macros
+    printf "%s", macros # Fixed to use printf instead of print
 
     # Emit heap
-    "static struct %s {\n", heap_name;
-    "	void *memory;\n";
-    "	size_t size;\n";
-    "	struct %s next\n;", heap_name;
-    "} *%s__HEAP;\n\n", heap_name;
+    printf "static struct %s {\n", heap_name;
+    printf "    void *memory;\n";
+    printf "    size_t size;\n";
+    printf "    struct %s *next;\n", heap_name;
+    printf "} *%s__HEAP;\n\n", heap_name;
 
     # Emit allocate function
-    "static inline void *%s(size_t num_members, size_t size_member) {\n", alloc_fun;
-    "	struct %s *node = ALLOCATE(1, sizeof(struct %s));", heap_name;
-    "	node->memory = ALLOCATE(num_members, size_members);"
-    "   node->size = num_members * size_member;"
-    "   node->next = %s__HEAP;"
-    "   %s__HEAP = node;"
-    "   return node->memory;"
-    "};\n"
+    printf "static inline void *%s(size_t num_members, size_t size_member) {\n", alloc_func; # Fixed variable name
+    printf "    struct %s *node = ALLOCATE(1, sizeof(struct %s));\n", heap_name, heap_name;
+    printf "    node->memory = ALLOCATE(num_members, size_member);\n";
+    printf "    node->size = num_members * size_member;\n";
+    printf "    node->next = %s__HEAP;\n", heap_name;
+    printf "    %s__HEAP = node;\n", heap_name;
+    printf "    return node->memory;\n";
+    printf "};\n\n";
 
-    # emit reallocate function
-    "static inline void *%s(void *memory, size_t new_size) {\n", realloc_func;
-    " 	struct %s *node = *%s__HEAP;\n", heap_name, heap_name;
-    "	while (node != NULL) \n"	
-    "		if (node->memory == memory) "
-    "			break;	"
-    "   if (node == NULL) {"
-    "		fprintf(stderr, \"Memory realloc error at %s\");\n", heap_name;
-    " 		exit(EXIT_FAILURE);	\n"
-    "   }\n"
-    "   node->size = new_size;\n"
-    "   node->memory = REALLOC(node->memory, new_size);\n"
-    "   return node->memory\n;"
-    "}\n"
+    # Emit reallocate function
+    printf "static inline void *%s(void *memory, size_t new_size) {\n", realloc_func;
+    printf "    struct %s *node = %s__HEAP;\n", heap_name, heap_name;
+    printf "    while (node != NULL) {\n";
+    printf "        if (node->memory == memory) {\n";
+    printf "            break;\n";
+    printf "        }\n";
+    printf "        node = node->next;\n";
+    printf "    }\n";
+    printf "    if (node == NULL) {\n";
+    printf "        fprintf(stderr, \"Memory realloc error at %s\");\n", heap_name;
+    printf "        exit(EXIT_FAILURE);\n";
+    printf "    }\n";
+    printf "    node->size = new_size;\n";
+    printf "    node->memory = REALLOC(node->memory, new_size);\n";
+    printf "    return node->memory;\n";
+    printf "}\n\n";
 
-    # emit free function
-    "static inline void *%s(void *memory, bool all) {\n", free_func;
-    "   if (all) goto all;\n"
-    " 	struct %s *node = *%s__HEAP\n;", heap_name, heap_name;
-    "	while (node != NULL) \n"	
-    "		if (node->memory == memory) \n"
-    "			break;	\n"
-    "   if (node == NULL) {\n"
-    "		fprintf(stderr, \"Memory free error at %s\");\n", heap_name;
-    " 		exit(EXIT_FAILURE);	\n"
-    "   }\n"
-    "   if (node->memory != NULL)\n"
-    "            free(node->memory\n"
-    "all:\n"
-    " 	struct %s *node = *%s__HEAP\n;", heap_name, heap_name;
-    "	while (node != NULL) \n"
-    "		free(node); "
-    "}\n"
+    # Emit free function
+    printf "static inline void %s(void *memory, bool all) {\n", free_func; # Fixed return type
+    printf "    if (all) goto all;\n";
+    printf "    struct %s *node = %s__HEAP;\n", heap_name, heap_name;
+    printf "    while (node != NULL) {\n";
+    printf "        if (node->memory == memory) {\n";
+    printf "            break;\n";
+    printf "        }\n";
+    printf "        node = node->next;\n";
+    printf "    }\n";
+    printf "    if (node == NULL) {\n";
+    printf "        fprintf(stderr, \"Memory free error at %s\");\n", heap_name;
+    printf "        exit(EXIT_FAILURE);\n";
+    printf "    }\n";
+    printf "    if (node->memory != NULL) {\n";
+    printf "        free(node->memory);\n";
+    printf "    }\n";
+    printf "all:\n";
+    printf "    while (%s__HEAP != NULL) {\n", heap_name;
+    printf "        node = %s__HEAP;\n", heap_name;
+    printf "        %s__HEAP = %s__HEAP->next;\n", heap_name, heap_name;
+    printf "        free(node);\n";
+    printf "    }\n";
+    printf "}\n\n";
 
- 
     # Emit appendage
     printf "%s", appendage
 }
