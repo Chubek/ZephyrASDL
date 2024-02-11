@@ -3,95 +3,179 @@
 
 #include "ast.h"
 
-typedef struct ASTNode {
-    NodeType type;
-    char *value;
-    struct ASTNode *children;
-    struct ASTNode *next; 
-} ASTNode;
+struct Asdl {
+       Type **types;
+       size_t num_types;
+};
 
-ASTNode *create_node(NodeType type, char *value) {
-    ASTNode *node = (ASTNode *)malloc(sizeof(ASTNode));
-    if (!node) {
-        fprintf(stderr, "Memory allocation failed\n");
-        exit(EXIT_FAILURE);
+struct Type {
+    const char *name;
+    Constructor **cons;
+    size_t num_cons;
+    Attributes *attrs;
+};
+
+struct Field {
+	const char *type_id;
+	const char *name;
+	int kind;
+};
+
+
+struct Constructor {
+        const char *con_id;
+	Fields **fields;
+	size_t num_fields;
+	int kind;
+};
+
+struct Attributes {
+	Field **fields;
+	size_t num_fields;
+};
+
+
+
+
+Field* createField(Type *type, const char *name, int kind) {
+    Field* field = (Field*)malloc(sizeof(Field));
+    if (field) {
+        field->type = type;
+        field->name = strdup(name);
+        field->kind = kind;
     }
-    node->type = type;
-    node->value = value;
-    node->children = NULL;
-    node->next = NULL;
-    return node;
+    return field;
 }
 
-ASTNode *add_child(ASTNode *parent, ASTNode *child) {
-    if (parent->children == NULL) {
-        parent->children = child;
-    } else {
-        ASTNode *temp = parent->children;
-        while (temp->next != NULL) {
-            temp = temp->next;
+
+Constructor* createConstructor(const char *name, int kind) {
+    Constructor* cons = (Constructor*)malloc(sizeof(Constructor));
+    if (cons) {
+        cons->name = strdup(name);
+        cons->num_fields = 0;
+        cons->fields = NULL;
+        cons->kind = kind;
+    }
+    return cons;
+}
+
+
+void insertField(Constructor *cons, Field *field) {
+    cons->num_fields++;
+    cons->fields = realloc(cons->fields, cons->num_fields * sizeof(Field*));
+    if (cons->fields) {
+        cons->fields[cons->num_fields - 1] = field;
+    }
+}
+
+void insertAttribute(Attributes *attrs, Field *field) {
+    attrs->num_fields++;
+    attrs->fields = realloc(attrs->fields, attrs->num_fields * sizeof(Field*));
+    if (attrs->fields) {
+        attrs->fields[attrs->num_fields - 1] = field;
+    }
+}
+
+
+Type* createType(const char *name) {
+    Type* type = (Type*)malloc(sizeof(Type));
+    if (type) {
+        type->name = strdup(name);
+        type->num_cons = 0;
+        type->cons = NULL;
+        type->attrs.num_fields = 0;
+        type->attrs.fields = NULL;
+    }
+    return type;
+}
+
+
+void insertConstructor(Type *type, Constructor *cons) {
+    type->num_cons++;
+    type->cons = realloc(type->cons, type->num_cons * sizeof(Constructor*));
+    if (type->cons) {
+        type->cons[type->num_cons - 1] = cons;
+    }
+}
+
+Attributes* createAttributes() {
+    Attributes* attrs = (Attributes*)malloc(sizeof(Attributes));
+    if (attrs) {
+        attrs->num_fields = 0;
+        attrs->fields = NULL;
+    }
+    return attrs;
+}
+
+
+
+Asdl* createAsdl() {
+    Asdl* asdl = (Asdl*)malloc(sizeof(Asdl));
+    if (asdl) {
+        asdl->num_types = 0;
+        asdl->types = NULL;
+    }
+    return asdl;
+}
+
+
+void insertType(Asdl *asdl, Type *type) {
+    asdl->num_types++;
+    asdl->types = realloc(asdl->types, asdl->num_types * sizeof(Type*));
+    if (asdl->types) {
+        asdl->types[asdl->num_types - 1] = type;
+    }
+}
+
+
+void freeField(Field *field) {
+    if (field) {
+        free((void*)field->name);
+        free(field);
+    }
+}
+
+
+void freeConstructor(Constructor *cons) {
+    if (cons) {
+        for (size_t i = 0; i < cons->num_fields; i++) {
+            freeField(cons->fields[i]);
         }
-        temp->next = child;
+        free(cons->fields);
+        free((void*)cons->name);
+        free(cons);
     }
-    return parent;
 }
 
 
-
-void free_ast(ASTNode *node) {
-    if (node) {
-        free(node->value);
-        ASTNode *child = node->children;
-        while (child) {
-            ASTNode *next = child->next;
-            free_ast(child);
-            child = next;
+void freeType(Type *type) {
+    if (type) {
+        for (size_t i = 0; i < type->num_cons; i++) {
+            freeConstructor(type->cons[i]);
         }
-        free(node);
+        free(type->cons);
+        free((void*)type->name);
+        free(type);
     }
 }
 
-
-void print_ast(FILE *output, ASTNode *root, int level) {
-    if (root == NULL)
-        return;
-
-    for (int i = 0; i < level; i++)
-       fprintf(output, "  ");
-
-    switch (root->type) {
-        case NODE_NONE:
-            fprintf(output, "Type: NODE_NONE");
-            break;
-        case NODE_ATTRIBUTES:
-            fprintf(output, "Type: NODE_ATTRIBUTES");
-            break;
-        case NODE_CON_ID:
-           fprintf(output, "Type: NODE_CON_ID");
-            break;
-        case NODE_TYPE_ID_OPT:
-           fprintf(output, "Type: NODE_TYPE_ID_OPT");
-            break;
-        case NODE_TYPE_ID_KLEENE:
-           fprintf(output, "Type: NODE_TYPE_ID_KLEENE");
-            break;
-        case NODE_TYPE_ID_ORD:
-           fprintf(output, "Type: NODE_TYPE_ID_ORD");
-            break;
-        case NODE_LHS_IDENT:
-           fprintf(output, "Type: NODE_LHS_IDENT");
-            break;
-        default:
-           fprintf(output, "Type: UNKNOWN");
-            break;
+void freeAttributes(Attributes *attrs) {
+    if (attrs) {
+        for (size_t i = 0; i < attrs->num_fields; i++) {
+            freeField(attrs->fields[i]);
+        }
+        free(attrs->fields);
+        free(attrs);
     }
+}
 
-    if (root->value != NULL)
-       fprintf(output, ", Value: %s", root->value);
-    
-    fprintf(output, "\n");
-
-    print_ast(output, root->children, level + 1);
-    print_ast(output, root->next, level);
+void freeAsdl(Asdl *asdl) {
+    if (asdl) {
+        for (size_t i = 0; i < asdl->num_types; i++) {
+            freeType(asdl->types[i]);
+        }
+        free(asdl->types);
+        free(asdl);
+    }
 }
 
