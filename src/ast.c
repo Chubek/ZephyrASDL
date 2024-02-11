@@ -1,15 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef enum NodeType {
-    NODE_NONE,
-    NODE_ATTRIBUTES,
-    NODE_CON_ID,
-    NODE_TYPE_ID_OPT,
-    NODE_TYPE_ID_KLEENE,
-    NODE_TYPE_ID_ORD,
-    NODE_LHS_IDENT,
-} NodeType;
+#include "ast.h"
 
 typedef struct ASTNode {
     NodeType type;
@@ -45,14 +37,14 @@ ASTNode *add_child(ASTNode *parent, ASTNode *child) {
 }
 
 
-}
+
 void free_ast(ASTNode *node) {
     if (node) {
         free(node->value);
         ASTNode *child = node->children;
         while (child) {
             ASTNode *next = child->next;
-            freeAST(child);
+            free_ast(child);
             child = next;
         }
         free(node);
@@ -72,7 +64,7 @@ void print_ast(FILE *output, ASTNode *root, int level) {
             fprintf(output, "Type: NODE_NONE");
             break;
         case NODE_ATTRIBUTES:
-            fprintf("Type: NODE_ATTRIBUTES");
+            fprintf(output, "Type: NODE_ATTRIBUTES");
             break;
         case NODE_CON_ID:
            fprintf(output, "Type: NODE_CON_ID");
@@ -99,7 +91,7 @@ void print_ast(FILE *output, ASTNode *root, int level) {
     
     fprintf(output, "\n");
 
-    print_ast(root->children, level + 1);
-    print_ast(root->next, level);
+    print_ast(output, root->children, level + 1);
+    print_ast(output, root->next, level);
 }
 

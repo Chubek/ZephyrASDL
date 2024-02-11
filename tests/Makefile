@@ -3,11 +3,11 @@ SRC_DIR = src
 TESTS_DIR = tests
 
 
-BUID_DIR = tests/_build
+BUILD_DIR = tests/_build
 
 
 
-SRC_YACC = $(SPECS_DIR)/parse.y
+SRC_YACC = $(SPECS_DIR)/parser.y
 SRC_LEX = $(SPECS_DIR)/scanner.l
 
 DEST_YACC = $(BUILD_DIR)/y.tab.c
@@ -15,7 +15,7 @@ DEST_LEX = $(BUILD_DIR)/lex.yy.c
 
 YACC_HEADER = y.tab.h
 
-SRC_AST = $(SRC_DIR)/tree.c
+SRC_AST = $(SRC_DIR)/ast.c
 
 SRC_TEST_AST = $(TESTS_DIR)/test_ast.c
 
@@ -36,6 +36,7 @@ $(DEST_YACC): $(DEST_LEX)
 	$(YACC) -d -o $(DEST_YACC)  $(SRC_YACC)
 
 $(DEST_LEX): $(SRC_LEX)
+	mkdir -p $(BUILD_DIR)
 	$(LEX) -o $(DEST_LEX) $(SRC_LEX)
 
 

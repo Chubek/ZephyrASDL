@@ -7,6 +7,7 @@
 
 extern ASTNode *yytree;
 extern int yylex(void);
+extern void yyerror(const char *s);
 
 void yyerror(const char *s);
 
@@ -21,7 +22,7 @@ void yyerror(const char *s);
 %token <string_val> CON_ID TYPE_ID IDENT
 
 %type <node_val> definitions definition rhs lhs type product_type sum_type constructor_list
-%type <node_val> attributes_opt constructor con_id fields field type_id id
+%type <node_val> attributes_opt constructor con_id fields field field_list type_id id
 
 %start definitions
 
@@ -56,7 +57,7 @@ constructor_list : constructor_list PIPE constructor   { $$ = add_child($1, $3);
                  | constructor                          { $$ = $1; }
                  ;
 
-attributes_opt : ATTRIBUTES fields  { $$ = create_node(NODE_ATTRIBUTES, $2); }
+attributes_opt : ATTRIBUTES fields  { $$ = create_node(NODE_ATTRIBUTES, (char*)$2); }
                | /* empty */         { $$ = create_node(NODE_NONE, NULL); }
                ;
 
@@ -89,8 +90,5 @@ id : IDENT                        { $$ = create_node(NODE_IDENT, $1); }
 
 %%
 
-void yyerror(const char *s) {
-    fprintf(stderr, "Error: %s at token: %s\n", s, yytext);
-}
 
 
