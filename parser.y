@@ -18,24 +18,24 @@ void yyerror(const char *s);
     ASTNode *node_val;
 }
 
-%token EQUALS PIPE ATTRIBUTES LPAREN RPAREN COMMA QUESTION_MARK STAR
-%token <string_val> CON_ID TYPE_ID IDENT
+%token EQUALS PIPE ATTRIBUTES LPAREN RPAREN COMMA QUESTION_MARK STAR SEMICOLON
+%token <string_val> CON_ID TYPE_ID
 
 %type <node_val> definitions definition rhs lhs type product_type sum_type constructor_list
-%type <node_val> attributes_opt constructor con_id fields field field_list type_id id
+%type <node_val> attributes_opt constructor con_id fields field field_list type_id id_opt
 
 %start definitions
 
 %%
 
-definitions : definitions definition   { $$ = yytree = add_child($1, $2); }
+definitions : definitions SEMICOLON definition   { $$ = yytree = add_child($1, $3); }
             | definition               { $$ = yytree = $1; }
             | /* empty */              { $$ = create_node(NODE_NONE, NULL); }
             ;
 
 definition : lhs EQUALS rhs          { $$ = add_child($1, $3); }
-          ;
-
+           ;
+          
 rhs : type                          { $$ = $1; }
     ;
 
@@ -75,7 +75,7 @@ field_list : field_list COMMA field   { $$ = add_child($1, $3); }
            | field                     { $$ = $1; }
            ;
 
-field : type_id id                { $$ = add_child($1, $2); }
+field : type_id id_opt		 { $$ = add_child($1, $2); }
       ;
 
 type_id : TYPE_ID QUESTION_MARK    { $$ = create_node(NODE_TYPE_ID_OPT, $1); }
@@ -83,10 +83,9 @@ type_id : TYPE_ID QUESTION_MARK    { $$ = create_node(NODE_TYPE_ID_OPT, $1); }
        | TYPE_ID                    { $$ = create_node(NODE_TYPE_ID_ORD, $1); }
        ;
 
-
-id : IDENT                        { $$ = create_node(NODE_IDENT, $1); }
-   | /* empty */                  { $$ = create_node(NODE_NONE, NULL); }
-   ;
+id_opt : TYPE_ID       { $$ = create_node(NODE_IDENT, $1); }
+       | /* empty */   { $$ = create_node(NODE_NONE, NULL); }
+       ;
 
 %%
 
