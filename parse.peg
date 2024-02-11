@@ -1,23 +1,15 @@
-definitions < definition+ EOF
-
-definition <- TypeIdent '=' Type
-
-
-Type <- ProductType / SumType
-
+Definitions <- Definition* EOF
+Definition <- TypeID _ '=' _ Type
+Type <- SumType / ProductType
 ProductType <- Fields
-SumType <- Constructor ( '|' Constructor ) / Attributes
+SumType <- Constructor ( _ '|' _ Constructor)* _ ('attributes' Fields)?
+Constructor <- ConID _ Fields?
+Fields <- '(' _ Field ( _ ',' _ Field)* _ ')'
+Field <- TypeID ('?' / '*')? _ ID?
 
-Attributes <- "attributes" Fields
-
-Constructor <- ConIdent Fields?
-
-Fields <- '(' Field ( ',' Field ) ')'
-Field <- TypeIdent
-
-ConIdent <- [A-Z][a-zA-Z_0-9]*
-TypeIdent <- [a-z][A-Za-z0-9_]*
+ID <- ConID / TypeID
+ConID <- [A-Z][a-zA-Z0-9_]*
+TypeID <- [a-z][a-z0-9_]*
 
 _ <- [ \r\n\t]+
-
 EOF <- !.
