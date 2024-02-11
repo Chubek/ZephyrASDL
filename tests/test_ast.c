@@ -1,3 +1,5 @@
+#include <stdio.h>
+#include <unistd.h>
 #include <getopt.h>
 
 #include "ast.h"
@@ -12,7 +14,7 @@ int main(int argc, char **argv) {
    FILE *input = NULL;
    FILE *output = NULL;
 
-   while ((c = getopt(argv, "i:o:")) != -1) {
+   while ((c = getopt(argc, argv, "i:o:")) != -1) {
 	switch (c) {
 		case 'i':
 			input = fopen(optarg, "r");

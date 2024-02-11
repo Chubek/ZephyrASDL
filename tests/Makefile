@@ -5,8 +5,6 @@ TESTS_DIR = tests
 
 BUILD_DIR = tests/_build
 
-
-
 SRC_YACC = $(SPECS_DIR)/parser.y
 SRC_LEX = $(SPECS_DIR)/scanner.l
 
@@ -30,7 +28,7 @@ CC = gcc
 ast_test: $(DEST_BIN)
 
 $(DEST_BIN): $(DEST_YACC)
-	$(CC) -I$(INCLUDE) -o $(DEST_BIN) $(SRC_AST) $(DEST_YACC) $(DEST_LEX)
+	$(CC) -I$(INCLUDE) -o $(DEST_BIN) $(SRC_AST) $(DEST_YACC) $(DEST_LEX) $(SRC_TEST_AST)
 
 $(DEST_YACC): $(DEST_LEX)
 	$(YACC) -d -o $(DEST_YACC)  $(SRC_YACC)
