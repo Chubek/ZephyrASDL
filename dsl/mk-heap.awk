@@ -1,5 +1,7 @@
 #!/usr/bin/awk -f
 
+/^$/	{ next; }
+
 BEGIN {
     # Define variables to store heap name and function names
     heap_name = ""
@@ -101,7 +103,7 @@ END {
     printf "}\n\n";
 
     # Emit free function
-    printf "static inline void %s(void *memory, bool all) {\n", free_func; # Fixed return type
+    printf "static inline void %s(void *memory, bool all) {\n", free_func;
     printf "    if (all) goto all;\n";
     printf "    struct %s *node = %s__HEAP;\n", heap_name, heap_name;
     printf "    while (node != NULL) {\n";
