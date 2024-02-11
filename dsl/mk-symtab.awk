@@ -26,7 +26,7 @@ END {
 	printf "	*stab = node;\n";
 	printf "}\n\n";
 	printf "%s *%s_get(%s *stab, char *key) {\n", type, tolower(name), name;
-	printf "	for (%s *tab = stab; tab != NULL; tab = tab->next) w{\n", name;
+	printf "	for (%s *tab = stab; tab != NULL; tab = tab->next) \n", name;
 	printf "		if (!strcmp(tab->key, key) return stab->value;\n";
 	printf "	 }\n"
 	printf "}\n\n";
