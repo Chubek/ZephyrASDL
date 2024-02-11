@@ -3,14 +3,11 @@
 
 typedef enum NodeType {
     NODE_NONE,
-    NODE_SUM_TYPE,
-    NODE_PRODUCT_TYPE,
     NODE_ATTRIBUTES,
     NODE_CON_ID,
     NODE_TYPE_ID_OPT,
     NODE_TYPE_ID_KLEENE,
     NODE_TYPE_ID_ORD,
-    NODE_RHS_TYPE,
     NODE_LHS_IDENT,
 } NodeType;
 
@@ -21,7 +18,7 @@ typedef struct ASTNode {
     struct ASTNode *next; 
 } ASTNode;
 
-ASTNode *createNode(NodeType type, char *value) {
+ASTNode *create_node(NodeType type, char *value) {
     ASTNode *node = (ASTNode *)malloc(sizeof(ASTNode));
     if (!node) {
         fprintf(stderr, "Memory allocation failed\n");
@@ -34,7 +31,7 @@ ASTNode *createNode(NodeType type, char *value) {
     return node;
 }
 
-ASTNode *addChild(ASTNode *parent, ASTNode *child) {
+ASTNode *add_child(ASTNode *parent, ASTNode *child) {
     if (parent->children == NULL) {
         parent->children = child;
     } else {
@@ -48,5 +45,61 @@ ASTNode *addChild(ASTNode *parent, ASTNode *child) {
 }
 
 
+}
+void free_ast(ASTNode *node) {
+    if (node) {
+        free(node->value);
+        ASTNode *child = node->children;
+        while (child) {
+            ASTNode *next = child->next;
+            freeAST(child);
+            child = next;
+        }
+        free(node);
+    }
+}
 
+
+void print_ast(FILE *output, ASTNode *root, int level) {
+    if (root == NULL)
+        return;
+
+    for (int i = 0; i < level; i++)
+       fprintf(output, "  ");
+
+    switch (root->type) {
+        case NODE_NONE:
+            fprintf(output, "Type: NODE_NONE");
+            break;
+        case NODE_ATTRIBUTES:
+            fprintf("Type: NODE_ATTRIBUTES");
+            break;
+        case NODE_CON_ID:
+           fprintf(output, "Type: NODE_CON_ID");
+            break;
+        case NODE_TYPE_ID_OPT:
+           fprintf(output, "Type: NODE_TYPE_ID_OPT");
+            break;
+        case NODE_TYPE_ID_KLEENE:
+           fprintf(output, "Type: NODE_TYPE_ID_KLEENE");
+            break;
+        case NODE_TYPE_ID_ORD:
+           fprintf(output, "Type: NODE_TYPE_ID_ORD");
+            break;
+        case NODE_LHS_IDENT:
+           fprintf(output, "Type: NODE_LHS_IDENT");
+            break;
+        default:
+           fprintf(output, "Type: UNKNOWN");
+            break;
+    }
+
+    if (root->value != NULL)
+       fprintf(output, ", Value: %s", root->value);
+    
+    fprintf(output, "\n");
+
+    print_ast(root->children, level + 1);
+    print_ast(root->next, level);
+}
 
