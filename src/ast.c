@@ -2,18 +2,16 @@
 #include <stdlib.h>
 
 typedef enum NodeType {
-    NODE_TYPE_ID,
-    NODE_CON_ID,
-    NODE_ID,
-    NODE_OPT,
-    NODE_CLOSURE,
     NODE_NONE,
-    NODE_CONSTRUCTOR,
-    NODE_FIELD,
     NODE_SUM_TYPE,
     NODE_PRODUCT_TYPE,
-    NODE_DEFINITION,
-    NODE_PROGRAM
+    NODE_ATTRIBUTES,
+    NODE_CON_ID,
+    NODE_TYPE_ID_OPT,
+    NODE_TYPE_ID_KLEENE,
+    NODE_TYPE_ID_ORD,
+    NODE_RHS_TYPE,
+    NODE_LHS_IDENT,
 } NodeType;
 
 typedef struct ASTNode {
@@ -50,45 +48,5 @@ ASTNode *addChild(ASTNode *parent, ASTNode *child) {
 }
 
 
-void printAST(ASTNode *node, int depth) {
-    if (node == NULL) return;
-
-    for (int i = 0; i < depth; i++) {
-        printf("    ");
-    }
-
-    switch (node->type) {
-        case NODE_TYPE_ID:
-            printf("Type ID: %s\n", node->value);
-            break;
-        case NODE_CONSTRUCTOR:
-            printf("Constructor: %s\n", node->value);
-            break;
-        case NODE_FIELD:
-            printf("Field: %s\n", node->value);
-            break;
-        case NODE_SUM_TYPE:
-            printf("Sum Type\n");
-            break;
-        case NODE_PRODUCT_TYPE:
-            printf("Product Type\n");
-            break;
-        case NODE_DEFINITION:
-            printf("Definition\n");
-            break;
-        case NODE_PROGRAM:
-            printf("Program\n");
-            break;
-        default:
-            printf("Unknown Node\n");
-            break;
-    }
-
-    ASTNode *child = node->children;
-    while (child != NULL) {
-        printAST(child, depth + 1);
-        child = child->next;
-    }
-}
 
 
