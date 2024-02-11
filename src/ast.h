@@ -1,25 +1,27 @@
 #ifndef AST_H
 #define AST_H
 
-typedef enum NodeType NodeType;
-typedef struct ASTNode ASTNode;
+typedef struct Field Field;
+typedef struct Constructor Constructor;
+typedef struct Attributes Attributes;
+typedef struct Type Type;
+typedef struct Asdl Asdl;
 
-enum NodeType {
-    NODE_NONE,
-    NODE_ATTRIBUTES,
-    NODE_CON_ID,
-    NODE_IDENT,
-    NODE_TYPE_ID_OPT,
-    NODE_TYPE_ID_KLEENE,
-    NODE_TYPE_ID_ORD,
-    NODE_LHS_IDENT,
-};
 
-ASTNode *create_node(NodeType type, char *value);
-ASTNode *add_child(ASTNode *parent, ASTNode *child);
-void free_ast(ASTNode *node);
-void print_ast(FILE *output, ASTNode *node, int level);
-
+Field* createField(Type *type, const char *name, int kind);
+Constructor* createConstructor(const char *name, int kind);
+void insertField(Constructor *cons, Field *field);
+void insertAttribute(Attributes *attrs, Field *field);
+Type* createType(const char *name);
+void insertConstructor(Type *type, Constructor *cons);
+Attributes* createAttributes();
+Asdl* createAsdl();
+void insertType(Asdl *asdl, Type *type);
+void freeField(Field *field);
+void freeConstructor(Constructor *cons);
+void freeType(Type *type);
+void freeAttributes(Attributes *attrs);
+void freeAsdl(Asdl *asdl);
 
 
 
