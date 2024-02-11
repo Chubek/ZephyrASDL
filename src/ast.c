@@ -1,8 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef enum {
+typedef enum NodeType {
     NODE_TYPE_ID,
+    NODE_CON_ID,
+    NODE_ID,
+    NODE_OPT,
+    NODE_CLOSURE,
+    NODE_NONE,
     NODE_CONSTRUCTOR,
     NODE_FIELD,
     NODE_SUM_TYPE,
@@ -31,8 +36,7 @@ ASTNode *createNode(NodeType type, char *value) {
     return node;
 }
 
-
-void addChild(ASTNode *parent, ASTNode *child) {
+ASTNode *addChild(ASTNode *parent, ASTNode *child) {
     if (parent->children == NULL) {
         parent->children = child;
     } else {
@@ -42,6 +46,7 @@ void addChild(ASTNode *parent, ASTNode *child) {
         }
         temp->next = child;
     }
+    return parent;
 }
 
 
