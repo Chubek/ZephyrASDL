@@ -2,7 +2,7 @@ Definitions <- Definition* EOF
 Definition <- TypeID _ '=' _ Type
 Type <- SumType / ProductType
 ProductType <- Fields
-SumType <- Constructor ( _ '|' _ Constructor)* _ ('attributes' Fields)?
+SumType <- Constructor ( _ '|' _ Constructor)* _ ('attributes' _ Fields)?
 Constructor <- ConID _ Fields?
 Fields <- '(' _ Field ( _ ',' _ Field)* _ ')'
 Field <- TypeID ('?' / '*')? _ ID?
