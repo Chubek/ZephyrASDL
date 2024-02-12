@@ -1,6 +1,7 @@
 #ifndef ABSYN_H
 #define ABSYN_H
 
+#include <stdlib.h> 
 
 typedef enum AbsynType AbsynType;
 typedef struct AbsynNode AbsynNode;
@@ -15,6 +16,7 @@ enum AbsynType {
   DEFN,
   LHS_IDENT,
   MARKER,
+  TUPLE 
 };
 
 struct AbsynNode {
@@ -24,9 +26,8 @@ struct AbsynNode {
    AbsynNode *next;
 };
 
-
 static inline AbsynNode *create_absyn_node(void) {
-    AbsynNode *node = (AbsynNode*)calloc(sizeof(AbsynNode));
+    AbsynNode *node = (AbsynNode*)calloc(1, sizeof(AbsynNode)); 
     node->value = NULL;
     node->next = NULL;
     return node;
@@ -38,7 +39,7 @@ static inline AbsynNode *create_ident(const char *id, char marker) {
    node->type = IDENT;
    node->is_leaf = true;
    node->next = create_absyn_node();
-   node->next->value = marker;
+   node->next->value = &marker;
    node->next->type = MARKER;
    node->next->is_leaf = true;
    return node;
@@ -48,17 +49,16 @@ static inline AbsynNode *create_field(const char *type_id, AbsynNode *ident) {
    AbsynNode *node = create_absyn_node();
    node->value = type_id;
    node->type = TYPE_ID;
-   mpde->next = ident;
+   node->next = ident; 
    return node;
 }
 
 static inline AbsynNode *create_constructor(const char *cons_id, AbsynNode *fields) {
    AbsynNode *node = create_absyn_node();
-   node->value = type_id;
+   node->value = cons_id; 
    node->type = CONS_ID;
-   mpde->next = fields;
+   node->next = fields; 
    return node;
-
 }
 
 static inline AbsynNode *create_attr(AbsynNode *fields) {
@@ -79,16 +79,20 @@ static inline AbsynNode *create_defn(const char *type_id, AbsynNode *rhs) {
 static inline AbsynNode *create_tuple(AbsynNode *node1, AbsynNode *node2) {
    AbsynNode *node = create_absyn_node();
    node->type = TUPLE;
-   node->value = (char*)calloc(2, sizeof(AbsynNode*)); 
-   memmove(node->value, &node1, sizeof(AbsynNode*));
-   memmove(node->value + 1, &node2, sizeof(AbsynNode*));
+   node->value = (AbsynNode**)calloc(2, sizeof(AbsynNode*)); 
+   node->value[0] = node1; 
+   node->value[1] = node2;
    return node;
 }
 
-static inline AbsynNode *append_subtree(AbsynNode **node, AbsynNode *subtree) {
-   AbsynNode *temp = *node;
-   node->next = subtree;
-   return node;
+static inline AbsynNode *append_subtree(AbsynNode *node, AbsynNode *subtree) {
+   AbsynNode *temp = node;
+   while (temp->next != NULL) {
+       temp = temp->next;
+   }
+   temp->next = subtree;
+   return temp->next; 
 }
 
 #endif
+
