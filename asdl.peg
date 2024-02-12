@@ -14,7 +14,7 @@ Rule  <- TypeId '=' Types  { rule = rule_alloc(sizeof(Rule));
 			   }
 
 
-Types <- type ( __ '|' __ type) { types = 
+Types <- Type ( __ '|' __ Type) { types = 
 				   type_realloc(types, 
 				   	(num_types) * sizeof(Type*));
 				  types[num_types++] = type;				
@@ -50,7 +50,7 @@ SumType <- Constructors __ Attr? { sumtype = sum_alloc(sizeof(SumType));
 				   num_cons = 0;
 				 }
 
-Attr <- "attributes" __ fields	{ attrs = fields; }
+Attr <- "attributes" __ Fields	{ attrs = fields; }
 
 Constructors <- Constructor __ ( __ '/' __ Constructor)* { cons = 
 							    cons_realloc(cons, 
@@ -87,7 +87,7 @@ ConId <- PascalCaseIdentifier		{ conid = pcid; }
 
 TypeId <- LowerCaseIdentifier		{ typeid = lowid; }
 
-CStyleIdentifer <- < Letter ( Digit / Letter / '_' )* >			    {
+CStyleIdentifier <- < Letter ( Digit / Letter / '_' )* >			    {
 										csid = dup_str(&yytext[0],
 												yyleng);
 									    }
