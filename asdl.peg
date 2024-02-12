@@ -1,36 +1,106 @@
-Asdl <- __ Definitions __ EOF
+Asdl <- Rules EOF
 
-Definitions <- Definition ( __ ';' __ Definition )
+Rules <- __ Rule __ { rules = 
+			rule_realloc(rules, (num_rules + 1) * sizeof(Rule*));
+		      rule[num_rules++] = rule;
+		    }
 
-Definition <- TypeId __ '=' __ type
+Rule  <- TypeId '=' Types  { rule = rule_alloc(sizeof(Rule));
+			     rule->id = typeid;
+			     rule->types = types;
+			     rule->num_types = num_types;
+			     types = NULL;
+			     num_types = 0;
+			   }
 
-Type <- SumType / ProductType
 
-ProductType <- Fields
+Types <- type ( __ '|' __ type) { types = 
+				   type_realloc(types, 
+				   	(num_types) * sizeof(Type*));
+				  types[num_types++] = type;				
+				}
+				       
+				      
 
-SumType <- Constructors __ Attr?
+Type <- SumType / ProductType  { type = type_alloc(sizeof(Type));
+				      type->kind = last_type_kind;
+				      if (last_type_kind == TYPE_PRODUCT)
+				      	type->product = prodtype;
+				      else
+				      	type->sum = sumtype;
+		                 }
 
-Attr <- "attributes" __ fields
 
-Constructors <- Constructor __ ( __ '|' __ Constructor)*
+ProductType <- Fields		 {
+				    prodtype = prod_alloc(sizeof(ProductType));
+				    prodtype->fields = fields;
+				    prodtype->num_fields = num_fields;
+				    last_type_kind = PRODUCT;
+				    fields = NULL;
+				    num_fields = 0;
+				}
 
-Constructor <- ConId __ Fields?
+SumType <- Constructors __ Attr? { sumtype = sum_alloc(sizeof(SumType));
+				   sumtype->constructors = cons;
+				   sumtype->num_constructors = num_cons;
+				   sumtype->attributes = attrs;
+				   last_type_kind = SUM;
+				   attrs = NULL;
+				   cons = NULL;
+				   num_cons = 0;
+				 }
 
-Fields <- '(' __ Field ( __ ',' __ Field )* __ ')'
+Attr <- "attributes" __ fields	{ attrs = fields; }
 
-Field <- TypeId ( '*' / '?' ) __ Ident 
+Constructors <- Constructor __ ( __ '/' __ Constructor)* { cons = 
+							    cons_realloc(cons, 
+							    	(num_cons + 1) * sizeof(Constructor*));
+							   cons[num_cons++] = con;
+							 }
 
-Ident <- CStyleIdentifier
+Constructor <- ConId __ Fields?			  { con = cons_alloc(sizeof(Constructor));
+							con->id = conid;
+							con->fields = fields;
+							con->num_fields = num_fields;
+							fields = NULL;
+							num_fields = 0;
+						  }
 
-ConId <- PascalCaseIdentifier
+Fields <- '(' __ Field ( __ ',' __ Field )* __ ')' { fields = 
+							fields_realloc(fields, 
+								(num_fields + 1) * sizeof(Field*));
+						     fields[num_fields++] = field;
+						   }
 
-TypeId <- LowerCaseIdentifier
 
-CStyleIdentifer <- Letter ( Digit / Letter / '_' )*
+Field <- TypeId Modifier? __ Ident { field = fields_alloc(sizeof(Field));
+				field->type_id = typeid;
+				field->id = ident;
+				field->kind = MOD_LUT[mod];
+			   }
 
-PascalCaseIdentifier <- UpperCaseLetter (UpperCaseLetter / Digit / '_')*
+Modifier <- < '*' / '?' >		{ mod = *yytext; }
 
-LowerCaseIdentifier <- LowerCaseLetter (LowerCaseLetter / Digit / '_')*
+Ident <- CStyleIdentifier		{ ident = csid; }
+
+ConId <- PascalCaseIdentifier		{ conid = pcid; }
+
+TypeId <- LowerCaseIdentifier		{ typeid = lowid; }
+
+CStyleIdentifer <- < Letter ( Digit / Letter / '_' )* >			    {
+										csid = dup_str(&yytext[0],
+												yyleng);
+									    }
+
+PascalCaseIdentifier <- UpperCaseLetter (UpperCaseLetter / Digit / '_')*    {
+										pcid = dup_str(&yytext[0],
+												yyleng);
+									    }
+
+LowerCaseIdentifier <- < LowerCaseLetter (LowerCaseLetter / Digit / '_')* > {
+										lowid = dup_str(&yytext[0],
+												yyleng);
+									    }
 
 Letter <- UpperCaseLetter / LowerCaseLetter
 
