@@ -14,8 +14,8 @@ void yyerror(const char *s);
 
 %union {
     char *string_val;
-    ASTNode *node_val;
-    ASTNodeList *node_list;
+    AbsynNode *node_val;
+    AbsynNodeList *node_list;
 }
 
 %token EQUALS PIPE ATTRIBUTES LPAREN RPAREN COMMA QUESTION_MARK STAR SEMICOLON
