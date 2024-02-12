@@ -37,6 +37,11 @@ tmp/
 *.peg.c
 *.peg.h
 
+# Ignore general generated fielss
+
+*.gen.c
+*.gen.h
+
 # Ignore accidental files
 ;
 :
