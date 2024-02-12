@@ -72,8 +72,20 @@ Product *prodtype, **prodtypes;
 Constructor *con, **cons;
 Field *field, **fields;
 
+size_t num_fields, num_cons, num_types, num_rules;
+
 
 rule = rules = type = types = sumtype = sumtypes = prodtype = prodtypes = con = cons = field = fields = NULL;
 
+num_fields = num_cons = num_typess = num_rules = 0;
 
+void parse_and_emit(const char *infile, const char *outfile) {
+    if (infile != NULL)
+	   stdin = freopen(infile, "r", stdin);
+    if (outfile != NULL)
+	    stdout = freopen(outfile, "w" stdout);
 
+    while (yyparse());
+
+    walk_rules(rules, num_rules);
+}
