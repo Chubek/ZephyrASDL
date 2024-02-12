@@ -1,98 +1,170 @@
 #ifndef ABSYN_H
 #define ABSYN_H
 
-#include <stdlib.h> 
+#include <stdlib.h>
+#include <stdint.h>
 
-typedef enum AbsynType AbsynType;
-typedef struct AbsynNode AbsynNode;
-typedef struct AbsynNodeList AbsynNodeList;
+typedef struct Rule Rule;
+typedef struct Type Type;
+typedef struct Sum Sum;
+typedef struct Product Product;
+typedef struct Constructor Constructor;
+typedef struct Field Field;
 
-enum AbsynType {
-  IDENT,
-  TYPE_ID,
-  CONS_ID,
-  CONSTRUCTOR,
-  ATTRIBUTE,
-  DEFN,
-  LHS_IDENT,
-  MARKER,
-  TUPLE 
+struct Rule {
+    char *id;
+    Type **types;
+    size_t num_types;
 };
 
-struct AbsynNode {
-   AbsynType type;
-   const char *value;
-   bool is_leaf;
-   AbsynNode *next;
+
+struct Type {
+   enum TypeKind {
+	TYPE_SUM,
+	TYPE_PRODUCT,
+   } kind;
+   union {
+	Product *product;
+	Sum *sum;
+   };
 };
 
-static inline AbsynNode *create_absyn_node(void) {
-    AbsynNode *node = (AbsynNode*)calloc(1, sizeof(AbsynNode)); 
-    node->value = NULL;
-    node->next = NULL;
-    return node;
+struct Sum {
+    Constructor **cons;
+    size_t num_cons;
+    Attributes *attr;
+};
+
+struct Product {
+   Field **fields;
+   size_t num_fields;
+};
+
+struct Constructor {
+    char *id;
+    Field **fields;
+    size_t num_fields;
+};
+
+struct Field {
+   enum FieldKind {
+	SEQUENCE, OPTIONAL, NORMAL,
+   } kind;
+   char *type_name;
+   char *id;
+};
+
+
+static inline Rule *create_rule(void) {
+   Rule *rule = (Rule*)calloc(1, sizeof(Rule));
+   rule->types = NULL;
+   rule->id = NULL;
+   return rule;
 }
 
-static inline AbsynNode *create_ident(const char *id, char marker) {
-   AbsynNode *node = create_absyn_node();
-   node->value = id;
-   node->type = IDENT;
-   node->is_leaf = true;
-   node->next = create_absyn_node();
-   node->next->value = &marker;
-   node->next->type = MARKER;
-   node->next->is_leaf = true;
-   return node;
+static inline Rule *rule_add_type(Rule *rule, Type *type) {
+    rule->types =
+	(Type**)realloc(rule->types, (rule->num_types + 1) * sizeof(Rule*));
+    rule->types[rule->num_types++] type;
+    return rul;
 }
 
-static inline AbsynNode *create_field(const char *type_id, AbsynNode *ident) {
-   AbsynNode *node = create_absyn_node();
-   node->value = type_id;
-   node->type = TYPE_ID;
-   node->next = ident; 
-   return node;
+static inline Sum *create_sum(void) {
+    Sum *sum = (Sum*)calloc(1, sizeof(Sum));
+    sum->cons = NULL;
+    sum->num_cons = 0;
+    return sum;
 }
 
-static inline AbsynNode *create_constructor(const char *cons_id, AbsynNode *fields) {
-   AbsynNode *node = create_absyn_node();
-   node->value = cons_id; 
-   node->type = CONS_ID;
-   node->next = fields; 
-   return node;
+static inline Sum *sum_add_constructor(Sum *sum, Constructor *constructor) {
+    sum->cons = (Constructor**)realloc(sum->cons, (sum->num_cons + 1) * sizeof(Constructor*));
+    sum->cons[sum->num_cons++] = constructor;
+    return sum;
 }
 
-static inline AbsynNode *create_attr(AbsynNode *fields) {
-    AbsynNode *node = create_absyn_node();
-    node->type = ATTRIBUTE;
-    node->next = fields;
-    return node;
+static inline Product *create_product(void) {
+    Product *product = (Product*)calloc(1, sizeof(Product));
+    product->fields = NULL;
+    product->num_fields = 0;
+    return product;
 }
 
-static inline AbsynNode *create_defn(const char *type_id, AbsynNode *rhs) {
-   AbsynNode *node = create_absyn_node();
-   node->type = LHS_IDENT;
-   node->value = type_id;
-   node->next = rhs;
-   return node;
+static inline Product *product_add_field(Product *product, Field *field) {
+    product->fields = (Field**)realloc(product->fields, (product->num_fields + 1) * sizeof(Field*));
+    product->fields[product->num_fields++] = field;
+    return product;
 }
 
-static inline AbsynNode *create_tuple(AbsynNode *node1, AbsynNode *node2) {
-   AbsynNode *node = create_absyn_node();
-   node->type = TUPLE;
-   node->value = (AbsynNode**)calloc(2, sizeof(AbsynNode*)); 
-   node->value[0] = node1; 
-   node->value[1] = node2;
-   return node;
+static inline Constructor *create_constructor(void) {
+    Constructor *constructor = (Constructor*)calloc(1, sizeof(Constructor));
+    constructor->fields = NULL;
+    constructor->num_fields = 0;
+    return constructor;
 }
 
-static inline AbsynNode *append_subtree(AbsynNode *node, AbsynNode *subtree) {
-   AbsynNode *temp = node;
-   while (temp->next != NULL) {
-       temp = temp->next;
-   }
-   temp->next = subtree;
-   return temp->next; 
+static inline Constructor *constructor_add_field(Constructor *constructor, Field *field) {
+    constructor->fields = (Field**)realloc(constructor->fields, (constructor->num_fields + 1) * sizeof(Field*));
+    constructor->fields[constructor->num_fields++] = field;
+    return constructor;
 }
 
-#endif
+static inline Field *create_field(void) {
+    Field *field = (Field*)calloc(1, sizeof(Field));
+    field->type_name = NULL;
+    field->id = NULL;
+    return field;
+}
+
+static inline void free_rule(Rule *rule) {
+   if (rule == NULL)
+	   return;
+
+   for (size_t i = 0; i < rule->num_types; i++)
+	    free_type(rule->type[rule->num_type]);
+
+   free(rule->id);
+   free(rule->types);
+   free(rule);
+}
+
+static inline void free_sum(Sum *sum) {
+    if (sum == NULL)
+        return;
+
+    for (size_t i = 0; i < sum->num_cons; ++i)
+        free_constructor(sum->cons[i]);
+
+    free(sum->cons);
+    free(sum);
+}
+
+static inline void free_product(Product *product) {
+    if (product == NULL)
+        return;
+
+    for (size_t i = 0; i < product->num_fields; ++i)
+        free_field(product->fields[i]);
+
+
+    free(product->fields);
+    free(product);
+}
+
+static inline void free_constructor(Constructor *constructor) {
+    if (constructor == NULL)
+        return;
+
+    for (size_t i = 0; i < constructor->num_fields; ++i)
+        free_field(constructor->fields[i]);
+
+    free(constructor->id);
+    free(constructor->fields);
+    free(constructor);
+}
+
+static inline void free_field(Field *field) {
+   free(field->type_name);
+   free(field->id);
+   free(field);
+}
 

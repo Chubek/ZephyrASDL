@@ -15,22 +15,20 @@ void yyerror(const char *s);
 %union {
     char *string_val;
     AbsynNode *node_val;
-    AbsynNodeList *node_list;
 }
 
 %token EQUALS PIPE ATTRIBUTES LPAREN RPAREN COMMA QUESTION_MARK STAR SEMICOLON
 %token <string_val> CON_ID TYPE_ID
 
 %type <string_val> name_opt lhs
-%type <node_list> fields rhs defns
-%type <node_val> constr field attrs defn tuple
+%type <node_val> fields rhs defns sonstr field attrs defn tuple
 
 %start asdl
 
 %%
 
 defns    : defn				{ $$ = $1; }
-	 | defns ';' defn		{ $$ = append_list(&$1, $3); }
+	 | defns ';' defn		{ $$ = append_subtree(&$1, $3); }
 	 ;
 
 defn     : lhs '=' rhs			{ $$ = create_defn($1, $3); }
@@ -39,7 +37,7 @@ lhs      : TYPE_ID			{ $$ = $1; }
 	 ;
 
 rhs      : rhs_item			{ $$ = $1; }
-	 | rhs '|' rhs_item		{ $$ = append_list(&$1, $3); }
+	 | rhs '|' rhs_item		{ $$ = append_subtree(&$1, $3); }
 	 ;
 
 rhs_item : constr			{ $$ = $1; }
@@ -59,7 +57,7 @@ constr   : CON_ID			{ $$ = create_constructor($1, NULL); }
 	 ;
 
 fields   : field		{ $$ = $1; }
-	 | fields ',' field     { $$ = append_list(&$1, $3); }
+	 | fields ',' field     { $$ = append_subtree(&$1, $3); }
 	 ;
 
 field    : TYPE_ID name_opt { $$ = create_field($1, $2); }
