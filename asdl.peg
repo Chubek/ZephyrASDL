@@ -1,0 +1,45 @@
+Asdl <- __ Definitions __ EOF
+
+Definitions <- Definition ( __ ';' __ Definition )
+
+Definition <- TypeId __ '=' __ type
+
+Type <- SumType / ProductType
+
+ProductType <- Fields
+
+SumType <- Constructors __ Attr?
+
+Attr <- "attributes" __ fields
+
+Constructors <- Constructor __ ( __ '|' __ Constructor)*
+
+Constructor <- ConId __ Fields?
+
+Fields <- '(' __ Field ( __ ',' __ Field )* __ ')'
+
+Field <- TypeId ( '*' / '?' ) __ Ident 
+
+Ident <- CStyleIdentifier
+
+ConId <- PascalCaseIdentifier
+
+TypeId <- LowerCaseIdentifier
+
+CStyleIdentifer <- Letter ( Digit / Letter / '_' )*
+
+PascalCaseIdentifier <- UpperCaseLetter (UpperCaseLetter / Digit / '_')*
+
+LowerCaseIdentifier <- LowerCaseLetter (LowerCaseLetter / Digit / '_')*
+
+Letter <- UpperCaseLetter / LowerCaseLetter
+
+UpperCaseLetter <- [A-Z]
+
+LowerCaseLetter <- [a-z]
+
+Digit <- [0-9]
+
+__ <- [ \r\n\t]*
+
+EOF <- !.
