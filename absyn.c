@@ -64,3 +64,16 @@ struct Field {
 
 
 #include "parse.peg.h"
+
+Rule *rule, **rules;
+Type *type, **types;
+Sum  *sumtype, **sumtypes;
+Product *prodtype, **prodtypes;
+Constructor *con, **cons;
+Field *field, **fields;
+
+
+rule = rules = type = types = sumtype = sumtypes = prodtype = prodtypes = con = cons = field = fields = NULL;
+
+
+
