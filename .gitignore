@@ -4,8 +4,9 @@
 *.out
 *.a
 *.so
+*.o
 
-# Ignore temporary files
+# Ignore temporary files and directories
 
 *.tmp
 *.temp
@@ -22,10 +23,20 @@ test/
 temp/
 tmp/
 
-# Ignore Lex & Yacc files
+# Ignore Lex & Yacc-generated files
+
 *.y.c
 *.y.h
 *.yy.c
 *.yy.h
 *.tab.c
 *.tab.h
+
+# Ignore PEG-generated files
+
+*.peg.c
+*.peg.h
+
+# Ignore accidental files
+;
+:
