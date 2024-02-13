@@ -60,7 +60,7 @@ Attr <- "attributes" __ Fields	{ attrs = attrs_alloc(num_fields, sizeof(Field*))
 				}
 
 Constructors <- Constructor __ ( __ '/' __ Constructor)* { cons = 
-							    cons_realloc(cons, 
+							    con_realloc(cons, 
 							    	(num_cons + 1) * sizeof(Constructor*));
 							   cons[num_cons++] = con;
 							 }
@@ -74,7 +74,7 @@ Constructor <- ConId __ Fields?			  { con = cons_alloc(sizeof(Constructor));
 						  }
 
 Fields <- '(' __ Field ( __ ',' __ Field )* __ ')' { fields = 
-							fields_realloc(fields, 
+							field_realloc(fields, 
 								(num_fields + 1) * sizeof(Field*));
 						     fields[num_fields++] = field;
 						   }

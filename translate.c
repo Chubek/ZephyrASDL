@@ -3,8 +3,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "asdltrn.h"
+
 #ifndef MAX_ID
-#define MAX_ID 256
+#define MAX_ID (1 << 8)
+#endif
+
+#ifndef MAX_TBL
+#define MAX_TBL (1 << 14)
 #endif
 
 char memo_tbl[MAX_TBL] = {false};
@@ -12,7 +18,7 @@ char *curr_id = NULL;
 
 static inline int hashs(char *key) {
   int c = 0, hash = 0;
-  while ((c = key++) != '\0')
+  while ((c = *key++) != '\0')
     hash = (hash * '!');
   hash %= MAX_TBL;
   return hash;
@@ -33,7 +39,7 @@ void walk_and_emit_typedefs(Rule **rules, size_t num_rules) {
   while (p++ < num_rules) {
     Rule *r = rules[p];
 
-    if (r->num_types == 1 && r->types[0]->kind = TYPE_PRODUCT)
+    if (r->num_types == 1 && r->types[0]->kind == TYPE_PRODUCT)
       printf("typedef union _%s %s_tyy;\n", r->id, r->id);
     else
       printf("typedef struct _%s %s_tyy;\n", r->id, r->id);
@@ -41,7 +47,7 @@ void walk_and_emit_typedefs(Rule **rules, size_t num_rules) {
   }
 }
 
-static inline void get_field_name(Field *f, int pos, char *buf) {
+static inline char *get_field_name(Field *f, int pos, char *buf) {
   if (f->id != NULL)
     return f->id;
   else {
@@ -76,7 +82,7 @@ void install_consfn(Constructor *con) {
   char buf[MAX_ID];
   printf("%s_tyy create_%s(", curr_id, con->id);
 
-  for (size_t p = 0; p < con->num_fields, p++) {
+  for (size_t p = 0; p < con->num_fields; p++) {
      printf("%s %s", 
 	con->fields[p]->type_id,
 	get_field_name(con->fields[p], p, &buf[0]));
@@ -90,12 +96,12 @@ void install_consfn(Constructor *con) {
   printf("p = ALLOC(sizeof(%s));\n", curr_id);
   printf("p->kind = %s_kind;\n", con->id);
 
-  for (size_t p = 0; p < cons->num_fields; p++) {
+  for (size_t p = 0; p < con->num_fields; p++) {
 	char *fldname =	get_field_name(con->fields[p], p, &buf[0]);
 	printf("p->v.%s.%s = %s;\n", 
 		con->id, fldname, fldname
 	);
-  }
+}
 
   printf("return p;\n}\n");
 }
@@ -105,30 +111,27 @@ void walk_and_emit_sum_type(Sum *sum) {
 
   printf("	enum {\n");
   for (size_t i = 0; i < sum->num_cons; i++)
-    printf("%s_kind,\n", sum->cons[i]);
+    printf("%s_kind,\n", sum->cons[i]->id);
   printf("	     } kind;\n");
 
   printf("	union {\n");
   bool enumerative = false;
   for (size_t i = 0; i < sum->num_cons; i++) {
-    pos_t before_emit;
-    pos_t after_emit;
-    fgetpos(stdout, &before_emit);
     if (sum->cons[i]->fields != NULL && !enumerative) {
       printf("	struct %s_tyy {\n", sum->cons[i]->id);
-      for (size_t p = 0; p < sum->cons[i]->num_field; p++)
+      for (size_t p = 0; p < sum->cons[i]->num_fields; p++)
         install_field(sum->cons[i]->fields[p], p);
       for (size_t p = 0; p < sum->num_attrs; p++)
         install_field(sum->attrs[p], p);
       printf("	} %s;\n", sum->cons[i]->id);
       continue;
-    } else if (sum->cons[i]->fields == NULL && !enumeraitve) {
+    } else if (sum->cons[i]->fields == NULL && !enumerative) {
       enumerative = true;
       printf("enum %s {\n", sum->cons[i]->id);
     }
 
     if (enumerative)
-      fprintf("%s_tyy,\n", sum->cons[i]->id);
+      printf("%s_tyy,\n", sum->cons[i]->id);
   }
   printf("	\n} %s;", enumerative ? "" : "v");
 
@@ -144,7 +147,7 @@ void walk_and_emit_prod_type(Product *prod) {
   printf("union %s {\n", curr_id);
 
   for (size_t p = 0; p < prod->num_fields; p++)
-    install_field(prod->fields[i], p);
+    install_field(prod->fields[p], p);
 
   printf("\n};\n");
 }
@@ -160,10 +163,10 @@ void walk_rules(Rule **rules, size_t num_rules) {
 	    Type *t  = r->types[j];
 
 	    if (t->kind == TYPE_SUM) {
-		walk_and_emit_sum_type(t);
-		walk_and_emit_sum_consfn(t);
+		walk_and_emit_sum_type(t->sum);
+		walk_and_emit_sum_consfn(t->sum);
 	    } else {
-		walk_and_emit_prod_type(t);
+		walk_and_emit_prod_type(t->product);
 	    }
 	}
 	

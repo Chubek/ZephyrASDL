@@ -4,8 +4,9 @@
 #include <stdbool.h>
 #include <string.h>
 #include <getopt.h>
+#include <unistd.h>
 
-extern void pare_and_translate(const char *infile const char *outfile);
+extern void parse_and_translate(const char *infile, const char *outfile);
 
 int main(int argc, char **argv) {
    const char *infile = NULL;
