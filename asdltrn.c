@@ -6,32 +6,38 @@
 #include <getopt.h>
 #include <unistd.h>
 
-extern void parse_and_translate(const char *infile, const char *outfile);
+extern void parse_and_translate(void);
+
+FILE *yyin = NULL, *yyout = NULL;
 
 int main(int argc, char **argv) {
-   const char *infile = NULL;
-   const char *outfile = NULL;
-
    int c = 0;
+   yyin = stdin;
+   yyout = stdout;
    while ((c = getopt(argc, argv, "i:o:")) != -1) {
 	switch (c) {
 		case 'i':
-			infile = optarg;
+			yyin = fopen(optarg, "r");
 			break;
 		case 'o':
-			outfile = optarg;
+			yyout = fopen(optarg, "w");
 			break;
 		default:
 			break;
 	}
    }
 
-   if (infile == NULL && isatty(STDIN_FILENO)) {
-	fprintf(stderr, "No file givne, neither via STDIN or arguments\n");
+   if (yyin == stdin && isatty(STDIN_FILENO)) {
+	fprintf(stderr, "No input file was given, neither via STDIN nor commandline arguments\n");
 	return 1;
    }
 
-   parse_and_translate(infile, outfile);
+   parse_and_translate();
+
+   if (yyin != stdin)
+	   fclose(yyin);
+   if (yyout != stdout)
+	   fclose(yyout);
 
    return 0;
 }
