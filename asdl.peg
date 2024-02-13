@@ -5,7 +5,7 @@ Rules <- __ Rule __ { rules =
 		      rule[num_rules++] = rule;
 		    }
 
-Rule  <- TypeId '=' Types  { rule = rule_alloc(sizeof(Rule));
+Rule  <- TypeId __ '=' __ Types  { rule = rule_alloc(sizeof(Rule));
 			     rule->id = typeid;
 			     rule->types = types;
 			     rule->num_types = num_types;
@@ -43,14 +43,20 @@ ProductType <- Fields		 {
 SumType <- Constructors __ Attr? { sumtype = sum_alloc(sizeof(SumType));
 				   sumtype->constructors = cons;
 				   sumtype->num_constructors = num_cons;
-				   sumtype->attributes = attrs;
+				   sumtype->attrs = attrs;
+				   sumtype->num_attrs = num_attrs;
 				   last_type_kind = SUM;
 				   attrs = NULL;
+				   num_attrs = 0;
 				   cons = NULL;
 				   num_cons = 0;
 				 }
 
-Attr <- "attributes" __ Fields	{ attrs = fields; }
+Attr <- "attributes" __ Fields	{ attrs = fields; 
+				  num_attrs = num_fields; 
+				  fields = NULL;
+				  num_fields = 0;
+				}
 
 Constructors <- Constructor __ ( __ '/' __ Constructor)* { cons = 
 							    cons_realloc(cons, 
