@@ -9,6 +9,7 @@
 #alloc con_heap , con_alloc , con_realloc , con_dump
 #alloc type_heap , type_alloc , type_realloc , type_dump
 #alloc rule_heap , rule_alloc , rule_realloc , rule_dump
+#alloc attrs_heap , attrs_alloc , attrss_realloc , attrs_dump
 
 #hashfunc tree_hash_func
 
