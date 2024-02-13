@@ -23,7 +23,7 @@ bool memo_table_is_set(const char *key) {
   memo_tbl[hash] == true;
 }
 
-void emit_typedefs(Rule **rules, size_t num_rules) {
+void walk_and_emit_typedefs(Rule **rules, size_t num_rules) {
   int p = 0;
   while (p++ < num_rules) {     
 	Rule *r = rules[p];
@@ -36,36 +36,34 @@ void emit_typedefs(Rule **rules, size_t num_rules) {
    }
 }
 
-
-char alt_id[MAX_ID] = {0};
-
-static inline char *get_field_name(Field *f, int pos) {
+static inline void get_field_name(Field *f, int pos, char *buf) {
    if (f->id != NULL)
 	   return f->id;
    else {
-	memset(&alt_id[0], 0, MAX_ID);
-	sprintf(&alt_id[0], "%s_%d", f->type_id, pos);
-	return &alt_id[0];
+	memset(&buf[0], 0, MAX_ID);
+	sprintf(&buf[0], "%s_%d", f->type_id, pos);
+	return &buf[0];
    }
 }
 
-void emit_single_field(Field *f, int p) {
-  switch (f->kind) {
+void install_field(Field *f, int p) {
+   char buf[MAX_ID] = {0};
+   switch (f->kind) {
 	    SEQUENCE:
 		printf("SEQUENCE_FIELD(%s, %s);\n",
 				f->type_id, 
-				get_field_name(f, p));
+				get_field_name(f, p, &buf[0]));
 		break;
 	    OPTIONAL:
 		printf("SEQUENCE_FIELD(%s, %s);\n",
 				f->type_id, 
-				get_field_name(f, p));
+				get_field_name(f, p, &buf[0]));
 
 	 	break;
 	    NORMAL:
 		printf("NORMAL_FIELD(%s, %s);\n",
 				f->type_id,
-				get_field_name(f, p));
+				get_field_name(f, p, &buf[0]));
 	        break;
 	    default:
 		break;
@@ -73,28 +71,39 @@ void emit_single_field(Field *f, int p) {
 
 }
 
-void emit_con(Constructor *con, Attributes *attrs) {
-    printf("		struct {\n");
-    for (size_t p = 0; p < con->num_fields; p++)
-	    print_single_field(cons->fields[p], p);
-    printf("		} %s;\n", con->id)
-}
-
-void emit_sum_type(Sum *sum) {
+void walk_and_emit_sum_type(Sum *sum) {
     printf("struct %s {\n", curr_id);
     
 
     printf("	enum {\n");
     for (size_t i = 0; i < sum->num_cons; i++)
-	    printf("%s_kind, ", sum->cons[i]);
+	    printf("%s_kind,\n", sum->cons[i]);
     printf("	     } kind;\n");
     
     printf("	union {\n");
-    for (size_t i = 0; i < sum->num_cons; i++)
-	    emit_con(sum->cons[i], sum->attrs);
-    printf("	\n};");
+    for (size_t i = 0; i < sum->num_cons; i++) {
+    	for (size_t p = 0; p < sum->cons[i]->num_field; p++)
+		install_field(sum->cons[i]->fields[p], p);
+	for (size_t p = 0; p < sum->num_attrs; p++)
+		install_field(sum->attrs[p], p);
+    }    
+    printf("	\n} tyy;");
 
     printf("\n};\n");
 }
+
+void walk_and_emit_prod_type(Product *prod) {
+   printf("union %s {\n", curr_id);
+
+   for (size_t p = 0; p < prod->num_fields; p++)
+	   install_field(prod->fields[i], p);
+
+   printf("\n};\n");
+}
+
+
+
+
+
 
 
