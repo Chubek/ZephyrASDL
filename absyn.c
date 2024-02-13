@@ -64,21 +64,23 @@ struct Field {
 };
 
 
-#include "parse.peg.h"
 
 Rule *rule, **rules;
 Type *type, **types;
 Sum  *sumtype, **sumtypes;
 Product *prodtype, **prodtypes;
 Constructor *con, **cons;
-Field *field, **fields;
+Field *field, **fields, **attrs;
 
-size_t num_fields, num_cons, num_types, num_rules;
+size_t num_fields, num_cons, num_types, num_rules, num_attrs;
 
+rule = rules = type = types = sumtype = sumtypes = prodtype = prodtypes = con = cons = field = fields = attrs = NULL;
 
-rule = rules = type = types = sumtype = sumtypes = prodtype = prodtypes = con = cons = field = fields = NULL;
+num_fields = num_cons = num_typess = num_rules = num_attrs = 0;
 
-num_fields = num_cons = num_typess = num_rules = 0;
+#include "parse.peg.h"
+
+extern void walk_rules(Rules**, size_t);
 
 void parse_and_emit(const char *infile, const char *outfile) {
     if (infile != NULL)
