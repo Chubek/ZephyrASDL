@@ -73,7 +73,6 @@ void install_field(Field *f, int p) {
 
 void walk_and_emit_sum_type(Sum *sum) {
     printf("struct %s {\n", curr_id);
-    
 
     printf("	enum {\n");
     for (size_t i = 0; i < sum->num_cons; i++)
@@ -81,13 +80,28 @@ void walk_and_emit_sum_type(Sum *sum) {
     printf("	     } kind;\n");
     
     printf("	union {\n");
+    bool enumerative = false;
     for (size_t i = 0; i < sum->num_cons; i++) {
-    	for (size_t p = 0; p < sum->cons[i]->num_field; p++)
-		install_field(sum->cons[i]->fields[p], p);
-	for (size_t p = 0; p < sum->num_attrs; p++)
-		install_field(sum->attrs[p], p);
-    }    
-    printf("	\n} tyy;");
+	pos_t before_emit;
+	pos_t after_emit;
+	fgetpos(stdout, &before_emit);
+	if (sum->cons[i]->fields != NULL && !enumerative) {	
+		printf("	struct %s_tyy {\n", sum->cons[i]->id);
+		for (size_t p = 0; p < sum->cons[i]->num_field; p++)
+			install_field(sum->cons[i]->fields[p], p);
+		for (size_t p = 0; p < sum->num_attrs; p++)
+			install_field(sum->attrs[p], p);
+		printf("	} %s;\n", sum->cons[i]->id);
+		continue;
+	} else if (sum->cons[i]->fields == NULL && !enumeraitve) {
+		enumerative = true;
+		printf("enum %s {\n", sum->cons[i]->id);
+	}
+
+	if (enumerative)
+		fprintf("%s_tyy,\n", sum->cons[i]->id);
+    }
+    printf("	\n} %s;", enumerative ? "" : "v");
 
     printf("\n};\n");
 }
@@ -100,7 +114,6 @@ void walk_and_emit_prod_type(Product *prod) {
 
    printf("\n};\n");
 }
-
 
 
 
