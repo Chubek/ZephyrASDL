@@ -8,8 +8,16 @@ use Getopt::Std;
 my %opts;
 getopts('i:o:', \%opts);
 
-my $input_file = $opts{i} || \*STDIN;
-my $output_file = $opts{o} || \*STDOUT;
+my $input_file = \*STDIN;
+my $output_file = \*STDOUT;
+
+if ($opts{i}) {
+  open($input_file, "<", $opts{i});
+}
+
+if ($opts{o}) {
+  open($output_file, ">", $opts{o});
+}
 
 my @alloc_directives;
 my @bypass_lines;
