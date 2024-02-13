@@ -40,7 +40,8 @@ struct Type {
 struct Sum {
     Constructor **cons;
     size_t num_cons;
-    Attributes *attr;
+    Filed **attrs;
+    size_t num_attrs;
 };
 
 struct Product {
