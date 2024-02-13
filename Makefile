@@ -25,4 +25,4 @@ $(PERL_DEST) :
 
 .PHONY : clean
 clean : 
-	rm -f $(C_BIN) $(PERL_DEST) $(PEG_DEST)
+	rm -f $(BIN_DEST) $(PERL_DEST) $(PEG_DEST)
