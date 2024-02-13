@@ -30,9 +30,9 @@ void walk_and_emit_typedefs(Rule **rules, size_t num_rules) {
     Rule *r = rules[p];
 
     if (r->num_types == 1 && r->types[0]->kind = TYPE_PRODUCT)
-      printf("typedef union _%s %s;\n", r->id, r->id);
+      printf("typedef union _%s %s_tyy;\n", r->id, r->id);
     else
-      printf("typedef struct _%s %s;\n", r->id, r->id);
+      printf("typedef struct _%s %s_tyy;\n", r->id, r->id);
     memo_table_set(r->id);
   }
 }
@@ -66,6 +66,34 @@ void install_field(Field *f, int p) {
   default:
     break;
   }
+}
+
+void install_consfn(Constructor *con) {
+  char buf[MAX_ID];
+  printf("%s_tyy create_%s(", current_id, con->id);
+
+  for (size_t p = 0; p < con->num_fields, p++) {
+     printf("%s %s", 
+	con->fields[p]->type_id,
+	get_field_name(con->fields[p], p, &buff[0]));
+
+     if (p < con->num_fields - 1)
+	     putchar(',');
+  }
+
+  printf(") {\n");
+  printf("%s *p = NULL;\n", curr_id);
+  printf("p = ALLOC(sizeof(%s));\n", curr_id);
+  printf("p->kind = %s_kind;\n", con->id);
+
+  for (size_t p = 0; p < cons->num_fields; p++) {
+	char *fldname =	get_field_name(con->fields[p], p, &buff[0]);
+	printf("p->v.%s.%s = %s;\n", 
+		con->id, fldname, fldname
+	);
+  }
+
+  printf("return p;\n}\n");
 }
 
 void walk_and_emit_sum_type(Sum *sum) {
@@ -103,6 +131,11 @@ void walk_and_emit_sum_type(Sum *sum) {
   printf("\n};\n");
 }
 
+void walk_and_emit_sum_consfn(Sum *sum) {
+   for (size_t i = 0; i < sum->num_cons; i++)
+	   install_consfn(sum->cons[i]);
+}
+
 void walk_and_emit_prod_type(Product *prod) {
   printf("union %s {\n", curr_id);
 
@@ -111,3 +144,25 @@ void walk_and_emit_prod_type(Product *prod) {
 
   printf("\n};\n");
 }
+
+void walk_rules(Rule **rules, size_t num_rules) {
+   walk_and_emit_typedefs(rules, num_rules);
+
+   for (size_t i = 0; i < num_rules; i++) {
+	Rule *r = rules[i];
+	curr_id = r->id;
+
+	for (size_t j = 0; j < r->num_types; j++) {
+	    Type *t  = r->types[j];
+
+	    if (t->kind == TYPE_SUM) {
+		walk_and_emit_sum_type(t);
+		walk_and_emit_sum_consfn(t);
+	    } else {
+		walk_and_emit_prod_type(t);
+	    }
+	}
+	
+   }
+}
+
