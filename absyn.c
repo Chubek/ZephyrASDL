@@ -5,11 +5,10 @@
 #include <stdint.h>
 
 #alloc field_heap , field_alloc , field_realloc , field_dump
-#alloc type_heap , type_alloc , type_realloc , type_dump
 #alloc con_heap , con_alloc , con_realloc , con_dump
 #alloc type_heap , type_alloc , type_realloc , type_dump
 #alloc rule_heap , rule_alloc , rule_realloc , rule_dump
-#alloc attrs_heap , attrs_alloc , attrss_realloc , attrs_dump
+#alloc attrs_heap , attrs_alloc , attrs_realloc , attrs_dump
 
 #hashfunc tree_hash_func
 
@@ -92,4 +91,10 @@ void parse_and_emit(const char *infile, const char *outfile) {
     while (yyparse());
 
     walk_rules(rules, num_rules);
+	
+    field_dump();
+    con_dump();
+    type_dump();
+    rule_dump();
+    attrs_dump();
 }
