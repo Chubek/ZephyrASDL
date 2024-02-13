@@ -6,7 +6,7 @@ Rules <- __ Rule __ { rules =
 		    }
 
 Rule  <- TypeId __ '=' __ Types  { rule = rule_alloc(sizeof(Rule));
-			     rule->id = typeid;
+			     rule->id = type_id;
 			     rule->types = types;
 			     rule->num_types = num_types;
 			     types = NULL;
@@ -66,7 +66,7 @@ Constructors <- Constructor __ ( __ '/' __ Constructor)* { cons =
 							 }
 
 Constructor <- ConId __ Fields?			  { con = cons_alloc(sizeof(Constructor));
-							con->id = conid;
+							con->id = cons_id;
 							con->fields = fields;
 							con->num_fields = num_fields;
 							fields = NULL;
@@ -81,31 +81,31 @@ Fields <- '(' __ Field ( __ ',' __ Field )* __ ')' { fields =
 
 
 Field <- TypeId Modifier? __ Ident { field = fields_alloc(sizeof(Field));
-				field->type_id = typeid;
-				field->id = ident;
-				field->kind = MOD_LUT[mod];
+				field->type_id = type_id;
+				field->id = identifier;
+				field->kind = MOD_LUT[modifier];
 			   }
 
-Modifier <- < '*' / '?' >		{ mod = *yytext; }
+Modifier <- < '*' / '?' >		{ modifier = *yytext; }
 
-Ident <- CStyleIdentifier		{ ident = csid; }
+Ident <- CStyleIdentifier		{ identifier = cstyle_id; }
 
-ConId <- PascalCaseIdentifier		{ conid = pcid; }
+ConId <- PascalCaseIdentifier		{ cons_id = pascalcase_id; }
 
-TypeId <- LowerCaseIdentifier		{ typeid = lowid; }
+TypeId <- LowerCaseIdentifier		{ type_id = lowercase_id; }
 
 CStyleIdentifier <- < Letter ( Digit / Letter / '_' )* >			    {
-										csid = dup_str(&yytext[0],
+										cstyle_id = dup_str(&yytext[0],
 												yyleng);
 									    }
 
 PascalCaseIdentifier <- UpperCaseLetter (UpperCaseLetter / Digit / '_')*    {
-										pcid = dup_str(&yytext[0],
+										pascalcase_id = dup_str(&yytext[0],
 												yyleng);
 									    }
 
 LowerCaseIdentifier <- < LowerCaseLetter (LowerCaseLetter / Digit / '_')* > {
-										lowid = dup_str(&yytext[0],
+										lowercase_id = dup_str(&yytext[0],
 												yyleng);
 									    }
 

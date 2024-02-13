@@ -3,6 +3,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#ifndef MAX_ID
+#define MAX_ID 256
+#endif
+
 char memo_tbl[MAX_TBL] = {false};
 char *curr_id = NULL;
 
@@ -70,12 +74,12 @@ void install_field(Field *f, int p) {
 
 void install_consfn(Constructor *con) {
   char buf[MAX_ID];
-  printf("%s_tyy create_%s(", current_id, con->id);
+  printf("%s_tyy create_%s(", curr_id, con->id);
 
   for (size_t p = 0; p < con->num_fields, p++) {
      printf("%s %s", 
 	con->fields[p]->type_id,
-	get_field_name(con->fields[p], p, &buff[0]));
+	get_field_name(con->fields[p], p, &buf[0]));
 
      if (p < con->num_fields - 1)
 	     putchar(',');
@@ -87,7 +91,7 @@ void install_consfn(Constructor *con) {
   printf("p->kind = %s_kind;\n", con->id);
 
   for (size_t p = 0; p < cons->num_fields; p++) {
-	char *fldname =	get_field_name(con->fields[p], p, &buff[0]);
+	char *fldname =	get_field_name(con->fields[p], p, &buf[0]);
 	printf("p->v.%s.%s = %s;\n", 
 		con->id, fldname, fldname
 	);

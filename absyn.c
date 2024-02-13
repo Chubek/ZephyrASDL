@@ -65,24 +65,28 @@ struct Field {
 
 
 
-Rule *rule, **rules;
-Type *type, **types;
-Sum  *sumtype, **sumtypes;
-Product *prodtype, **prodtypes;
-Constructor *con, **cons;
-Field *field, **fields, **attrs;
+Rule *rule = NULL, **rules = NULL;
+Type *type = NULL, **types = NULL;
+Sum  *sumtype = NULL, **sumtypes = NULL;
+Product *prodtype = NULL, **prodtypes = NULL;
+Constructor *con = NULL, **cons = NULL;
+Field *field = NULL, **fields = NULL, **attrs = NULL;
 
-size_t num_fields, num_cons, num_types, num_rules, num_attrs;
+char modifier = 0, *lowercase_id = NULL, *pascalcase_id = NULL, *cstyle_id = NULL, *cons_id = NULL, *type_id = NULL, *identifier = NULL;
 
-rule = rules = type = types = sumtype = sumtypes = prodtype = prodtypes = con = cons = field = fields = attrs = NULL;
+enum FieldKind MOD_LUT['~'] = {
+  [0 .. '~'] = NORMAL,
+  ['*'] = SEQUENCE,
+  ['?'] = OPTIONAL,
+};
 
-num_fields = num_cons = num_typess = num_rules = num_attrs = 0;
+size_t num_fields = 0, num_cons = 0, num_types = 0, num_rules = 0, num_attrs = 0;
 
 #include "parse.peg.h"
 
 extern void walk_rules(Rules**, size_t);
 
-void parse_and_emit(const char *infile, const char *outfile) {
+void parse_and_translate(const char *infile, const char *outfile) {
     if (infile != NULL)
 	   stdin = freopen(infile, "r", stdin);
     if (outfile != NULL)
