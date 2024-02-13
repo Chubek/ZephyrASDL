@@ -2,7 +2,7 @@ Asdl <- Rules EOF
 
 Rules <- __ Rule __ { rules = 
 			rule_realloc(rules, (num_rules + 1) * sizeof(Rule*));
-		      rule[num_rules++] = rule;
+		      rules[num_rules++] = rule;
 		    }
 
 Rule  <- TypeId __ '=' __ Types  { rule = rule_alloc(sizeof(Rule));
@@ -24,7 +24,7 @@ Types <- Type ( __ '|' __ Type) { types =
 
 Type <- SumType / ProductType  { type = type_alloc(sizeof(Type));
 				      type->kind = last_type_kind;
-				      if (last_type_kind == TYPE_PRODUCT)
+				      if (last_type_kind == PRODUCT)
 				      	type->product = prodtype;
 				      else
 				      	type->sum = sumtype;
@@ -32,7 +32,7 @@ Type <- SumType / ProductType  { type = type_alloc(sizeof(Type));
 
 
 ProductType <- Fields		 {
-				    prodtype = prod_alloc(sizeof(ProductType));
+				    prodtype = prod_alloc(sizeof(Product));
 				    prodtype->fields = fields;
 				    prodtype->num_fields = num_fields;
 				    last_type_kind = PRODUCT;
@@ -40,9 +40,9 @@ ProductType <- Fields		 {
 				    num_fields = 0;
 				}
 
-SumType <- Constructors __ Attr? { sumtype = sum_alloc(sizeof(SumType));
-				   sumtype->constructors = cons;
-				   sumtype->num_constructors = num_cons;
+SumType <- Constructors __ Attr? { sumtype = sum_alloc(sizeof(Sum));
+				   sumtype->cons = cons;
+				   sumtype->num_cons = num_cons;
 				   sumtype->attrs = attrs;
 				   sumtype->num_attrs = num_attrs;
 				   last_type_kind = SUM;
@@ -52,7 +52,7 @@ SumType <- Constructors __ Attr? { sumtype = sum_alloc(sizeof(SumType));
 				   num_cons = 0;
 				 }
 
-Attr <- "attributes" __ Fields	{ attrs = attrs_alloc(num_fields, sizeof(Field*));
+Attr <- "attributes" __ Fields	{ attrs = attrs_alloc(num_fields * sizeof(Field*));
 				  memmove(&attrs[0], &fields[0], num_fields * sizeof(Field*)); 
 				  num_attrs = num_fields; 
 				  fields = NULL;
@@ -65,7 +65,7 @@ Constructors <- Constructor __ ( __ '/' __ Constructor)* { cons =
 							   cons[num_cons++] = con;
 							 }
 
-Constructor <- ConId __ Fields?			  { con = cons_alloc(sizeof(Constructor));
+Constructor <- ConId __ Fields?			  { con = con_alloc(sizeof(Constructor));
 							con->id = cons_id;
 							con->fields = fields;
 							con->num_fields = num_fields;
@@ -80,7 +80,7 @@ Fields <- '(' __ Field ( __ ',' __ Field )* __ ')' { fields =
 						   }
 
 
-Field <- TypeId Modifier? __ Ident { field = fields_alloc(sizeof(Field));
+Field <- TypeId Modifier? __ Ident { field = field_alloc(sizeof(Field));
 				field->type_id = type_id;
 				field->id = identifier;
 				field->kind = MOD_LUT[modifier];

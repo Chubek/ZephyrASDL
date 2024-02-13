@@ -7,6 +7,7 @@
 #alloc rule_heap, rule_alloc, rule_realloc, rule_dump
 #alloc attrs_heap, attrs_alloc, attrs_realloc, attrs_dump
 #alloc prod_heap, prod_alloc, prod_realloc, prod_dump
+#alloc sum_heap, sum_alloc, sum_realloc, sum_dump
 #alloc strn_heap, strn_alloc, strn_realloc, strn_dump
 #hashfunc tree_hash
 
@@ -34,6 +35,11 @@ char *dup_str(char *s, size_t n) {
     return memmove(&d[0], &s[0], n);
 }
 
+int last_type_kind = 0;
+
+#define SUM 1
+#define PRODUCT 2
+
 #include "parse.peg.h"
 
 extern void walk_rules(Rule**, size_t);
@@ -54,5 +60,6 @@ void parse_and_translate(const char *infile, const char *outfile) {
     rule_dump();
     attrs_dump();
     prod_dump();
+    sum_dump();
     strn_dump();
 }
