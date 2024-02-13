@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 
@@ -40,17 +41,23 @@ int last_type_kind = 0;
 #define SUM 1
 #define PRODUCT 2
 
-#include "parse.peg.h"
-
+extern FILE *yyin, *yyout;
 extern void walk_rules(Rule**, size_t);
 
-void parse_and_translate(const char *infile, const char *outfile) {
-    if (infile != NULL)
-	   stdin = freopen(infile, "r", stdin);
-    if (outfile != NULL)
-	    stdout = freopen(outfile, "w", stdout);
+#define YY_INPUT(buf, result, max_size)        		\
+{                                       	      	\
+   int yyc = fgetc(yyin);              	        	\
+   result = (EOF == yyc) ? -1 : (*(buf) = yyc, 1); 	\
+}
 
+
+#include "parse.peg.h"
+
+
+void parse_and_translate(void) {
     while (yyparse());
+
+    printf("2");
 
     walk_rules(rules, num_rules);
 	
