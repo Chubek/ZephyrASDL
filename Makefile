@@ -10,7 +10,7 @@ PERL = perl
 CC = gcc
 PEG = peg
 
-PERL_SCRIPT = AlocPP.pl
+PERL_SCRIPT = AllocPP.pl
 
 all : $(BIN_DEST)
 
