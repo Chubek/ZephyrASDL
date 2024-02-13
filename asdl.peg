@@ -52,7 +52,8 @@ SumType <- Constructors __ Attr? { sumtype = sum_alloc(sizeof(SumType));
 				   num_cons = 0;
 				 }
 
-Attr <- "attributes" __ Fields	{ attrs = fields; 
+Attr <- "attributes" __ Fields	{ attrs = attrs_alloc(num_fields, sizeof(Field*));
+				  memmove(&attrs[0], &fields[0], num_fields * sizeof(Field*)); 
 				  num_attrs = num_fields; 
 				  fields = NULL;
 				  num_fields = 0;
