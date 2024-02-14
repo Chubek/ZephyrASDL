@@ -36,6 +36,8 @@ tmp/
 
 *.peg.c
 *.peg.h
+parse.c
+parse.h
 
 # Ignore general generated fielss
 

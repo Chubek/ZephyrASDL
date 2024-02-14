@@ -53,8 +53,7 @@ char *readbuff = NULL;
     result= ('\0' == yyc) ? 0 : (*(buf)= yyc, 1); \
 }
 
-#include "parse.peg.h"
-
+int yyparse(void);
 
 void parse_and_translate(void) {
     long flen = 0;
@@ -79,3 +78,7 @@ void parse_and_translate(void) {
     strn_dump();
     buf_dump();
 }
+
+#include "parse.peg.h"
+
+
