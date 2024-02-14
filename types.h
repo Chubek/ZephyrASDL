@@ -1,7 +1,5 @@
-#ifndef ASDL_TRN_H
-#define ASDL_TRN_H
-
-#include <string.h>
+#ifndef TYPES_H
+#define TYPES_H
 
 typedef struct Rule Rule;
 typedef struct Type Type;
@@ -53,9 +51,6 @@ struct Field {
    char *type_id;
    char *id;
 };
-
-
-
 
 
 #endif

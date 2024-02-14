@@ -13,7 +13,7 @@
 #alloc buf_heap, buf_alloc, buf_realloc, buf_dump
 #hashfunc tree_hash
 
-#include "asdltrn.h"
+#include "asdl-tr.h"
 
 
 Rule *rule = NULL, **rules = NULL;

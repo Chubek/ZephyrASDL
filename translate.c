@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "asdltrn.h"
+#include "asdl-tr.h"
 
 #ifndef MAX_ID
 #define MAX_ID (1 << 8)
@@ -13,39 +13,7 @@
 #define MAX_TBL (1 << 14)
 #endif
 
-char memo_tbl[MAX_TBL] = {false};
 char *curr_id = NULL;
-
-static inline int hashstr(char *key) {
-  int c = 0, hash = 0;
-  while ((c = *key++) != '\0')
-    hash = (hash * '!');
-  hash %= MAX_TBL;
-  return hash;
-}
-
-void memo_table_set(const char *key) {
-  int hash = hashstr((char *)key);
-  memo_tbl[hash] = true;
-}
-
-bool memo_table_is_set(const char *key) {
-  int hash = hashstr((char *)key);
-  memo_tbl[hash] == true;
-}
-
-void walk_and_emit_typedefs(Rule **rules, size_t num_rules) {
-  int p = 0;
-  while (p++ < num_rules) {
-    Rule *r = rules[p];
-
-    if (r->type->kind == TYPE_PRODUCT)
-      printf("typedef union _%s %s_tyy;\n", r->id, r->id);
-    else
-      printf("typedef struct _%s %s_tyy;\n", r->id, r->id);
-    memo_table_set(r->id);
-  }
-}
 
 static inline char *get_field_name(Field *f, int pos, char *buf) {
   if (f->id != NULL)
@@ -152,20 +120,24 @@ void walk_and_emit_prod_type(Product *prod) {
   printf("\n};\n");
 }
 
-void walk_rules(Rule **rules, size_t num_rules) {
-   walk_and_emit_typedefs(rules, num_rules);
-
-   for (size_t i = 0; i < num_rules; i++) {
-	Rule *r = rules[i];
-	curr_id = r->id;
-
-	    if (r->type->kind == TYPE_SUM) {
-		walk_and_emit_sum_type(r->type->sum);
-		walk_and_emit_sum_consfn(r->type->sum);
-	    } else {
-		walk_and_emit_prod_type(r->type->product);
-	    }
-	}
-	
+void emit_typedef(Rule *r) {
+    if (r->type->kind == TYPE_PRODUCT) 
+    	printf("typedef union _%s %s_tyy;\n", r->id, r->id);
+    else
+	printf("typedef struct _%s %s_tyy;\n", r->id, r->id);
 }
+
+void translate_rule(Rule *r) {
+    emit_typedef(r);
+    
+    curr_id = r->id;
+
+    if (r->type->kind == TYPE_SUM) {
+	walk_and_emit_sum_type(r->type->sum);
+	walk_and_emit_sum_consfn(r->type->sum);
+    } else {
+	walk_and_emit_prod_type(r->type->product);
+    }
+}
+	
 
