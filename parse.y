@@ -4,22 +4,24 @@
 #include <string.h>
 
 
+#include "types.h"
+
 extern FILE* yyin;
 extern int yylex();
-extern void translate_rule(Rule* rule);
+extern void translate_rule(char*, Type*);
 void yyerror(const char* s);
-
-#include "types.h"
 
 int num_fields = 0;
 int num_attrs = 0;
 int num_cons = 0;
+int num_rules = 0;
 
 Field **fields = NULL;
 Field **attributes = NULL;
-Type **types == NULL;
+Type **types = NULL;
 Constructor **cons = NULL;
-
+Sum* sumtype = NULL;
+Product *prodtype = NULL;
 
 #include "absyn.gen.h"
 
@@ -33,7 +35,7 @@ Constructor **cons = NULL;
     Rule *rule;
     Rule **rules;
     Field *field;
-    Filed **fields;
+    Field **fields;
     Sum *sum;
     Product *product;
     Constructor *con;
@@ -69,8 +71,12 @@ rules : rule SEMICOLON rules { }
       ;
 
 rule : init_id type { translate_rule($1, $2); 
-     			num_rules = 0; num_cons = 0;
-			fields = NULL; cons = NULL; types = NULL; attributes = NULL; }
+     			num_cons = 0;
+			fields = NULL; 
+			cons = NULL; 
+			types = NULL; 
+			attributes = NULL; 
+		    }
      ;
 
 init_id : INIT_ID COLON { $$ = $1; }

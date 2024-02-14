@@ -14,7 +14,7 @@ int main(int argc, char **argv) {
    int c = 0;
    yyin = stdin;
 
-   while ((c = getopt(argc, argv)) != -1) {
+   while ((c = getopt(argc, argv, "i:o:")) != -1) {
   	switch (c) {
 		case 'i':
 			yyin = fopen(optarg, "i");

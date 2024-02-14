@@ -2,8 +2,9 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
-#include "asdl-tr.h"
+#include "types.h"
 
 #ifndef MAX_ID
 #define MAX_ID (1 << 8)
@@ -120,23 +121,19 @@ void walk_and_emit_prod_type(Product *prod) {
   printf("\n};\n");
 }
 
-void emit_typedef(Rule *r) {
-    if (r->type->kind == TYPE_PRODUCT) 
-    	printf("typedef union _%s %s_tyy;\n", r->id, r->id);
+void translate_rule(char *id, Type *t) {
+    if (t->kind == TYPE_PRODUCT) 
+    	printf("typedef union _%s %s_tyy;\n", id, id);
     else
-	printf("typedef struct _%s %s_tyy;\n", r->id, r->id);
-}
+	printf("typedef struct _%s %s_tyy;\n", id, id);
 
-void translate_rule(Rule *r) {
-    emit_typedef(r);
-    
-    curr_id = r->id;
+    curr_id = id;
 
-    if (r->type->kind == TYPE_SUM) {
-	walk_and_emit_sum_type(r->type->sum);
-	walk_and_emit_sum_consfn(r->type->sum);
+    if (t->kind == TYPE_SUM) {
+	walk_and_emit_sum_type(t->sum);
+	walk_and_emit_sum_consfn(t->sum);
     } else {
-	walk_and_emit_prod_type(r->type->product);
+	walk_and_emit_prod_type(t->product);
     }
 }
 	

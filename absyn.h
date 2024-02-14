@@ -4,7 +4,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#alloc fields_heap, fields_alloc, field_realloc, fields_dump
+#include "types.h"
+
+#alloc fields_heap, fields_alloc, fields_realloc, fields_dump
 #alloc cons_heap, cons_alloc, cons_realloc, cons_dump
 #alloc sums_heap, sums_alloc, sums_realloc, sums_dump
 #alloc prod_heap, prod_alloc, prod_realloc, prod_dump
@@ -28,16 +30,16 @@ void dump_heap(void) {
 static inline void add_field(char* type_id, enum FieldKind kind, char* id) {
     fields = fields_realloc(fields, (num_fields + 1) * sizeof(Field*));
     fields[num_fields] = fields_alloc(sizeof(Field));
-    fields[num_fields]->type_id = dup_str(type_id);
+    fields[num_fields]->type_id = type_id;
     fields[num_fields]->kind = kind;
-    fields[num_fields]->id = dup_str(id);
+    fields[num_fields]->id = id;
     num_fields++;
 }
 
 static inline void add_constructor(char* con_id, Field** fields, int num_fields) {
     cons = cons_realloc(cons, (num_cons + 1) * sizeof(Constructor*));
     cons[num_cons] = cons_alloc(sizeof(Constructor));
-    cons[num_cons]->con_id = dup_str(con_id);
+    cons[num_cons]->id =  con_id;
     cons[num_cons]->fields = fields;
     cons[num_cons]->num_fields = num_fields;
     num_cons++;
@@ -52,7 +54,7 @@ static inline void add_sum_type(Constructor** constructors, int num_constructors
 }
 
 static inline void add_product_type(Field** fields, int num_fields) {
-    prodtype = prods_alloc(sizeof(Product));
+    prodtype = prod_alloc(sizeof(Product));
     prodtype->fields = fields;
     prodtype->num_fields = num_fields;
 }
