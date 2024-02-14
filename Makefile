@@ -1,28 +1,42 @@
-PEG_SOURCE = asdl.peg
-PERL_SOURCE = absyn.c
-C_SOURCE = translate.c absyn.gen.c asdltrn.c
+LEX_SOURCE = scan.l
+YACC_SOURCE = parse.y
+PERL_SOURCE = absyn.h
+TRANSLATE_SOURCE = translate.c
 
-PEG_DEST = parse.peg.h
-PERL_DEST = absyn.gen.c
-BIN_DEST = asdltrn
+LEX_DEST = lex.yy.c
+YACC_DEST = y.tab.c
+PERL_DEST = absyn.gen.h
+BIN_DEST = asdl
+
+ENTRY_POINT = asdl.c
+
+C_SOURCE = $(ENTRY_POINT) $(TRANSLATE_SOURCE) $(LEX_DST) $(YACC_DEST)
+
+GEN_FILES = $(LEX_DEST) $(YACC_DEST) $(PERL_DEST)
 
 PERL = perl
 CC = gcc
-PEG = peg
+LEX = flex
+YACC = bison
 
 PERL_SCRIPT = AllocPP.pl
 
 all : $(BIN_DEST)
 
-$(BIN_DEST) : $(PEG_DEST)
+$(BIN_DEST) : $(LEX_DEST)
 	$(CC) -o $(BIN_DEST) $(DEBUG) $(C_SOURCE)
 
-$(PEG_DEST) : $(PERL_DEST)
-	$(PEG) -o $(PEG_DEST) $(PEG_VERBOSE) $(PEG_SOURCE)
+$(LEX_DEST) : $(YACC_DEST)
+	$(LEX) $(LEX_SOURCE)
+
+$(YACC_DEST) : $(PERL_DEST)
+	$(YACC) -dy $(YACC_SOURCE)
 
 $(PERL_DEST) : 
 	$(PERL) $(PERL_SCRIPT) -i $(PERL_SOURCE) -o $(PERL_DEST)
 
 .PHONY : clean
 clean : 
-	rm -f $(BIN_DEST) $(PERL_DEST) $(PEG_DEST)
+	rm -f $(GEN_FILES)
+
+

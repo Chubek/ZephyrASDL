@@ -19,7 +19,7 @@ Field **fields = NULL;
 Type **types == NULL;
 Constructor **cons = NULL;
 
-#include "absyn.h"
+#include "absyn.gen.h"
 
 
 %}
