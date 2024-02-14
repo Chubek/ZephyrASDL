@@ -1,26 +1,18 @@
-Asdl <- Rules EOF
+Asdl <- Rules __ EOF
+     / EOF { fprintf(stderr, "Error: empty file\n"); }
 
-Rules <- __ Rule __ { rules = 
-			rule_realloc(rules, (num_rules + 1) * sizeof(Rule*));
-		      rules[num_rules++] = rule;
-		    }
+Rules <- Rule ( __ ';' __ Rule )* { rules = 
+					rule_realloc(rules, (num_rules + 1) * sizeof(Rule*));
+		  		        rules[num_rules++] = rule;
+				     }
 
-Rule  <- TypeId __ '=' __ Types  { rule = rule_alloc(sizeof(Rule));
-			     rule->id = type_id;
-			     rule->types = types;
-			     rule->num_types = num_types;
-			     types = NULL;
-			     num_types = 0;
-			   }
-
-
-Types <- Type ( __ '|' __ Type) { types = 
-				   type_realloc(types, 
-				   	(num_types) * sizeof(Type*));
-				  types[num_types++] = type;				
-				}
-				       
-				      
+Rule  <- LhsTypeName Type __ { rule = rule_alloc(sizeof(Rule));
+					        rule->id = type_id;
+					        rule->type = type;
+					        type = NULL;
+						type_id = NULL;
+		  		 	      }
+LhsTypeName <- TypeId __ ( '=' / ':' ) __
 
 Type <- SumType / ProductType  { type = type_alloc(sizeof(Type));
 				      type->kind = last_type_kind;
@@ -59,7 +51,7 @@ Attr <- "attributes" __ Fields	{ attrs = attrs_alloc(num_fields * sizeof(Field*)
 				  num_fields = 0;
 				}
 
-Constructors <- Constructor __ ( __ '/' __ Constructor)* { cons = 
+Constructors <- Constructor ( __ '|' __ Constructor)* { cons = 
 							    con_realloc(cons, 
 							    	(num_cons + 1) * sizeof(Constructor*));
 							   cons[num_cons++] = con;
@@ -73,41 +65,49 @@ Constructor <- ConId __ Fields?			  { con = con_alloc(sizeof(Constructor));
 							num_fields = 0;
 						  }
 
-Fields <- '(' __ Field ( __ ',' __ Field )* __ ')' { fields = 
-							field_realloc(fields, 
-								(num_fields + 1) * sizeof(Field*));
-						     fields[num_fields++] = field;
-						   }
+Fields <- '(' __ FieldPairs __ ')'  { fields = field_realloc(fields, 
+					(num_fields + 1) * sizeof(Field*));
+	 	 	                fields[num_fields++] = field;
+				    }
 
+FieldPairs <-  Field ( __ ',' __ Field )*
 
-Field <- TypeId Modifier? __ Ident { field = field_alloc(sizeof(Field));
-				field->type_id = type_id;
+Field <- ModType __ IdentOpt { field = field_alloc(sizeof(Field));
 				field->id = identifier;
-				field->kind = MOD_LUT[modifier];
+				field->type_id = type_id;
+				 if (modifier[0] == '*' || modifier[0] == '?')
+				    type->kind = *modifier == '*' ? SEQUENCE : OPTIONAL;
+				else
+				    type->kind = NORMAL;				
+				modifier = NULL;
+				identifier = NULL;
+				type_id = NULL;
 			   }
 
-Modifier <- < '*' / '?' >		{ modifier = *yytext; }
+IdentOpt <- Ident?
 
-Ident <- CStyleIdentifier		{ identifier = cstyle_id; }
+ModType <- TypeId Modifier?
 
-ConId <- PascalCaseIdentifier		{ cons_id = pascalcase_id; }
+Ident <- CStyleIdentifier     __	{ identifier = cstyle_id; }
 
-TypeId <- LowerCaseIdentifier		{ type_id = lowercase_id; }
+ConId <- PascalCaseIdentifier __	{ cons_id = pascalcase_id; }
 
-CStyleIdentifier <- < Letter ( Digit / Letter / '_' )* >			    {
-										cstyle_id = dup_str(&yytext[0],
-												yyleng);
-									    }
+TypeId <- LowerCaseIdentifier __	{ type_id = lowercase_id; }
 
-PascalCaseIdentifier <- UpperCaseLetter (UpperCaseLetter / Digit / '_')*    {
-										pascalcase_id = dup_str(&yytext[0],
-												yyleng);
-									    }
+CStyleIdentifier <- < Letter ( Digit / Letter / '_' )* >   { cstyle_id = dup_str(&yytext[0],
+											yyleng);
+							   }
 
-LowerCaseIdentifier <- < LowerCaseLetter (LowerCaseLetter / Digit / '_')* > {
-										lowercase_id = dup_str(&yytext[0],
-												yyleng);
-									    }
+PascalCaseIdentifier <- < UpperCaseLetter ( Letter / Digit / '_')* >  { pascalcase_id = 
+ 									dup_str(&yytext[0],												   yyleng);
+								      }
+
+LowerCaseIdentifier <- < LowerCaseLetter ( LowerCaseLetter / Digit / '_')* > { lowercase_id = 
+									dup_str(&yytext[0], 
+											yyleng);
+								    }
+
+Modifier <- < "*" / "?" >    { modifier = dup_str(yytext, yyleng); }
 
 Letter <- UpperCaseLetter / LowerCaseLetter
 
@@ -117,6 +117,6 @@ LowerCaseLetter <- [a-z]
 
 Digit <- [0-9]
 
-__ <- [ \r\n\t]*
+__ <- ( " " / "\r\n" / "\t" / "\n" )*
 
 EOF <- !.

@@ -13,8 +13,7 @@ typedef struct Field Field;
 
 struct Rule {
     char *id;
-    Type **types;
-    size_t num_types;
+    Type *type;
 };
 
 

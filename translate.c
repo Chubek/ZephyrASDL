@@ -16,7 +16,7 @@
 char memo_tbl[MAX_TBL] = {false};
 char *curr_id = NULL;
 
-static inline int hashs(char *key) {
+static inline int hashstr(char *key) {
   int c = 0, hash = 0;
   while ((c = *key++) != '\0')
     hash = (hash * '!');
@@ -25,12 +25,12 @@ static inline int hashs(char *key) {
 }
 
 void memo_table_set(const char *key) {
-  int hash = hashs((char *)key);
+  int hash = hashstr((char *)key);
   memo_tbl[hash] = true;
 }
 
 bool memo_table_is_set(const char *key) {
-  int hash = hashs((char *)key);
+  int hash = hashstr((char *)key);
   memo_tbl[hash] == true;
 }
 
@@ -39,7 +39,7 @@ void walk_and_emit_typedefs(Rule **rules, size_t num_rules) {
   while (p++ < num_rules) {
     Rule *r = rules[p];
 
-    if (r->num_types == 1 && r->types[0]->kind == TYPE_PRODUCT)
+    if (r->type->kind == TYPE_PRODUCT)
       printf("typedef union _%s %s_tyy;\n", r->id, r->id);
     else
       printf("typedef struct _%s %s_tyy;\n", r->id, r->id);
@@ -159,17 +159,13 @@ void walk_rules(Rule **rules, size_t num_rules) {
 	Rule *r = rules[i];
 	curr_id = r->id;
 
-	for (size_t j = 0; j < r->num_types; j++) {
-	    Type *t  = r->types[j];
-
-	    if (t->kind == TYPE_SUM) {
-		walk_and_emit_sum_type(t->sum);
-		walk_and_emit_sum_consfn(t->sum);
+	    if (r->type->kind == TYPE_SUM) {
+		walk_and_emit_sum_type(r->type->sum);
+		walk_and_emit_sum_consfn(r->type->sum);
 	    } else {
-		walk_and_emit_prod_type(t->product);
+		walk_and_emit_prod_type(r->type->product);
 	    }
 	}
 	
-   }
 }
 

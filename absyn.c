@@ -10,6 +10,7 @@
 #alloc prod_heap, prod_alloc, prod_realloc, prod_dump
 #alloc sum_heap, sum_alloc, sum_realloc, sum_dump
 #alloc strn_heap, strn_alloc, strn_realloc, strn_dump
+#alloc buf_heap, buf_alloc, buf_realloc, buf_dump
 #hashfunc tree_hash
 
 #include "asdltrn.h"
@@ -22,7 +23,7 @@ Product *prodtype = NULL, **prodtypes = NULL;
 Constructor *con = NULL, **cons = NULL;
 Field *field = NULL, **fields = NULL, **attrs = NULL;
 
-char modifier = 0, *lowercase_id = NULL, *pascalcase_id = NULL, *cstyle_id = NULL, *cons_id = NULL, *type_id = NULL, *identifier = NULL;
+char *modifier = NULL, *lowercase_id = NULL, *pascalcase_id = NULL, *cstyle_id = NULL, *cons_id = NULL, *type_id = NULL, *identifier = NULL;
 
 enum FieldKind MOD_LUT['~'] = {
   ['*'] = SEQUENCE,
@@ -44,20 +45,27 @@ int last_type_kind = 0;
 extern FILE *yyin, *yyout;
 extern void walk_rules(Rule**, size_t);
 
-#define YY_INPUT(buf, result, max_size)        		\
-{                                       	      	\
-   int yyc = fgetc(yyin);              	        	\
-   result = (EOF == yyc) ? -1 : (*(buf) = yyc, 1); 	\
-}
+char *readbuff = NULL;
 
+#define YY_INPUT(buf, result, max_size)        \
+{                                              \
+    int yyc = *readbuff++;                          \
+    result= ('\0' == yyc) ? 0 : (*(buf)= yyc, 1); \
+}
 
 #include "parse.peg.h"
 
 
 void parse_and_translate(void) {
+    long flen = 0;
+    readbuff = 0;
+    fseek(yyin, 0, SEEK_END);
+    flen = ftell(yyin);
+    rewind(yyin);
+    readbuff = buf_alloc(flen + 1);
+    fread(&readbuff[0], 1, flen, yyin);
+ 
     while (yyparse());
-
-    printf("2");
 
     walk_rules(rules, num_rules);
 	
@@ -69,4 +77,5 @@ void parse_and_translate(void) {
     prod_dump();
     sum_dump();
     strn_dump();
+    buf_dump();
 }
