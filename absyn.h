@@ -10,10 +10,19 @@
 #alloc prod_heap, prod_alloc, prod_realloc, prod_dump
 #alloc str_heap, str_alloc, str_realloc, str_dump
 
+#hashfunc tree_hash
 
 char *dup_str(char *s, int n) {
     char *d = str_alloc(n);
     return memmove(&d[0], s, n);
+}
+
+void dump_heap(void) {
+   fields_dump();
+   cons_dump();
+   sums_dump();
+   prod_dump();
+   str_dump();
 }
 
 static inline void add_field(char* type_id, enum FieldKind kind, char* id) {
