@@ -2,6 +2,7 @@
 
 %{
 #include "y.tab.h"
+#include "absyn.h"
 %}
 
 %%
