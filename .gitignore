@@ -1,5 +1,5 @@
 # Ignore object files
-asdltrn
+asdl
 *.a
 *.out
 *.a
