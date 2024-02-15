@@ -8,6 +8,7 @@ extern int num_rules;
 
 extern Field **fields;
 extern Field **attributes;
+extern Type *type;
 extern Type **types;
 extern Constructor **cons;
 extern Sum* sumtype;
@@ -29,7 +30,7 @@ void yyerror(const char* s);
  Sum *sumv;
  Product *productv;
  Constructor *conv;
-Constructor **consv;
+ Constructor **consv;
  Type *typev;
  Type **typesv;
 }
@@ -49,6 +50,7 @@ Constructor **consv;
 %type <sumv> sum_type
 %type <fieldv> field
 %type <fieldsv> fields
+%type <fieldsv> fields_par
 %type <fieldsv> fields_opt
 %type <fieldsv> attr_opt
 %type <typev> type
@@ -70,17 +72,17 @@ rule : INIT_ID ASSIGN type { translate_rule($1, $3);
 		    }
      ;
 
-type : sum_type {  }
-     | product_type {  }
+type : sum_type { $$ = type; }
+     | product_type { $$ = type;  }
      ;
 
-sum_type : constructors attr_opt { add_sum_type($1, 
+sum_type : constructors attr_opt { add_sum_type(cons, 
 					num_cons, 
-					$2, 
+					attributes, 
 					num_attrs); }
 
 constructors : constructor PIPE constructors { }
-            | constructor { num_cons++; }
+            | constructor {  }
             ;
 
 constructor : con_id fields_opt { add_constructor($1, $2, num_fields); }
@@ -90,15 +92,18 @@ attr_opt : ATTRIBUTES fields { attributes = $2; num_attrs = num_fields; }
          | /* empty */ { }
          ;
 
-product_type : fields { add_product_type($1, num_fields); }
+product_type : fields_par { add_product_type($1, num_fields); }
              ;
 
 fields_opt : LPAREN fields RPAREN { }
 	   | /* empty */	{ }
            ;
 
+fields_par : LPAREN fields RPAREN { }
+	   ;
+
 fields : field COMMA fields	{ }
-        | field			{ num_fields++; }
+        | field			{ }
         ;
 
 field : type_id modifier_opt ident_opt { add_field($1, $2, $3); }

@@ -5,6 +5,7 @@
 #alloc sums_heap, sums_alloc, sums_realloc, sums_dump
 #alloc prod_heap, prod_alloc, prod_realloc, prod_dump
 #alloc str_heap, str_alloc, str_realloc, str_dump
+#alloc types_heap, types_alloc, types_realloc, types_dump
 
 #hashfunc tree_hash
 
@@ -15,6 +16,7 @@ int num_rules = 0;
 
 Field **fields = NULL;
 Field **attributes = NULL;
+Type *type = NULL;
 Type **types = NULL;
 Constructor **cons = NULL;
 Sum* sumtype = NULL;
@@ -26,6 +28,7 @@ void add_field(char* type_id, int mod, char* id) {
     fields[num_fields]->type_id = type_id;
     fields[num_fields]->kind = (mod == '*' || mod == '?') ? (mod == '*' ? SEQUENCE : OPTIONAL) : NORMAL;
     fields[num_fields]->id = id;
+    num_fields++;
 }
 
 void add_constructor(char* con_id, Field** fields, int num_fields) {
@@ -43,12 +46,18 @@ void add_sum_type(Constructor** constructors, int num_constructors, Field** attr
     sumtype->num_cons = num_constructors;
     sumtype->attrs = attributes;
     sumtype->num_attrs = num_attributes;
+    type = types_alloc(sizeof(Type));
+    type->kind = TYPE_SUM;
+    type->sum = sumtype;
 }
 
 void add_product_type(Field** fields, int num_fields) {
     prodtype = prod_alloc(sizeof(Product));
     prodtype->fields = fields;
     prodtype->num_fields = num_fields;
+    type = types_alloc(sizeof(Type));
+    type->kind = TYPE_PRODUCT;
+    type->product = prodtype;
 }
 
 char *dup_str(char *s, int n) {
@@ -62,6 +71,7 @@ void dump_heaps(void) {
    sums_dump();
    prod_dump();
    str_dump();
+   types_dump();
 }
 
 
