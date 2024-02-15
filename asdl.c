@@ -19,7 +19,7 @@ int main(int argc, char **argv) {
    while ((c = getopt(argc, argv, "i:o:")) != -1) {
   	switch (c) {
 		case 'i':
-			yyin = fopen(optarg, "i");
+			yyin = fopen(optarg, "r");
 			break;
 		default:
 			break;

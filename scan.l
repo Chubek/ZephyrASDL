@@ -17,13 +17,12 @@ extern char *dup_str(char *, int);
 %%
 
 "attributes"               { return ATTRIBUTES; }
-^[a-z][a-z0-9_]		   { yylval.str = dup_str(yytext, yyleng); return INIT_ID; }
+^[a-z][a-z0-9_]*	   { yylval.str = dup_str(yytext, yyleng); return INIT_ID; }
 [a-z_][a-z0-9_]*  	   { yylval.str = dup_str(yytext, yyleng); return TYPE_ID; }
 [A-Z][a-zA-Z0-9_]*         { yylval.str = dup_str(yytext, yyleng); return CON_ID; }
 "("                        { return LPAREN; }
 ")"                        { return RPAREN; }
 ","                        { return COMMA; }
-";"                        { return SEMICOLON; }
 "|"                        { return PIPE; }
 "?"                        { return QUESTION; }
 "*"                        { return STAR; }

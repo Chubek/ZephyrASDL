@@ -29,7 +29,7 @@ $(BIN_DEST) : $(LEX_DEST)
 	$(CC) -o $(BIN_DEST) $(DEBUG) $(C_SOURCE)
 
 $(LEX_DEST) : $(YACC_DEST)
-	$(LEX) $(LEX_SOURCE)
+	$(LEX) $(LDBG) $(LEX_SOURCE)
 
 $(YACC_DEST) : $(PERL_DEST)
 	$(YACC) -dy $(YACC_SOURCE)
