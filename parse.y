@@ -29,7 +29,7 @@ void yyerror(const char* s);
  Sum *sumv;
  Product *productv;
  Constructor *conv;
- Constructor **consv;
+Constructor **consv;
  Type *typev;
  Type **typesv;
 }
@@ -37,13 +37,12 @@ void yyerror(const char* s);
 %token <str> TYPE_ID
 %token <str> CON_ID
 %token <str> INIT_ID
-%token ATTRIBUTES LPAREN RPAREN COMMA EQUALS COLON SEMICOLON PIPE QUESTION STAR
+%token ATTRIBUTES LPAREN RPAREN COMMA ASSIGN SEMICOLON PIPE QUESTION STAR
 
 %type <str> ident_opt
 %type <num> modifier_opt
 %type <str> type_id
 %type <str> con_id
-%type <str> init_id
 %type <conv> constructor
 %type <consv> constructors
 %type <prodv> product_type
@@ -54,13 +53,15 @@ void yyerror(const char* s);
 %type <fieldsv> attr_opt
 %type <typev> type
 
+%start rules
+
 %%
 
 rules : rule SEMICOLON rules { }
       | /* empty */ { }
       ;
 
-rule : init_id type { translate_rule($1, $2); 
+rule : INIT_ID ASSIGN type { translate_rule($1, $3); 
      			num_cons = 0;
 			fields = NULL; 
 			cons = NULL; 
@@ -68,10 +69,6 @@ rule : init_id type { translate_rule($1, $2);
 			attributes = NULL; 
 		    }
      ;
-
-init_id : INIT_ID COLON { $$ = $1; }
-        | INIT_ID EQUALS { $$ = $1; }
-        ;
 
 type : sum_type {  }
      | product_type {  }
@@ -81,7 +78,6 @@ sum_type : constructors attr_opt { add_sum_type($1,
 					num_cons, 
 					$2, 
 					num_attrs); }
-         ;
 
 constructors : constructor PIPE constructors { }
             | constructor { num_cons++; }

@@ -1,3 +1,5 @@
-stmt : Compound(stmt, stmt)
+stmt = Compound(stmt, stmt)
+     ;
+
 
 
