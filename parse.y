@@ -10,6 +10,7 @@ extern Field **fields;
 extern Field **attributes;
 extern Type *type;
 extern Type **types;
+extern Constructor *con;
 extern Constructor **cons;
 extern Sum* sumtype;
 extern Product *prodtype;
@@ -23,16 +24,6 @@ void yyerror(const char* s);
 %union {
  char *str;
  int num;
- Rule *rulev;
- Rule **rulesv;
- Field *fieldv;
- Field **fieldsv;
- Sum *sumv;
- Product *productv;
- Constructor *conv;
- Constructor **consv;
- Type *typev;
- Type **typesv;
 }
 
 %token <str> TYPE_ID
@@ -44,55 +35,45 @@ void yyerror(const char* s);
 %type <num> modifier_opt
 %type <str> type_id
 %type <str> con_id
-%type <conv> constructor
-%type <consv> constructors
-%type <prodv> product_type
-%type <sumv> sum_type
-%type <fieldv> field
-%type <fieldsv> fields
-%type <fieldsv> fields_par
-%type <fieldsv> fields_opt
-%type <fieldsv> attr_opt
-%type <typev> type
 
 %start rules
 
 %%
 
-rules : rule SEMICOLON rules { }
+rules : rule rules { }
       | /* empty */ { }
       ;
 
-rule : INIT_ID ASSIGN type { translate_rule($1, $3); 
-     			num_cons = 0;
-			fields = NULL; 
-			cons = NULL; 
-			types = NULL; 
-			attributes = NULL; 
-		    }
+rule : INIT_ID ASSIGN type semi_opt  { translate_rule($1, type);   }     
      ;
 
-type : sum_type { $$ = type; }
-     | product_type { $$ = type;  }
+semi_opt : SEMICOLON
+	 | /* empty */
+
+type : sum_type {  }
+     | product_type {  }
      ;
 
 sum_type : constructors attr_opt { add_sum_type(cons, 
 					num_cons, 
 					attributes, 
-					num_attrs); }
+					num_attrs);
+					num_cons = 0;
+					cons = NULL;
+					attributes = NULL;}
 
 constructors : constructor PIPE constructors { }
             | constructor {  }
             ;
 
-constructor : con_id fields_opt { add_constructor($1, $2, num_fields); }
+constructor : con_id fields_opt { add_constructor($1, fields, num_fields); fields = NULL; num_fields = 0; }
             ;
 
-attr_opt : ATTRIBUTES fields { attributes = $2; num_attrs = num_fields; }
+attr_opt : ATTRIBUTES fields { attributes = dup_mem(fields, num_fields, sizeof(Field*)); num_attrs = num_fields; fields = NULL; num_fields = 0; }
          | /* empty */ { }
          ;
 
-product_type : fields_par { add_product_type($1, num_fields); }
+product_type : fields_par { add_product_type(fields, num_fields); }
              ;
 
 fields_opt : LPAREN fields RPAREN { }

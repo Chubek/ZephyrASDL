@@ -65,6 +65,11 @@ char *dup_str(char *s, int n) {
     return memmove(&d[0], s, n);
 }
 
+void *dup_mem(void *m, int n, int nmemb) {
+    void *d = str_alloc(n * nmemb);
+    return memmove(d, m, n * nmemb);
+}
+
 void dump_heaps(void) {
    fields_dump();
    cons_dump();

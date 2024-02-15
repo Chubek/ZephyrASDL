@@ -28,7 +28,7 @@ struct Rule {
 
 struct Type {
    enum TypeKind {
-	TYPE_SUM,
+    	TYPE_SUM,
 	TYPE_PRODUCT,
    } kind;
    union {
@@ -68,6 +68,7 @@ void add_constructor(char* con_id, Field** fields, int num_fields);
 void add_sum_type(Constructor** constructors, int num_constructors, Field** attributes, int num_attributes);
 void add_product_type(Field** fields, int num_fields);
 char *dup_str(char *s, int n);
+void *dup_mem(void *m, int n, int nmemb);
 void dump_heaps(void);
 
 #endif
