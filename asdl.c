@@ -6,6 +6,8 @@
 #include <getopt.h>
 #include <unistd.h>
 
+#include "types.h"
+
 extern FILE *yyin;
 extern int yyparse(void);
 extern void dump_heaps(void);

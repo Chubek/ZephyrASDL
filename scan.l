@@ -1,8 +1,17 @@
-%option noyywrap
 
 %{
+
+typedef struct Rule Rule;
+typedef struct Type Type;
+typedef struct Sum Sum;
+typedef struct Product Product;
+typedef struct Constructor Constructor;
+typedef struct Field Field;
+
+extern char *dup_str(char *, int);
+
 #include "y.tab.h"
-#include "absyn.gen.h"
+
 %}
 
 %%

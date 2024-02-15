@@ -1,18 +1,20 @@
 LEX_SOURCE = scan.l
 YACC_SOURCE = parse.y
-PERL_SOURCE = absyn.h
+PERL_SOURCE = absyn.c
 TRANSLATE_SOURCE = translate.c
 
 LEX_DEST = lex.yy.c
 YACC_DEST = y.tab.c
-PERL_DEST = absyn.gen.h
+PERL_DEST = absyn.gen.c
 BIN_DEST = asdl
+
+YACC_TAB = y.tab.h
 
 ENTRY_POINT = asdl.c
 
-C_SOURCE = $(ENTRY_POINT) $(TRANSLATE_SOURCE) $(LEX_DST) $(YACC_DEST)
+C_SOURCE = $(ENTRY_POINT) $(PERL_DEST) $(TRANSLATE_SOURCE) $(LEX_DEST) $(YACC_DEST)
 
-GEN_FILES = $(LEX_DEST) $(YACC_DEST) $(PERL_DEST) y.tab.h
+GEN_FILES = $(LEX_DEST) $(YACC_DEST) $(PERL_DEST) $(YACC_TAB)
 
 PERL = perl
 CC = gcc
@@ -32,7 +34,7 @@ $(LEX_DEST) : $(YACC_DEST)
 $(YACC_DEST) : $(PERL_DEST)
 	$(YACC) -dy $(YACC_SOURCE)
 
-$(PERL_DEST) : 
+$(PERL_DEST) : $(PERL_SOURCE)
 	$(PERL) $(PERL_SCRIPT) -i $(PERL_SOURCE) -o $(PERL_DEST)
 
 .PHONY : clean
