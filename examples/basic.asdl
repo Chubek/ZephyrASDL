@@ -1,5 +1,17 @@
+%%
+
+typedef int int;
+typedef char *string;
+
+%%
+
+
 stmt = Compound(stmt* s1, stmt? s2)
      | Single(expr)
+     ;
+
+expr = Add(int, int)
+     | Sub(int, int)
      ;
 
 
