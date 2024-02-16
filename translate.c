@@ -129,8 +129,10 @@ void install_consfn(Constructor *con) {
 
     for (size_t p = 0; p < con->num_fields; p++) {
         EMIT("%s %s", con->fields[p]->type_id, get_field_name(con->fields[p], p, &buff[0]));
-        if (p < con->num_fields - 1)
-            putchar(',');
+        if (p < con->num_fields - 1) {
+            fputc(',', yyout);
+	    fputc(' ', yyout);
+	}
     }
 
     PUTS(") {\n", yyout);
@@ -155,7 +157,7 @@ void install_consfn(Constructor *con) {
 void walk_and_emit_sum_type(Sum *sum) {
     char buff[MAX_ID];
 
-    EMIT("struct %s {\n", curr_id);
+    EMIT("struct _%s {\n", curr_id);
 
     indent++;
     PUTS("enum {\n", yyout);
@@ -195,7 +197,7 @@ void walk_and_emit_sum_type(Sum *sum) {
     indent--;
     
 
-    PUTS("};\n", yyout);
+    PUTS("};\n\n", yyout);
     
 }
 
@@ -214,7 +216,7 @@ void walk_and_emit_prod_type(Product *prod) {
         install_field(prod->fields[p], p);
     indent--;
 
-    PUTS("};\n", yyout);
+    PUTS("};\n\n", yyout);
 }
 
 
