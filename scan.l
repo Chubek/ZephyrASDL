@@ -1,4 +1,3 @@
-
 %{
 
 typedef struct Rule Rule;
@@ -28,8 +27,8 @@ extern char *dup_str(char *, int);
 "|"                        { return PIPE; }
 "?"                        { return QUESTION; }
 "*"                        { return STAR; }
-"%%"			   { BEGIN(EMBED); }
-<EMBED>"%%"		   { BEGIN(INITIAL); }
+"%%\n"			   { BEGIN(EMBED); fputs("/* embed-begin */\n", yyout); }
+<EMBED>"\n%%"		   { BEGIN(INITIAL); fputs("\n/* embed-end */\n\n", yyout); }
 <EMBED>.		   { fputc(*yytext, yyout); }
 [=:]			   { return ASSIGN; }
 [ \t\r\n]                  ;  // Skip whitespace
