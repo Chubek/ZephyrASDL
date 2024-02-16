@@ -2,8 +2,5 @@ stmt = Compound(stmt* s1, stmt? s2)
      | Single(expr)
      ;
 
-expr = Add(prim, prim)
-     | Sub(prim, prim)
-     ;
 
 
