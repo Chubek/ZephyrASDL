@@ -1,4 +1,4 @@
-stmt = Compound(stmt, stmt)
+stmt = Compound(stmt* s1, stmt? s2)
      | Single(expr)
      ;
 
