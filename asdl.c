@@ -8,6 +8,7 @@
 
 #include "types.h"
 
+extern fpos_t top;
 extern FILE *yyin;
 extern FILE *yyout;
 extern int yyparse(void);
@@ -38,6 +39,8 @@ int main(int argc, char **argv) {
   fputs(macro_normal_field, yyout);
   fputs(macro_sequence_field, yyout);
   fputs(macro_optional_field, yyout);
+  fputs("\n", yyout);
+  fgetpos(yyout, &top);
 
   yyparse();
 
