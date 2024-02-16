@@ -14,6 +14,8 @@ extern char *dup_str(char *, int);
 
 %}
 
+%x EMBED
+
 %%
 
 "attributes"               { return ATTRIBUTES; }
@@ -26,6 +28,9 @@ extern char *dup_str(char *, int);
 "|"                        { return PIPE; }
 "?"                        { return QUESTION; }
 "*"                        { return STAR; }
+"%%"			   { BEGIN(EMBED); }
+<EMBED>"%%"		   { BEGIN(INITIAL); }
+<EMBED>.		   { fputc(*yytext, yyout); }
 [=:]			   { return ASSIGN; }
 [ \t\r\n]                  ;  // Skip whitespace
 .                          ;
