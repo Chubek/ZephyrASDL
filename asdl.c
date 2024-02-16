@@ -12,7 +12,7 @@ extern FILE *yyin;
 extern FILE *yyout;
 extern int yyparse(void);
 extern void initialize(void);
-extern void finish_up_translate(void);
+extern void merge_temp_files(void);
 extern void dump_heaps(void);
 
 int main(int argc, char **argv) {
@@ -37,7 +37,7 @@ int main(int argc, char **argv) {
 
   yyparse();
 
-  finish_up_translate();
+  merge_temp_files();
 
   if (yyin != stdin)
     fclose(yyin);
