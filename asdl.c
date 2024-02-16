@@ -8,15 +8,12 @@
 
 #include "types.h"
 
-extern fpos_t top;
 extern FILE *yyin;
 extern FILE *yyout;
 extern int yyparse(void);
+extern void initialize(void);
+extern void finish_up_translate(void);
 extern void dump_heaps(void);
-
-extern const char *macro_normal_field;
-extern const char *macro_sequence_field;
-extern const char *macro_optional_field;
 
 int main(int argc, char **argv) {
   int c = 0;
@@ -36,16 +33,16 @@ int main(int argc, char **argv) {
     }
   }
 
-  fputs(macro_normal_field, yyout);
-  fputs(macro_sequence_field, yyout);
-  fputs(macro_optional_field, yyout);
-  fputs("\n", yyout);
-  fgetpos(yyout, &top);
+  initialize();
 
   yyparse();
 
+  finish_up_translate();
+
   if (yyin != stdin)
     fclose(yyin);
+  if (yyout != stdout);
+    fclose(yyout);
 
   dump_heaps();
 }
