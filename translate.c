@@ -15,9 +15,7 @@
 #define MAX_TBL (1 << 14)
 #endif
 
-#ifndef MAX_SEQUENCE_SIZE
-#define MAX_SEQUENCE_SIZE (1 << 10)
-#endif
+#define INIT_SEQ_SIZE (1 << 10)
 
 const char *macro_normal_field = "#define NORMAL_FIELD(type, name) type name;\n\n";
 
@@ -57,14 +55,15 @@ static char upper_to_lower_map[SCHAR_MAX] = {
 
 static char *curr_id = NULL;
 
-
 static int indent = 0;
-static fpos_t top;
 
 static FILE *tmp_defs = NULL;
 static FILE *tmp_decls = NULL;
 
 extern FILE *yyout;
+
+size_t seq_size = INIT_SEQ_SIZE;
+
 
 static inline char *to_lowercase(char *s, char *buff) {
    memset(buff, 0, MAX_ID);
@@ -271,7 +270,7 @@ void initialize(void) {
     tmp_defs = tmpfile();
     tmp_decls = tmpfile();
 
-    EMIT_DECL("#define MAX_SEQUENCE_SIZE %d\n\n", MAX_SEQUENCE_SIZE);
+    EMIT_DECL("#ifndef MAX_SEQUENCE_SIZE\n#define MAX_SEQUENCE_SIZE %lu\n#endif\n", seq_size);
     PUTS_DECL(macro_normal_field);
     PUTS_DECL(macro_sequence_field);
     PUTS_DECL(macro_optional_field);
