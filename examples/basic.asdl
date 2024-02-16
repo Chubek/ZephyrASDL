@@ -1,5 +1,9 @@
 stmt = Compound(stmt, stmt)
+     | Single(expr)
      ;
 
+expr = Add(prim, prim)
+     | Sub(prim, prim)
+     ;
 
 
