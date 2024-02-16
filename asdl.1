@@ -1,11 +1,11 @@
 .TH ASDL 1 "February 2024" "Version 1.0" "ASDL Manual"
 .SH NAME
-asdl \- ASDL language implementation
+asdl \- Zephyr ASDL language implementation
 .SH SYNOPSIS
 .B asdl
 [\-i \fIinput_file\fR] [\-\fIo\fR \fIoutput_file\fR] [\-\fIs\fR \fIsequence_size\fR]
 .SH DESCRIPTION
-\fBasdl\fR is a utility for working with the Abstract Syntax Description Language (ASDL). It reads input from a file or standard input, processes it according to the ASDL specification, and writes the result to a file or standard output.
+\fBasdl\fR is a utility for working with the Zephyr Abstract Syntax Description Language (ASDL). It reads input from a file or standard input, processes it according to the ASDL specification, and writes the result to a file or standard output.
 
 The following options are supported:
 .TP
@@ -21,10 +21,12 @@ Specify the sequence size. The default is 1024.
 To process a file named input.asdl and output the result to output.asdl:
 .PP
 .B asdl -i input.asdl -o output.asdl
+.TP 
+Please see the paper for more info on the syntax (you could also use the examples in the repository).
 .SH AUTHOR
-ASDL was written by John Doe <johndoe@example.com>.
+ASDL was written by Chubak Bidpaa <chubakbidpaa@gmail.com>.
 .SH COPYRIGHT
-Copyright \(co 2024 John Doe.
+Copyright \(co 2024 Chubak Bidpaa.
 
 ASDL is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -39,5 +41,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with ASDL.  If not, see <https://www.gnu.org/licenses/>.
 .SH SEE ALSO
+.TP 
+The Zephyr Abstract Syntax Description Language - Wang, Appel, Korn, Serra (1997) <https://www.cs.princeton.edu/~appel/papers/asdl97.pdf>
+.TP 
 The GitHub repository for ASDL can be found at: <https://github.com/Chubek/ZephyrASDL>
 
