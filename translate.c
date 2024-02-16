@@ -7,6 +7,11 @@
 
 #include "types.h"
 
+#alloc typedef_heap, typedef_alloc, typedef_realloc, typedef_dump
+
+#hashfunc  typdef_hash
+
+
 #ifndef MAX_ID
 #define MAX_ID (1 << 8)
 #endif
@@ -17,6 +22,10 @@
 
 #ifndef MAX_SEQ_COUNT
 #define MAX_SEQ_COUNT (1 << 14)
+#endif
+
+#ifndef MAX_TYDEF
+#define MAX_TYDEF (1 << 12)
 #endif
 
 const char *macro_normal_field = "#define NORMAL_FIELD(type, name) type name;\n\n";
@@ -55,10 +64,13 @@ static char upper_to_lower_map[SCHAR_MAX] = {
     ['Z'] = 'z'
 };
 
-char *curr_id = NULL;
-int indent = 0;
-fpos_t top;
-fpos_t curr;
+static char *curr_id = NULL;
+static char *type_defs = NULL;
+static int type_defs_len = MAX_TYDEF;
+static int type_defs_curs = 0;
+static int indent = 0;
+static fpos_t top;
+
 
 extern FILE *yyout;
 
@@ -219,17 +231,29 @@ void walk_and_emit_prod_type(Product *prod) {
     PUTS("};\n\n", yyout);
 }
 
+void save_typedef(char *id, bool uni) {
+   char buff[MAX_TYDEF] = {0};
+   int def_len = 0;
 
-void translate_rule(char *id, Type *t) {
-    fgetpos(yyout, &curr);
-    fsetpos(yyout, &top);
+   if (uni)
+        def_len = snprintf(&buff[0], MAX_TYDEF, "typedef union _%s %s_tyy;\n", id, id);
+   else
+        def_len = snprintf(&buff[0], MAX_TYDEF, "typedef struct _%s %s_tyy;\n", id, id);
 
+
+   type_defs = typedef_realloc(type_defs, type_defs_len + def_len + 1);
+   memmove(&type_defs[type_defs_curs], &buff[0], def_len);
+   type_defs_len += def_len;
+   type_defs_curs += def_len;
+}
+
+
+
+void translate_rule(char *id, Type *t) {     
     if (t->kind == TYPE_PRODUCT)
-        EMIT("typedef union _%s %s_tyy;\n", id, id);
+	save_typedef(id, true);
     else
-        EMIT("typedef struct _%s %s_tyy;\n", id, id);
-
-    fsetpos(yyout, &curr);
+	save_typedef(id, false);
 
     curr_id = id;
 
@@ -239,5 +263,27 @@ void translate_rule(char *id, Type *t) {
     } else {
         walk_and_emit_prod_type(t->product);
     }
+
+}
+
+
+void initialize(void) {
+    PUTS(macro_normal_field, yyout);
+    PUTS(macro_sequence_field, yyout);
+    PUTS(macro_optional_field, yyout);
+    
+    fputs("\n\n", yyout);
+
+    fgetpos(yyout, &top);
+
+    type_defs = typedef_alloc(type_defs_len);
+	
+}
+
+void finish_up_translate(void) {
+   rewind(yyout);
+   fputs(type_defs, yyout);
+   fputs("\n\n", yyout);
+   typedef_dump();
 }
 
