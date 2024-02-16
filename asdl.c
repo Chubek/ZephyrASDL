@@ -10,6 +10,7 @@
 
 extern FILE *yyin;
 extern FILE *yyout;
+extern size_t seq_size;
 extern int yyparse(void);
 extern void initialize(void);
 extern void merge_temp_files(void);
@@ -20,13 +21,16 @@ int main(int argc, char **argv) {
   yyin = stdin;
   yyout = stdout;
 
-  while ((c = getopt(argc, argv, "i:o:")) != -1) {
+  while ((c = getopt(argc, argv, "i:o:s:")) != -1) {
     switch (c) {
     case 'i':
       yyin = fopen(optarg, "r");
       break;
     case 'o':
       yyout = fopen(optarg, "w");
+      break;
+    case 's':
+      seq_size = strtoul(optarg, NULL, 10);
       break;
     default:
       break;
