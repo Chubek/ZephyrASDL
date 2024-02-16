@@ -15,6 +15,17 @@
 #define MAX_TBL (1 << 14)
 #endif
 
+#ifndef MAX_SEQ_COUNT
+#define MAX_SEQ_COUNT (1 << 14)
+#endif
+
+const char *macro_normal_field = "#define NORMAL_FIELD(type, name) type name;\n\n";
+
+const char *macro_sequence_field = "#define SEQUENCE_FIELD(type, name) type name[MAX_SEQUENCE_SIZE]; \\ \n\tint name##_count;\n\n";
+
+const char *macro_optional_field = "#define OPTIONAL_FIELD(type, name) type name; \\ \n\tint name##_present;\n\n";
+
+
 static char upper_to_lower_map[SCHAR_MAX] = {
     ['A'] = 'a',
     ['B'] = 'b',
