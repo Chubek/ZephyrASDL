@@ -82,28 +82,28 @@ static inline void print_indent() {
 	   fputs(s, f);				\
 	} while (0)
 
-static inline char *get_field_name(Field *f, int pos, char *buf) {
+static inline char *get_field_name(Field *f, int pos, char *buff) {
     if (f->id != NULL)
         return f->id;
     else {
-        memset(buf, 0, MAX_ID);
-        snprintf(buf, MAX_ID, "%s_%d", f->type_id, pos);
-        return buf;
+        memset(buff, 0, MAX_ID);
+        snprintf(buff, MAX_ID, "%s_%d", f->type_id, pos);
+        return buff;
     }
 }
 
 void install_field(Field *f, int p) {
     indent++;
-    char buf[MAX_ID] = {0};
+    char buff[MAX_ID] = {0};
     switch (f->kind) {
         case SEQUENCE:
-      	    EMIT("SEQUENCE_FIELD(%s, %s);\n", f->type_id, get_field_name(f, p, buf));
+      	    EMIT("SEQUENCE_FIELD(%s, %s);\n", f->type_id, get_field_name(f, p, &buff[0]));
             break;
 	case OPTIONAL:
-            EMIT("OPTIONAL_FIELD(%s, %s);\n", f->type_id, get_field_name(f, p, buf));
+            EMIT("OPTIONAL_FIELD(%s, %s);\n", f->type_id, get_field_name(f, p, &buff[0]));
             break;
         case NORMAL:
-            EMIT("NORMAL_FIELD(%s, %s);\n", f->type_id, get_field_name(f, p, buf));
+            EMIT("NORMAL_FIELD(%s, %s);\n", f->type_id, get_field_name(f, p, &buff[0]));
             break;
         default:
             break;
@@ -113,11 +113,11 @@ void install_field(Field *f, int p) {
 
 
 void install_consfn(Constructor *con) {
-    char buf[MAX_ID];
-    EMIT("%s_tyy create_%s(", curr_id, con->id);
+    char buff[MAX_ID];
+    EMIT("%s_tyy create_%s(", curr_id, to_lowercase(con->id, &buff[0]));
 
     for (size_t p = 0; p < con->num_fields; p++) {
-        EMIT("%s %s", con->fields[p]->type_id, get_field_name(con->fields[p], p, buf));
+        EMIT("%s %s", con->fields[p]->type_id, get_field_name(con->fields[p], p, &buff[0]));
         if (p < con->num_fields - 1)
             putchar(',');
     }
@@ -131,11 +131,11 @@ void install_consfn(Constructor *con) {
     EMIT("p->kind = %s_kind;\n", con->id);
 
     for (size_t p = 0; p < con->num_fields; p++) {
-        char *fldname = get_field_name(con->fields[p], p, buf);
+        char *fldname = get_field_name(con->fields[p], p, &buff[0]);
         EMIT("p->v.%s.%s = %s;\n", con->id, fldname, fldname);
     }
 
-    PUTS("return p;\n}\n", yyout);
+    PUTS("return p;\n}\n\n", yyout);
     
     indent--;
 }
