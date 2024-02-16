@@ -1,6 +1,8 @@
+#define _POSX_C_SOURCE 200112L
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
@@ -9,7 +11,7 @@
 
 #alloc typedef_heap, typedef_alloc, typedef_realloc, typedef_dump
 
-#hashfunc  typdef_hash
+#hashfunc  translate_hash
 
 
 #ifndef MAX_ID
@@ -20,8 +22,8 @@
 #define MAX_TBL (1 << 14)
 #endif
 
-#ifndef MAX_SEQ_COUNT
-#define MAX_SEQ_COUNT (1 << 14)
+#ifndef MAX_SEQUENCE_SIZE
+#define MAX_SEQUENCE_SIZE (1 << 10)
 #endif
 
 #ifndef MAX_TYDEF
@@ -30,9 +32,9 @@
 
 const char *macro_normal_field = "#define NORMAL_FIELD(type, name) type name;\n\n";
 
-const char *macro_sequence_field = "#define SEQUENCE_FIELD(type, name) type name[MAX_SEQUENCE_SIZE]; \\ \n\tint name##_count;\n\n";
+const char *macro_sequence_field = "#define SEQUENCE_FIELD(type, name) type name[MAX_SEQUENCE_SIZE]; int name##_count;\n\n";
 
-const char *macro_optional_field = "#define OPTIONAL_FIELD(type, name) type name; \\ \n\tint name##_present;\n\n";
+const char *macro_optional_field = "#define OPTIONAL_FIELD(type, name) type name; int name##_present;\n\n";
 
 
 static char upper_to_lower_map[SCHAR_MAX] = {
@@ -65,13 +67,16 @@ static char upper_to_lower_map[SCHAR_MAX] = {
 };
 
 static char *curr_id = NULL;
+
 static char *type_defs = NULL;
 static int type_defs_len = MAX_TYDEF;
 static int type_defs_curs = 0;
+
+
 static int indent = 0;
 static fpos_t top;
 
-
+static FILE *temp = NULL;
 extern FILE *yyout;
 
 static inline char *to_lowercase(char *s, char *buff) {
@@ -89,20 +94,20 @@ static inline char *to_lowercase(char *s, char *buff) {
 
 static inline void print_indent() {
     for (int i = 0; i < indent; i++) {
-        fprintf(yyout, "  ");
+        fprintf(temp, "  ");
     }
 }
 
 #define EMIT(s, ...)           			\
 	do {					\
             print_indent();    	        	\
-	    fprintf(yyout, s, __VA_ARGS__);	\
+	    fprintf(temp, s, __VA_ARGS__);	\
 	} while (0)
 
-#define PUTS(s, f)				\
+#define PUTS(s)					\
 	do {					\
 	   print_indent();			\
-	   fputs(s, f);				\
+	   fputs(s, temp);			\
 	} while (0)
 
 static inline char *get_field_name(Field *f, int pos, char *buff) {
@@ -142,12 +147,12 @@ void install_consfn(Constructor *con) {
     for (size_t p = 0; p < con->num_fields; p++) {
         EMIT("%s %s", con->fields[p]->type_id, get_field_name(con->fields[p], p, &buff[0]));
         if (p < con->num_fields - 1) {
-            fputc(',', yyout);
-	    fputc(' ', yyout);
+            fputc(',', temp);
+	    fputc(' ', temp);
 	}
     }
 
-    PUTS(") {\n", yyout);
+    PUTS(") {\n");
 
     indent++;
     
@@ -160,7 +165,7 @@ void install_consfn(Constructor *con) {
         EMIT("p->v.%s.%s = %s;\n", con->id, fldname, fldname);
     }
 
-    PUTS("return p;\n}\n\n", yyout);
+    PUTS("return p;\n}\n\n");
     
     indent--;
 }
@@ -172,15 +177,15 @@ void walk_and_emit_sum_type(Sum *sum) {
     EMIT("struct _%s {\n", curr_id);
 
     indent++;
-    PUTS("enum {\n", yyout);
+    PUTS("enum {\n");
     
     for (size_t i = 0; i < sum->num_cons; i++)
         EMIT("%s_kind,\n", sum->cons[i]->id);
     
     indent--;
-    PUTS("} kind;\n", yyout);
+    PUTS("} kind;\n");
 
-    PUTS("union {\n", yyout);
+    PUTS("union {\n");
 
     indent++;
 
@@ -209,7 +214,7 @@ void walk_and_emit_sum_type(Sum *sum) {
     indent--;
     
 
-    PUTS("};\n\n", yyout);
+    PUTS("};\n\n");
     
 }
 
@@ -228,7 +233,7 @@ void walk_and_emit_prod_type(Product *prod) {
         install_field(prod->fields[p], p);
     indent--;
 
-    PUTS("};\n\n", yyout);
+    PUTS("};\n\n");
 }
 
 void save_typedef(char *id, bool uni) {
@@ -268,22 +273,33 @@ void translate_rule(char *id, Type *t) {
 
 
 void initialize(void) {
-    PUTS(macro_normal_field, yyout);
-    PUTS(macro_sequence_field, yyout);
-    PUTS(macro_optional_field, yyout);
-    
-    fputs("\n\n", yyout);
+    temp = tmpfile();
 
-    fgetpos(yyout, &top);
+    EMIT("#define MAX_SEQUENCE_SIZE %d\n\n", MAX_SEQUENCE_SIZE);
+    PUTS(macro_normal_field);
+    PUTS(macro_sequence_field);
+    PUTS(macro_optional_field);
+    
+    fputs("\n\n", temp);
+
+    fgetpos(temp, &top);
 
     type_defs = typedef_alloc(type_defs_len);
 	
 }
 
 void finish_up_translate(void) {
+   rewind(temp);
    rewind(yyout);
+
    fputs(type_defs, yyout);
    fputs("\n\n", yyout);
+
+   char c = 0;
+   while ((c = getc(temp)) != EOF)
+	fputc(c, yyout);
+
+   fclose(temp);
    typedef_dump();
 }
 
