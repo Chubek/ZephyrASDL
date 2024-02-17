@@ -11,17 +11,13 @@
 #define MAX_ID (1 << 8)
 #endif
 
-#ifndef MAX_TBL
-#define MAX_TBL (1 << 14)
-#endif
-
 #define INIT_SEQ_SIZE (1 << 10)
 
-const char *macro_normal_field = "#define NORMAL_FIELD(type, name) type name;\n\n";
+const char *macro_normal_field = "#define NORMAL_FIELD(type, name) type name\n\n";
 
-const char *macro_sequence_field = "#define SEQUENCE_FIELD(type, name) type name[MAX_SEQUENCE_SIZE]; int name##_count;\n\n";
+const char *macro_sequence_field = "#define SEQUENCE_FIELD(type, name) type *name; int name##_count\n\n";
 
-const char *macro_optional_field = "#define OPTIONAL_FIELD(type, name) type name; int name##_present;\n\n";
+const char *macro_optional_field = "#define OPTIONAL_FIELD(type, name) type name; int name##_present\n\n";
 
 
 static char upper_to_lower_map[SCHAR_MAX] = {
@@ -57,6 +53,7 @@ static char *curr_id = NULL;
 
 static int indent = 0;
 
+static FILE *tmp_tydefs = NULL;
 static FILE *tmp_defs = NULL;
 static FILE *tmp_decls = NULL;
 
@@ -109,6 +106,20 @@ static inline void print_indent() {
 	} while (0)
 
 
+#define EMIT_TYDEF(s, ...)           			\
+	do {					\
+            print_indent();    	        	\
+	    fprintf(tmp_tydefs, s, __VA_ARGS__);	\
+	} while (0)
+
+#define PUTS_TYDEF(s)					\
+	do {					\
+	   print_indent();			\
+	   fputs(s, tmp_dydefs);			\
+	} while (0)
+
+
+
 static inline char *get_field_name(Field *f, int pos, char *buff) {
     if (f->id != NULL)
         return f->id;
@@ -124,13 +135,13 @@ void install_field(Field *f, int p) {
     char buff[MAX_ID] = {0};
     switch (f->kind) {
         case SEQUENCE:
-      	    EMIT_DEF("SEQUENCE_FIELD(%s, %s);\n", f->type_id, get_field_name(f, p, &buff[0]));
+      	    EMIT_DEF("SEQUENCE_FIELD(%s_tyy, %s);\n", f->type_id, get_field_name(f, p, &buff[0]));
             break;
 	case OPTIONAL:
-            EMIT_DEF("OPTIONAL_FIELD(%s, %s);\n", f->type_id, get_field_name(f, p, &buff[0]));
+            EMIT_DEF("OPTIONAL_FIELD(%s_tyy, %s);\n", f->type_id, get_field_name(f, p, &buff[0]));
             break;
         case NORMAL:
-            EMIT_DEF("NORMAL_FIELD(%s, %s);\n", f->type_id, get_field_name(f, p, &buff[0]));
+            EMIT_DEF("NORMAL_FIELD(%s_tyy, %s);\n", f->type_id, get_field_name(f, p, &buff[0]));
             break;
         default:
             break;
@@ -140,14 +151,15 @@ void install_field(Field *f, int p) {
 
 
 void install_consfn(Constructor *con) {
-    char buff[MAX_ID];
+    char buff[MAX_ID] = {0};
+    char tbuff[MAX_ID] = {0};
     EMIT_DEF("%s_tyy create_%s(", curr_id, to_lowercase(con->id, &buff[0]));
     EMIT_DECL("%s_tyy create_%s(", curr_id, to_lowercase(con->id, &buff[0]));
 
 
     for (size_t p = 0; p < con->num_fields; p++) {
-        EMIT_DEF("%s %s", con->fields[p]->type_id, get_field_name(con->fields[p], p, &buff[0]));
-        EMIT_DECL("%s %s", con->fields[p]->type_id, get_field_name(con->fields[p], p, &buff[0]));
+        EMIT_DEF("%s_tyy %c%s", con->fields[p]->type_id, con->fields[p]->kind == SEQUENCE ? '*' : ' ', get_field_name(con->fields[p], p, &buff[0]));
+        EMIT_DECL("%s_tyy %c%s", con->fields[p]->type_id, con->fields[p]->kind == SEQUENCE ? '*' : ' ', get_field_name(con->fields[p], p, &buff[0]));
         if (p < con->num_fields - 1) {
 	    PUTS_DEF(", ");
 	    PUTS_DECL(", ");
@@ -159,13 +171,13 @@ void install_consfn(Constructor *con) {
 
     indent++;
     
-    EMIT_DEF("%s *p = NULL;\n", curr_id);
-    EMIT_DEF("p = ALLOC(sizeof(%s));\n", curr_id);
+    EMIT_DEF("%s_tyy p = NULL;\n", curr_id);
+    EMIT_DEF("p = ALLOC(sizeof(%s_tyy));\n", curr_id);
     EMIT_DEF("p->kind = %s_kind;\n", con->id);
 
     for (size_t p = 0; p < con->num_fields; p++) {
-        char *fldname = get_field_name(con->fields[p], p, &buff[0]);
-        EMIT_DEF("p->v.%s.%s = %s;\n", con->id, fldname, fldname);
+        char *fldname = get_field_name(con->fields[p], p, &tbuff[0]);
+        EMIT_DEF("p->v.%s.%s = %s;\n", to_lowercase(con->id, &buff[0]), fldname, fldname);
     }
 
     PUTS_DEF("return p;\n}\n\n");
@@ -241,9 +253,9 @@ void walk_and_emit_prod_type(Product *prod) {
 
 void emit_typedef(char *id, bool uni) {
    if (uni)
-	EMIT_DECL("typedef union _%s %s_tyy;\n", id, id);
+	EMIT_TYDEF("typedef union _%s *%s_tyy;\n", id, id);
    else
-        EMIT_DECL("typedef struct _%s %s_tyy;\n", id, id);
+        EMIT_TYDEF("typedef struct _%s *%s_tyy;\n", id, id);
 }
 
 
@@ -267,6 +279,7 @@ void translate_rule(char *id, Type *t) {
 
 
 void initialize(void) {
+    tmp_tydefs = tmpfile();
     tmp_defs = tmpfile();
     tmp_decls = tmpfile();
 
@@ -277,10 +290,17 @@ void initialize(void) {
 }
 
 void merge_temp_files(void) {
+   rewind(tmp_tydefs);
    rewind(tmp_decls);
    rewind(tmp_defs);
 
    char c = 0;
+
+   while ((c = getc(tmp_tydefs)) != EOF)
+	fputc(c, yyout);
+
+   fputs("\n\n", yyout);
+
 
    while ((c = getc(tmp_decls)) != EOF)
 	fputc(c, yyout);
@@ -290,6 +310,7 @@ void merge_temp_files(void) {
    while ((c = getc(tmp_defs)) != EOF)
 	fputc(c, yyout);
 
+   fclose(tmp_tydefs);
    fclose(tmp_defs);
    fclose(tmp_decls);
 }
