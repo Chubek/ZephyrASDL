@@ -11,6 +11,7 @@ You can see `examples/basic.asdl` to get a clue. Please read the paper for more 
 ```
 sudo apt-get install flex bison
 make && make install
+man 1 asdl
 ```
 
 ## Uses for Zephyr ASDL
