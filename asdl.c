@@ -45,8 +45,9 @@ int main(int argc, char **argv) {
 
   if (yyin != stdin)
     fclose(yyin);
-  if (yyout != stdout);
-    fclose(yyout);
+  if (yyout != stdout)
+    ;
+  fclose(yyout);
 
   dump_heaps();
 }
