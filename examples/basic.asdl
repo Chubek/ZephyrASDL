@@ -1,7 +1,6 @@
 %%
-
-typedef int int;
-typedef char *string;
+typedef int int_tyy;
+typedef char *string_tyy;
 
 %%
 
@@ -12,6 +11,7 @@ stmt = Compound(stmt* s1, stmt? s2)
 
 expr = Add(int, int)
      | Sub(int, int)
+     | Cat(string, string)
      ;
 
 
