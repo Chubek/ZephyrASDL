@@ -19,4 +19,4 @@ This domain-specific language is mostly used to serialize a tree description int
 
 ## Notice
 
-Default types described by paper (`identifier` and `init`) are not (or yet to be) included. You can use a couple of `typedef` statements to have them in your file by inserting them as preludes between two `%%`s.
+Default types described by paper (`identifier` and `int`) are not (or yet to be) included. You can use a couple of `typedef` statements to have them in your file by inserting them as preludes between two `%%`s.
