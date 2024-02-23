@@ -1,11 +1,11 @@
-#include "types.h"
+#include "asdl.h"
 
 #alloc fields_heap, fields_alloc, fields_realloc, fields_dump
 #alloc cons_heap, cons_alloc, cons_realloc, cons_dump
 #alloc sums_heap, sums_alloc, sums_realloc, sums_dump
 #alloc prod_heap, prod_alloc, prod_realloc, prod_dump
 #alloc str_heap, str_alloc, str_realloc, str_dump
-#alloc types_heap, types_alloc, types_realloc, types_dump
+#alloc asdl.heap, types_alloc, types_realloc, types_dump
 
 #hashfunc tree_hash
 

@@ -6,7 +6,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "types.h"
+#include "asdl.h"
 
 extern FILE *yyin;
 extern FILE *yyout;

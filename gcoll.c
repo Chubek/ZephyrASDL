@@ -5,18 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "errors.h"
-#include "radish.h"
-
-typedef struct GCNode {
-  void *data;
-  struct GCNode *next;
-  int marked;
-} GCNode;
-
-typedef struct Heap {
-  GCNode *head;
-} Heap;
+#include "asdl.h"
 
 GCNode *new_gc_node(void *data) {
   GCNode *node = (GCNode *)malloc(sizeof(GCNode));
