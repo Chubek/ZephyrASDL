@@ -28,24 +28,25 @@ void finalize_translator(void) {
       outfile = fopen(translator.outpath, "w");
 
   while ((c = fgetc(translator.prelude) != EOF)
-		  fputc(c, outfile);
+     fputc(c, outfile);
 
   fputc('\n', outfile);
   
   while ((c = fgetc(translator.decls) != EOF)
-		  fputc(c, outfile);
+    fputc(c, outfile);
 
   fputc('\n', outfile);
 
   while ((c = fgetc(translator.defs) != EOF)
-		  fputc(c, outfile);
+    fputc(c, outfile);
 
   fputc('\n', outfile);
   
   while ((c = fgetc(translator.appendage) != EOF)
-		  fputc(c, outfile);
+    fputc(c, outfile);
 
-  fputc(c, outfile);
+  fputc('\n', outfile);
+  fclose(outfile);
 }
 
 void dump_translator(void) {
