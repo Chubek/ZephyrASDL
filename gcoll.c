@@ -84,7 +84,7 @@ void garbage_collect(Heap *heap) {
   sweep(heap);
 }
 
-void free_heap(Heap *heap) {
+void dump_heap(Heap *heap) {
   GCNode *current = heap->head;
   while (current != NULL) {
     GCNode *temp = current;

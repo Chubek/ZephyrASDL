@@ -94,7 +94,7 @@ void *heap_realloc(Heap *heap, void *data, size_t new_size);
 void mark(GCNode *node);
 void sweep(Heap *heap);
 void garbage_collect(Heap *heap);
-void free_heap(Heap *heap);
+void dump_heap(Heap *heap);
 
 char *gc_strndup(const char *str, size_t n);
 
