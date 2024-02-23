@@ -1,82 +1,54 @@
 #include "asdl.h"
 
-#alloc fields_heap, fields_alloc, fields_realloc, fields_dump
-#alloc cons_heap, cons_alloc, cons_realloc, cons_dump
-#alloc sums_heap, sums_alloc, sums_realloc, sums_dump
-#alloc prod_heap, prod_alloc, prod_realloc, prod_dump
-#alloc str_heap, str_alloc, str_realloc, str_dump
-#alloc asdl.heap, types_alloc, types_realloc, types_dump
+Heap *absyn_heap = NULL;
 
-#hashfunc tree_hash
+#define GC_ALLOC(size) heap_alloc(absyn_heap, size)
 
-int num_fields = 0;
-int num_attrs = 0;
-int num_cons = 0;
-int num_rules = 0;
-
-Field **fields = NULL;
-Field **attributes = NULL;
-Type *type = NULL;
-Type **types = NULL;
-Constructor **cons = NULL;
-Sum *sumtype = NULL;
-Product *prodtype = NULL;
-
-void add_field(char *type_id, int mod, char *id) {
-  fields = fields_realloc(fields, (num_fields + 1) * sizeof(Field *));
-  fields[num_fields] = fields_alloc(sizeof(Field));
-  fields[num_fields]->type_id = type_id;
-  fields[num_fields]->kind =
-      (mod == '*' || mod == '?') ? (mod == '*' ? SEQUENCE : OPTIONAL) : NORMAL;
-  fields[num_fields]->id = id;
-  num_fields++;
+void add_field(Field **prev, char *type_id, int modifier, char *id) {
+  Field *field = (Field *)GC_ALLOC(sizeof(Field));
+  field->type_id = type_id;
+  field->modifier = modifier;
+  field->id = id;
+  field->next = *prev;
+  *prev = field;
+  return field;
 }
 
-void add_constructor(char *con_id, Field **fields, int num_fields) {
-  cons = cons_realloc(cons, (num_cons + 1) * sizeof(Constructor *));
-  cons[num_cons] = cons_alloc(sizeof(Constructor));
-  cons[num_cons]->id = con_id;
-  cons[num_cons]->fields = fields;
-  cons[num_cons]->num_fields = num_fields;
-  num_cons++;
+void add_constructor(Constructor **prev, char *con_id, Field *fields,
+                     int num_fields) {
+  Constructor *constructor = (Constructor *)GC_ALLOC(sizeof(Constructor));
+  constructor->fields = fields;
+  constructor->num_fields = num_fields;
+  constructor->next = *prev;
+  *prev = constructor;
+  return constructor;
 }
 
-void add_sum_type(Constructor **constructors, int num_constructors,
-                  Field **attributes, int num_attributes) {
-  sumtype = sums_alloc(sizeof(Sum));
-  sumtype->cons = constructors;
-  sumtype->num_cons = num_constructors;
-  sumtype->attrs = attributes;
-  sumtype->num_attrs = num_attributes;
-  type = types_alloc(sizeof(Type));
-  type->kind = TYPE_SUM;
-  type->sum = sumtype;
+void add_sum_type(Rule **prev, Constructor *constructors, int num_constructors,
+                  Field *attributes, int num_attributes) {
+  Rule *rule = (Rule *)GC_ALLOC(sizeof(Rule));
+  rule->constructors = constructors;
+  rule->num_constructors = num_constructors;
+  rule->attributes = attributes;
+  rule->num_attributes = num_attributes;
+  rule->kind = TYPE_SUM;
+  rule->next = *prev;
+  *prev = rule;
+  return rule;
 }
 
-void add_product_type(Field **fields, int num_fields) {
-  prodtype = prod_alloc(sizeof(Product));
-  prodtype->fields = fields;
-  prodtype->num_fields = num_fields;
-  type = types_alloc(sizeof(Type));
-  type->kind = TYPE_PRODUCT;
-  type->product = prodtype;
+void add_product_type(Rule **prev, Field *fields, int num_fields) {
+  Rule *rule = (Rule *)GC_ALLOC(sizeof(Rule));
+  rule->fields = fields;
+  rule->num_fields = num_fields;
+  rule->kind = TYPE_PRODUCT;
+  rule->next = *prev;
+  *prev = rule;
+  return rule;
 }
 
-char *dup_str(char *s, int n) {
-  char *d = str_alloc(n);
-  return memmove(&d[0], s, n);
-}
-
-void *dup_mem(void *m, int n, int nmemb) {
-  void *d = str_alloc(n * nmemb);
-  return memmove(d, m, n * nmemb);
-}
-
-void dump_heaps(void) {
-  fields_dump();
-  cons_dump();
-  sums_dump();
-  prod_dump();
-  str_dump();
-  types_dump();
+char *gc_strndup(const char *str, size_t n) {
+  char *dup = (char *)GC_ALLOC(n);
+  memmove(dup, str, n);
+  return dup;
 }
