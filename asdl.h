@@ -100,5 +100,7 @@ char *gc_strndup(const char *str, size_t n);
 
 
 void init_translator(void);
+void finalize_translator(void);
+void dump_translator(void);
 
 #endif
