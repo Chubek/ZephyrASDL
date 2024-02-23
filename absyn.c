@@ -27,10 +27,11 @@ void add_constructor(Constructor **prev, char *con_id, Field *fields,
 void add_sum_type(Rule **prev, Constructor *constructors, int num_constructors,
                   Field *attributes, int num_attributes) {
   Rule *rule = (Rule *)GC_ALLOC(sizeof(Rule));
-  rule->constructors = constructors;
-  rule->num_constructors = num_constructors;
-  rule->attributes = attributes;
-  rule->num_attributes = num_attributes;
+  rule->type = (Type *)GC_ALLOC(sizeof(Type));
+  rule->type->sum->constructors = constructors;
+  rule->type->sum->num_constructors = num_constructors;
+  rule->type->sum->attributes = attributes;
+  rule->type->sum->num_attributes = num_attributes;
   rule->kind = TYPE_SUM;
   rule->next = *prev;
   *prev = rule;
@@ -39,9 +40,10 @@ void add_sum_type(Rule **prev, Constructor *constructors, int num_constructors,
 
 void add_product_type(Rule **prev, Field *fields, int num_fields) {
   Rule *rule = (Rule *)GC_ALLOC(sizeof(Rule));
-  rule->fields = fields;
-  rule->num_fields = num_fields;
-  rule->kind = TYPE_PRODUCT;
+  rule->type = (Type *)GC_ALLOC(sizeof(Type));
+  rule->type->product->fields = fields;
+  rule->type->product->num_fields = num_fields;
+  rule->type->kind = TYPE_PRODUCT;
   rule->next = *prev;
   *prev = rule;
   return rule;
