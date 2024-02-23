@@ -18,6 +18,7 @@ typedef enum TypeKind TypeKind;
 struct Rule {
   char *id;
   Type *type;
+  Rule *next;
 };
 
 struct Type {
@@ -32,20 +33,20 @@ struct Type {
 };
 
 struct Sum {
-  Constructor **cons;
+  Constructor *cons;
+  Field *attrs;
   size_t num_cons;
-  Field **attrs;
   size_t num_attrs;
 };
 
 struct Product {
-  Field **fields;
+  Field *fields;
   size_t num_fields;
 };
 
 struct Constructor {
   char *id;
-  Field **fields;
+  Field *fields;
   size_t num_fields;
 };
 
@@ -57,11 +58,12 @@ struct Field {
   } kind;
   char *type_id;
   char *id;
+  Field *next;
 };
 
 struct GCNode {
   void *data;
-  struct GCNode *next;
+  GCNode *next;
   int marked;
 };
 
@@ -69,14 +71,12 @@ struct Heap {
   GCNode *head;
 };
 
-void add_field(char *type_id, int opt, char *id);
-void add_constructor(char *con_id, Field **fields, int num_fields);
-void add_sum_type(Constructor **constructors, int num_constructors,
+void add_field(Field **prev, char *type_id, int opt, char *id);
+void add_constructor(Constructor **prev, char *con_id, Field **fields,
+                     int num_fields);
+void add_sum_type(Rule **prev, Constructor **constructors, int num_constructors,
                   Field **attributes, int num_attributes);
-void add_product_type(Field **fields, int num_fields);
-char *dup_str(char *s, int n);
-void *dup_mem(void *m, int n, int nmemb);
-void dump_heaps(void);
+void add_product_type(Rule **prev, Field **fields, int num_fields);
 
 GCNode *new_gc_node(void *data);
 Heap *create_heap();
@@ -87,5 +87,6 @@ void sweep(Heap *heap);
 void garbage_collect(Heap *heap);
 void free_heap(Heap *heap);
 
+char *gc_strndup(const char *str, size_t n);
 
 #endif
