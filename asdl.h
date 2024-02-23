@@ -33,8 +33,8 @@ struct Type {
 };
 
 struct Sum {
-  Constructor *cons;
-  Field *attrs;
+  Constructor *constructors;
+  Field *attributes;
   size_t num_cons;
   size_t num_attrs;
 };
@@ -52,9 +52,9 @@ struct Constructor {
 
 struct Field {
   enum FieldKind {
-    SEQUENCE,
-    OPTIONAL,
-    NORMAL,
+    FIELD_SEQUENCE,
+    FIELD_OPTIONAL,
+    FIELD_NORMAL,
   } kind;
   char *type_id;
   char *id;
