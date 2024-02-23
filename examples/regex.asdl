@@ -1,0 +1,16 @@
+%%
+
+#include <stdint.h>
+#include <stdbool.h>
+
+typedef uint8_t *string_tyy;
+
+%%
+
+
+regex = Concat(regex, regex)
+      | Alternate(regex, regex)
+      | Kleene(regex)
+      | WildCard(bool)
+      | Backref(regex)
+      ;
