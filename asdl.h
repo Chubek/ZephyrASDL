@@ -61,6 +61,15 @@ struct Field {
   Field *next;
 };
 
+struct Translator {
+   FILE *prelude;
+   FILE *decls;
+   FILE *defs;
+   FILE *appendage;
+   Rule *rules;
+   char *outpath;
+};
+
 struct GCNode {
   void *data;
   GCNode *next;
@@ -88,5 +97,8 @@ void garbage_collect(Heap *heap);
 void free_heap(Heap *heap);
 
 char *gc_strndup(const char *str, size_t n);
+
+
+void init_translator(void);
 
 #endif
