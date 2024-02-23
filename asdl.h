@@ -92,6 +92,8 @@ void dump_heap(Heap *heap);
 
 char *gc_strndup(const char *str, size_t n);
 
+void translate_rule_chain(Rule *rules);
+
 
 void init_translator(void);
 void finalize_translator(void);
