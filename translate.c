@@ -1,4 +1,4 @@
-#include <ctype.h>
+#include <alloca.h>
 #include <limits.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -10,6 +10,13 @@
 
 #include "asdl.h"
 
+#define STR_FORMAT(dest, fmt, ...)                                             \
+  do {                                                                         \
+    size_t l = strlen(fmt) + USHRT_MAX;                                        \
+    dest = alloca(l);                                                          \
+    snprintf(dest, l, fmt, __VA_ARGS__);                                       \
+  } while (0)
+
 #define EMIT_PRELUDE(fmt, ...) fprintf(translator.prelude, fmt, __VA_ARGS__)
 #define EMIT_DECLS(fmt, ...) fprintf(translator.decls, fmt, __VA_ARGS__)
 #define EMIT_DEFS(fmt, ...) fprintf(translator.defs, fmt, __VA_ARGS__)
@@ -19,6 +26,9 @@
 #define INDENT "    "
 #endif
 
+char *def_suffix = "def";
+char *fn_suffix = "create";
+char *arg_suffix = "arg";
 int indent_level = 0;
 Translator translator = {0};
 
@@ -128,7 +138,47 @@ static inline void install_function_return(void) {
   EMIT_DEFS("return p;\n}\n\n");
 }
 
-static inline print_indent(void) {
+static inline void print_indent(void) {
   for (int i = 0; i < indent_level; i++)
     fputs(translator.defs, INDENT);
+}
+
+static inline void translate_product_type(char *id, Product *product) {
+  char def = NULL;
+  char fn = NULL;
+  STR_FORMAT(def, "%s_%s", id, def_suffix);
+  STR_FORMAT(fn, "%s_%s", id, fn_suffix);
+  install_typedef(id, def);
+  install_funcdecl_init(def, fn);
+
+  size_t n = 0;
+  for (Field *f = product->fields; f != NULL; f = f->next, n++) {
+    char *argtyy = NULL;
+    char *argname = NULL;
+    char *cache = NULL;
+    STR_FORMAT(argtyy, "%s_%s", f->type_id, def_suffix);
+
+    if (f->id == NULL) {
+      STR_FORMAT(argname, "%s_%s%lu", f->type_id, arg_suffix, n);
+      STR_FORMAT(cache, "%s_%lu", f->type_id, n);
+    } else {
+      STR_FORMAT(argname, "%s_%s", f->id, arg_suffix);
+      STR_FORMAT(cache, "%s", f->id);
+    }
+
+    install_funcdecl_arg(argtyy, argname, f->next == NULL);
+    f->cache = cache;
+  }
+}
+
+static inline void translate_rule(Rule *rule) {
+  if (rule->type->kind == TYPE_PRODUCT)
+    translate_sum_type(rule->id, rule->type->sum);
+  else
+    translate_product_type(rule->id, rule->type->product);
+}
+
+void translate_rule_chain(Rule *rules) {
+  for (Rule *r = rules; r != NULL; r = r->next)
+    translate_rule(r);
 }
