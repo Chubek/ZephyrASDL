@@ -54,6 +54,7 @@ struct Field {
   } kind;
   char *type_id;
   char *id;
+  char *cache;
   Field *next;
 };
 

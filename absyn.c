@@ -22,6 +22,7 @@ Field *add_field(char *type_id, int modifier, char *id) {
   field->type_id = type_id;
   field->modifier = modifier;
   field->id = id;
+  field->cache = NULL;
   field->next = fields;
   fields = field;
   return field;
