@@ -1,11 +1,11 @@
 BIN_DEST = asdl
 MAN_DEST = man/man1
 
-YACC_TAB = y.tab.h
+YACC_TAB = parse.tab.h
 
 PERL_ABSYN_DEST = absyn.gen.c
 LEX_DEST = lex.yy.c
-YACC_DEST = y.tab.c
+YACC_DEST = parse.tab.c
 
 ENTRY_POINT = asdl.c
 
@@ -40,7 +40,7 @@ $(LEX_DEST) : $(YACC_DEST)
 	$(LEX) $(LDBG) $(LEX_SOURCE)
 
 $(YACC_DEST) : $(PERL_ABSYN_DEST)
-	$(YACC) -dy $(YACC_SOURCE)
+	$(YACC) -d$(YDBG) $(YACC_SOURCE)
 
 $(PERL_ABSYN_DEST) : $(PERL_ABSYN_SOURCE)
 	$(PERL) $(PERL_SCRIPT) -i $(PERL_ABSYN_SOURCE) -o $(PERL_ABSYN_DEST)

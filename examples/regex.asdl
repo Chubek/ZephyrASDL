@@ -1,5 +1,23 @@
+%%
+
+#include <stdint.h>
+
+typedef uint8_t char_tyy;
+typedef int int_tyy;
+
+%%
+
 regex = Cat(regex, regex)
       | Alt(regex, regex)
-      | Star
+      | Kleene(regex)
+      | Character(char)
+      | CharacterRange(char, char)
+      | AtleatOnce(regex)
+      | AtleastZero(regex)
+      | Exactly(int)
+      | Between(int, int)
       | Backref(regex)
+      | Wildcard
+      | LineBegin
+      | LineEnd
       ;

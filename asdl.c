@@ -21,16 +21,13 @@ int main(int argc, char **argv) {
   yyin = stdin;
   yyout = stdout;
 
-  while ((c = getopt(argc, argv, "i:o:s:")) != -1) {
+  while ((c = getopt(argc, argv, "i:o:")) != -1) {
     switch (c) {
     case 'i':
       yyin = fopen(optarg, "r");
       break;
     case 'o':
       yyout = fopen(optarg, "w");
-      break;
-    case 's':
-      seq_size = strtoul(optarg, NULL, 10);
       break;
     default:
       break;
@@ -45,9 +42,9 @@ int main(int argc, char **argv) {
 
   if (yyin != stdin)
     fclose(yyin);
+
   if (yyout != stdout)
-    ;
-  fclose(yyout);
+    fclose(yyout);
 
   dump_heaps();
 }

@@ -9,7 +9,7 @@ typedef struct Field Field;
 
 extern char *dup_str(char *, int);
 
-#include "y.tab.h"
+#include "parse.tab.h"
 
 %}
 
