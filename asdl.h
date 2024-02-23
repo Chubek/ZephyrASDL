@@ -35,19 +35,15 @@ struct Type {
 struct Sum {
   Constructor *constructors;
   Field *attributes;
-  size_t num_cons;
-  size_t num_attrs;
 };
 
 struct Product {
   Field *fields;
-  size_t num_fields;
 };
 
 struct Constructor {
   char *id;
   Field *fields;
-  size_t num_fields;
 };
 
 struct Field {
@@ -80,12 +76,10 @@ struct Heap {
   GCNode *head;
 };
 
-void add_field(Field **prev, char *type_id, int opt, char *id);
-void add_constructor(Constructor **prev, char *con_id, Field *fields,
-                     int num_fields);
-void add_sum_type(Rule **prev, Constructor *constructors, int num_constructors,
-                  Field *attributes, int num_attributes);
-void add_product_type(Rule **prev, Field *fields, int num_fields);
+void add_field(char *type_id, int opt, char *id);
+void add_constructor(char *con_id, Field *fields);
+void add_sum_type(Constructor *constructors, Field *attributes);
+void add_product_type(Field *fields);
 
 GCNode *new_gc_node(void *data);
 Heap *create_heap();
@@ -102,5 +96,9 @@ char *gc_strndup(const char *str, size_t n);
 void init_translator(void);
 void finalize_translator(void);
 void dump_translator(void);
+
+void init_absyn(void);
+void finalize_absyn(void);
+void dump_absyn(void);
 
 #endif
