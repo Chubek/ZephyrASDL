@@ -72,11 +72,11 @@ struct Heap {
 };
 
 void add_field(Field **prev, char *type_id, int opt, char *id);
-void add_constructor(Constructor **prev, char *con_id, Field **fields,
+void add_constructor(Constructor **prev, char *con_id, Field *fields,
                      int num_fields);
-void add_sum_type(Rule **prev, Constructor **constructors, int num_constructors,
-                  Field **attributes, int num_attributes);
-void add_product_type(Rule **prev, Field **fields, int num_fields);
+void add_sum_type(Rule **prev, Constructor *constructors, int num_constructors,
+                  Field *attributes, int num_attributes);
+void add_product_type(Rule **prev, Field *fields, int num_fields);
 
 GCNode *new_gc_node(void *data);
 Heap *create_heap();
