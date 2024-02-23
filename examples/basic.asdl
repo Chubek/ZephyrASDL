@@ -5,13 +5,15 @@ typedef char *string_tyy;
 %%
 
 
-stmt = Compound(stmt* s1, stmt? s2)
+stmt = Concat(stmt, stmt)
+     | Compound(stmt* s1, stmt? s2)
      | Single(expr)
      ;
 
 expr = Add(int, int)
      | Sub(int, int)
-     | Cat(string, string)
+     | Cat(string, string, expr)
+     | Eval(expr)
      ;
 
 
