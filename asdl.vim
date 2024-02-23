@@ -6,19 +6,25 @@ if exists("b:current_syntax")
     finish
 endif
 
-syntax region asdlPrelude start="%%\n" end="\n%%\n" contains=@ALL
+syntax include @asdlCCode syntax/c.vim
+
+syntax region asdlPrelude start="%%\n" end="\n%%\n" contains=@asdlCCode,asdlDelimiter
 
 syntax match asdlOperator "="
 syntax match asdlOperator ":"
 syntax match asdlOperator "|"
+syntax match asdlOperator ";"
+syntax match asdlOperator ","
 
-syntax match conId /[A-Z][a-zA-Z0-9_]*/
-syntax match typeId /[a-z][a-z0-9_]*/
+syntax match asdlConId /[A-Z][a-zA-Z0-9_]*/
+syntax match asdlTypeId /[a-z][a-z0-9_]*/
 
-highlight link asdlPrelude SpecialComment
+syntax match asdlDelimiter "%%" contained
+
+highlight link asdlDelimiter Todo
 highlight link asdlOperator Operator
-highlight link conId Identifier
-highlight link typeId Type
+highlight link asdlConId Identifier
+highlight link asdlTypeId Type
 
 let b:current_syntax = "asdl"
 
