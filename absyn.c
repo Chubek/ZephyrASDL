@@ -15,7 +15,7 @@ void init_absyn(void) {
   absyn_heap = create_heap();
 }
 
-void finalize_absyn(void) { translate_rule_chain(rules_head); }
+void finalize_absyn(void) { translate_rule_chain(rules); }
 
 void dump_absyn(void) { dump_heap(absyn_heap); }
 
