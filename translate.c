@@ -40,6 +40,13 @@ int indent_level = 0;
 
 Translator translator = {0};
 
+void assign_suffixes(char *def, char *fn, char *arg, char *kind) {
+   def_suffix = def;
+   fn_suffix = fn;
+   arg_suffix = arg;
+   kind_suffix = kind;
+}
+
 void init_translator(char *outpath) {
   translator.prelude = tmpfile();
   translator.decls = tmpfile();
