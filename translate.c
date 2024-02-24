@@ -32,6 +32,7 @@ char *fn_suffix = "create";
 char *arg_suffix = "arg";
 char *kind_suffix = "kind";
 int indent_level = 0;
+Heap *translate_heap = NULL;
 Translator translator = {0};
 
 void init_translator(void) {
