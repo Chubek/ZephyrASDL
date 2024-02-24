@@ -11,6 +11,7 @@ void init_absyn(void) {
   constructors = NULL;
   fields = NULL;
   rules = NULL;
+  absyn_heap = create_heap();
 }
 
 void finalize_absyn(void) { translate_rule_chain(rules_head); }
