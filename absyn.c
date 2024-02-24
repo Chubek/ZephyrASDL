@@ -1,8 +1,6 @@
 #include "asdl.h"
 
-#define GC_ALLOC(size) heap_alloc(absyn_heap, size)
-
-Heap *absyn_heap = NULL;
+#alloc absyn_heap, absyn_alloc, absyn_realloc, absyn_dump
 
 Field *fields;
 Constructor *constructors;
@@ -12,15 +10,14 @@ void init_absyn(void) {
   constructors = NULL;
   fields = NULL;
   rules = NULL;
-  absyn_heap = create_heap();
 }
 
 void finalize_absyn(void) { translate_rule_chain(rules); }
 
-void dump_absyn(void) { dump_heap(absyn_heap); }
+void dump_absyn(void) { absyn_dump(); }
 
 Field *add_field(char *type_id, int modifier, char *id) {
-  Field *field = (Field *)GC_ALLOC(sizeof(Field));
+  Field *field = (Field *)absyn_alloc(sizeof(Field));
   field->type_id = type_id;
   field->modifier = modifier;
   field->id = id;
@@ -31,7 +28,7 @@ Field *add_field(char *type_id, int modifier, char *id) {
 }
 
 Constructor *add_constructor(char *id, Field *fields) {
-  Constructor *constructor = (Constructor *)GC_ALLOC(sizeof(Constructor));
+  Constructor *constructor = (Constructor *)absyn_alloc(sizeof(Constructor));
   constructor->id = id;
   constructor->fields = fields;
   constructor->next = constructors;
@@ -40,8 +37,8 @@ Constructor *add_constructor(char *id, Field *fields) {
 }
 
 Rule *add_sum_type(Constructor *constructors, Field *attributes) {
-  Rule *rule = (Rule *)GC_ALLOC(sizeof(Rule));
-  rule->type = (Type *)GC_ALLOC(sizeof(Type));
+  Rule *rule = (Rule *)absyn_alloc(sizeof(Rule));
+  rule->type = (Type *)absyn_alloc(sizeof(Type));
   rule->type->sum->constructors = constructors;
   rule->type->sum->attributes = attributes;
   rule->kind = TYPE_SUM;
@@ -51,8 +48,8 @@ Rule *add_sum_type(Constructor *constructors, Field *attributes) {
 }
 
 Rule *add_product_type(Field *fields) {
-  Rule *rule = (Rule *)GC_ALLOC(sizeof(Rule));
-  rule->type = (Type *)GC_ALLOC(sizeof(Type));
+  Rule *rule = (Rule *)absyn_alloc(sizeof(Rule));
+  rule->type = (Type *)absyn_alloc(sizeof(Type));
   rule->type->product->fields = fields;
   rule->type->kind = TYPE_PRODUCT;
   rule->next = rules;
@@ -61,6 +58,6 @@ Rule *add_product_type(Field *fields) {
 }
 
 char *gc_strndup(const char *str, size_t n) {
-  char *dup = (char *)GC_ALLOC(n);
+  char *dup = (char *)absyn_alloc(n);
   return memmove(dup, str, n);
 }
