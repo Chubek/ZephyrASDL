@@ -23,6 +23,9 @@
 #define EMIT_DEFS(fmt, ...) fprintf(translator.defs, fmt, __VA_ARGS__)
 #define EMIT_APPENDAGE(fmt, ...) fprintf(translator.appendage, fmt, __VA_ARGS__)
 
+#define INC_INDENT() indent_level++
+#define DEC_INDENT() indent_level--
+
 #ifndef INDENT
 #define INDENT "    "
 #endif
@@ -35,13 +38,13 @@ int indent_level = 0;
 Heap *translate_heap = NULL;
 Translator translator = {0};
 
-void init_translator(void) {
+void init_translator(char *outpath) {
   translator.prelude = tmpfile();
   translator.decls = tmpfile();
   translator.defs = tmpfile();
   translator.appendage = tmpfile();
   translator.rules = NULL;
-  translator.outpath = NULL;
+  translator.outpath = outpath;
   translate_heap = create_heap();
 }
 
@@ -83,9 +86,14 @@ void dump_translator(void) {
   dump_heap(translator_heap);
 }
 
+static inline void print_indent(void) {
+  for (int i = 0; i < indent_level; i++)
+    fputs(translator.defs, INDENT);
+}
+
 static inline char *gc_strdup(char *str) {
   size_t len = strlen(str);
-  char *dup = heap_alloc(len);
+  char *dup = heap_alloc(translate_heap, len);
   return memmove(dup, str, len);
 }
 
@@ -120,22 +128,29 @@ static inline void install_macro(const char *name, const char *def) {
 }
 
 static inline void install_field(const char *type, const char *name) {
+  print_indent();
   EMIT_DEFS("%s %s;", type, name);
 }
 
 static inline void install_datatype_init(const char *kind, const char *name) {
+  print_indent();
   EMIT_DEFS("%s %s {\n");
 }
 
 static inline void install_datatype_field(const char *field, const char *end) {
+  print_indent();
   EMIT_DEFS("%s%s", field, end);
 }
 
 static inline void install_datatype_named_end(const char *name) {
+  print_indent();
   EMIT_DEFS("} %s;\n", name);
 }
 
-static inline void install_datatype_unnamed_end(void) { EMIT_DEFS("};\n"); }
+static inline void install_datatype_unnamed_end(void) {
+  print_indent();
+  EMIT_DEFS("};\n");
+}
 
 static inline void install_function_signature_init(const char *returns,
                                                    const char *name) {
@@ -148,21 +163,19 @@ static inline void install_function_signature_arg(const char *type,
 }
 
 static inline void install_function_alloc(const char *type) {
+  print_indent();
   EMIT_DEFS("%s *p = ALLOC(sizeof(%s_%s));\n\n", type, type, def_suffix);
 }
 
 static inline void install_function_assign(const char *field,
                                            const char *value) {
+  print_indent();
   EMIT_DEFS("p->%s = %s;\n", field, value);
 }
 
 static inline void install_function_return(void) {
+  print_indent();
   EMIT_DEFS("return p;\n}\n\n");
-}
-
-static inline void print_indent(void) {
-  for (int i = 0; i < indent_level; i++)
-    fputs(translator.defs, INDENT);
 }
 
 static inline void translate_product_type(char *id, Product *product) {
@@ -177,6 +190,8 @@ static inline void translate_product_type(char *id, Product *product) {
   install_funcdecl_init(def, fn);
 
   install_datatype_init("union", id);
+
+  INC_INDENT();
 
   size_t n = 0;
   for (Field *f = product->fields; f != NULL; f = f->next, n++) {
@@ -198,6 +213,8 @@ static inline void translate_product_type(char *id, Product *product) {
 
     f->cache = cache;
   }
+
+  DEC_INDENT();
 
   install_datatype_unnamed_end();
 }
@@ -259,26 +276,38 @@ static inline void install_field(Field *field, size_t num) {
 }
 
 static inline void install_constructor(Constructor *constructor) {
+  INC_INDENT();
+
   size_t n = 0;
   for (Field f = constructor->fields; f != NULL; f = f->next, n++) {
     install_field(f, n);
   }
+
+  DEC_INDENT();
 }
 
 static inline void install_attributes(Field *attributes) {
+  INC_INDENT();
+
   size_t n = 0;
   for (Field f = attributes; f != NULL; f = f->next, n++)
     install_field(f, n);
+
+  DEC_INDENT();
 }
 
 static inline void install_kinds(Constructor *constructors) {
   install_datatype_init("enum", " ");
+
+  INC_INDENT();
 
   for (Constructor *c = constructors; c != NULL; c = c->next) {
     char *kind_name = NULL;
     STR_FORMAT(kind_name, "%s_%s", to_lowercase(c->id), kind_suffix);
     install_datatype_field(kind_name, ",");
   }
+
+  DEC_INDENT();
 
   install_datatype_named_end("kind");
 }
@@ -293,6 +322,7 @@ static inline void install_constructor_function(char *id,
   STR_FORMAT(returns, "%s_%s", id, def_suffix);
   STR_FORMAT(fnname, "create_%s", lc_ident);
 
+  install_funcdecl_init(returns, fnname);
   install_function_signature_init(returns, fnname);
 
   size_t n = 0;
@@ -310,6 +340,7 @@ static inline void install_constructor_function(char *id,
 
     f->cache = argname;
 
+    install_funcdecl_arg(argtyy, argname, f->next == NULL);
     install_function_signature_arg(argtyy, argname, f->next == NULL);
   }
 
@@ -328,8 +359,11 @@ static inline void install_constructor_function(char *id,
 
     f->cache = argname;
 
+    install_funcdecl_arg(argtyy, argname);
     install_function_signature_arg(argtyy, argname, f->next == NULL);
   }
+
+  INC_INDENT();
 
   install_function_alloc(id);
 
@@ -350,6 +384,8 @@ static inline void install_constructor_function(char *id,
   }
 
   install_function_return();
+
+  DEC_INDENT();
 }
 
 static inline void translate_sum_type(char *id, Sum *sum) {
@@ -361,6 +397,8 @@ static inline void translate_sum_type(char *id, Sum *sum) {
 
   install_datatype_init("struct", id);
 
+  INC_INDENT();
+
   install_kinds(sum->constructors);
 
   for (Constructor *c = sum->constructors; c != NULL; c = c->next) {
@@ -369,6 +407,8 @@ static inline void translate_sum_type(char *id, Sum *sum) {
     install_attributes(sum->attributes);
     install_datatype_named_end(c->id);
   }
+
+  DEC_INDENT();
 
   install_datatype_unnamed_end();
 
