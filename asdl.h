@@ -83,7 +83,7 @@ void add_sum_type(Constructor *constructors, Field *attributes);
 void add_product_type(Field *fields);
 
 GCNode *new_gc_node(void *data);
-Heap *create_heap();
+Heap *create_heap(void);
 void *heap_alloc(Heap *heap, size_t size);
 void *heap_realloc(Heap *heap, void *data, size_t new_size);
 void mark(GCNode *node);
