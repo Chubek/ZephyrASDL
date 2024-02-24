@@ -9,42 +9,68 @@
 #include "asdl.h"
 
 extern FILE *yyin;
-extern FILE *yyout;
-extern size_t seq_size;
 extern int yyparse(void);
-extern void initialize(void);
-extern void merge_temp_files(void);
-extern void dump_heaps(void);
 
-int main(int argc, char **argv) {
+void parse_arguments(int argc, char **argv) {
   int c = 0;
-  yyin = stdin;
-  yyout = stdout;
 
-  while ((c = getopt(argc, argv, "i:o:")) != -1) {
+  char *def_suffix = "def", *fn_suffix = "fn", *arg_suffix = "arg",
+       *kind_suffix = "kind";
+  char *outpath = NULL;
+  yyin = stdin;
+
+  while ((c = getopt("o:d:f:a:k:h")) != -1) {
     switch (c) {
-    case 'i':
-      yyin = fopen(optarg, "r");
-      break;
     case 'o':
-      yyout = fopen(optarg, "w");
+      outpath = optarg;
+      break;
+    case 'd':
+      def_suffix = optarg;
+      break;
+    case 'a':
+      arg_suffix = optarg;
+      break;
+    case 'f':
+      fn_suffix = optarg;
+      break;
+    case 'k':
+      kind_suffix = optarg;
+      break;
+    case 'h':
+      display_help_and_exit();
       break;
     default:
       break;
     }
   }
 
-  initialize();
+  if (optind != argc - 2 && !isatty(STDIN_FILENO)) {
+    fprintf("Error: no input file given, neither via arguments nor STDIN\n");
+    exit(EXIT_FAILURE);
+  } else {
+    yyin = fopen(arg[optind], "r");
+  }
+
+  assign_suffixes(def_suffix, fn_suffix, arg_suffix, kind_suffix);
+  initialize_translator(outpath);
+  initialize_absyn();
+}
+
+int main(int argc, char **argv) {
+  parse_arguments(argc, argv);
 
   yyparse();
 
-  merge_temp_files();
+  finalize_absyn();
+  finalize_translator();
+
+  dump_absyn();
+  dump_translator();
 
   if (yyin != stdin)
     fclose(yyin);
 
-  if (yyout != stdout)
-    fclose(yyout);
+  fprintf(stderr, "Successfully tanslated\n");
 
-  dump_heaps();
+  return 0;
 }
