@@ -1,4 +1,5 @@
 #include <alloca.h>
+#include <ctype.h>
 #include <limits.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -40,6 +41,18 @@ void init_translator(void) {
   translator.appendage = tmpfile();
   translator.rules = NULL;
   translator.outpath = NULL;
+}
+
+static inline char *to_lowercase(char *str) {
+  char *original, *copy;
+
+  original = copy = gc_strndup(str, strlen(str));
+
+  while (*copy++) {
+    *copy = tolower(*copy);
+  }
+
+  return original;
 }
 
 void finalize_translator(void) {
@@ -127,7 +140,7 @@ static inline void install_function_signature_arg(const char *type,
 }
 
 static inline void install_function_alloc(const char *type) {
-  EMIT_DEFS("%s *p = ALLOC(sizeof(%s));\n\n", type, type);
+  EMIT_DEFS("%s *p = ALLOC(sizeof(%s_%s));\n\n", type, type, def_suffix);
 }
 
 static inline void install_function_assign(const char *field,
@@ -255,11 +268,80 @@ static inline void install_kinds(Constructor *constructors) {
 
   for (Constructor *c = constructors; c != NULL; c = c->next) {
     char *kind_name = NULL;
-    STR_FORMAT(kind_name, "%s_%s", c->id, kind_suffix);
+    STR_FORMAT(kind_name, "%s_%s", to_lowercase(c->id), kind_suffix);
     install_datatype_field(kind_name, ",");
   }
 
   install_datatype_named_end("kind");
+}
+
+static inline void install_constructor_function(char *id,
+                                                Constructor *constructor,
+                                                Field *attributes) {
+  char *lc_ident = to_lowercase(constructor->id);
+
+  char *returns = NULL;
+  char *fnname = NULL;
+  STR_FORMAT(returns, "%s_%s", id, def_suffix);
+  STR_FORMAT(fnname, "create_%s", lc_ident);
+
+  install_function_signature_init(returns, fnname);
+
+  size_t n = 0;
+  for (Field *f = constructor->fields; f != NULL; f = f->next, n++) {
+    char *argtyy = NULL;
+    char *argname = NULL;
+
+    STR_FORMAT(argtyy, "%s_%s", f->type_id, def_suffix);
+
+    if (f->id == NULL) {
+      STR_FORMAT(argname, "%s_%lu", f->type_id, n);
+    } else {
+      STR_FORMAT(argname, "%s", f->id);
+    }
+
+    f->cache = argname;
+
+    install_function_signature_arg(argtyy, argname, f->next == NULL);
+  }
+
+  n = 0;
+  for (Field *f = attributes; f != NULL; f = f->next, n++) {
+    char *argtyy = NULL;
+    char *argname = NULL;
+
+    STR_FORMAT(argtyy, "%s_%s", f->type_id, def_suffix);
+
+    if (f->id == NULL) {
+      STR_FORMAT(argname, "%s_%lu", f->type_id, n);
+    } else {
+      STR_FORMAT(argname, "%s", f->id);
+    }
+
+    f->cache = argname;
+
+    install_function_signature_arg(argtyy, argname, f->next == NULL);
+  }
+
+  install_function_alloc(id);
+
+  for (Field *f = constructor->fields; f != NULL; f = f->next) {
+    char *assignname = NULL;
+
+    STR_FORMAT(assignname, "%s->%s", lc_ident, f->cache);
+
+    install_function_assign(assignname, "NULL");
+  }
+
+  for (Field *f = attributes; f != NULL; f = f->next) {
+    char *assignname = NULL;
+
+    STR_FORMAT(assignname, "%s->%s", lc_ident, f->cache);
+
+    install_function_assign(assignname, "NULL");
+  }
+
+  install_function_return();
 }
 
 static inline void translate_sum_type(char *id, Sum *sum) {
@@ -274,13 +356,19 @@ static inline void translate_sum_type(char *id, Sum *sum) {
   install_kinds(sum->constructors);
 
   for (Constructor *c = sum->constructors; c != NULL; c = c->next) {
-    install_datatype_init("union", cr->id);
+    install_datatype_init("union", c->id);
     install_constructor(c);
     install_attributes(sum->attributes);
     install_datatype_named_end(c->id);
   }
 
   install_datatype_unnamed_end();
+
+  fputs("\n\n\n", translator.defs);
+
+  for (Constructor *c = sum->constructors; c != NULL; c = c->next) {
+    install_constructor_function(id, c, sum->attributes);
+  }
 }
 
 static inline void translate_rule(Rule *rule) {
