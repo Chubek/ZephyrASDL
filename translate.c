@@ -83,7 +83,9 @@ void finalize_translator(void) {
     fputc(c, outfile);
 
   fputc('\n', outfile);
-  fclose(outfile);
+
+  if (outfile != stdin)
+    fclose(outfile);
 }
 
 void dump_translator(void) {
