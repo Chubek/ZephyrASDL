@@ -78,8 +78,9 @@ void dump_translator(void) {
   fclose(translator.appendage);
 }
 
-static inline void install_typedef(const char *original, const char *alias) {
-  EMIT_DECLS("typedef %s %s;\n", original, alias);
+static inline void install_typedef(const char *original, const char *alias,
+                                   bool pointer) {
+  EMIT_DECLS("typedef %s%s%s;\n", original, pointer ? " *" : " ", alias);
 }
 
 static inline void install_funcdecl_init(const char *returns,
@@ -94,6 +95,10 @@ static inline void install_funcdecl_arg(const char *type, const char *name,
 
 static inline void install_macro(const char *name, const char *def) {
   EMIT_DEFS("#define %s %s\n", name, def);
+}
+
+static inline void install_field(const char *type, const char *name) {
+  EMIT_DEFS("%s %s;", type, name);
 }
 
 static inline void install_datatype_init(const char *kind, const char *name) {
@@ -146,7 +151,7 @@ static inline void translate_product_type(char *id, Product *product) {
   STR_FORMAT(def, "%s_%s", id, def_suffix);
   STR_FORMAT(fn, "%s_%s", id, fn_suffix);
 
-  install_typedef(tyy, def);
+  install_typedef(tyy, def, true);
   install_funcdecl_init(def, fn);
 
   install_datatype_init("union", id);
@@ -173,6 +178,78 @@ static inline void translate_product_type(char *id, Product *product) {
   }
 
   install_datatype_unnamed_end();
+}
+
+static inline void install_field(Field *field, size_t num) {
+  switch (field->kind) {
+  case FIELD_NORMAL:
+    char *tyy = NULL;
+    char *name = NULL;
+    STR_FORMAT(tyy, "%s_%s", field->type_id, def_suffix);
+
+    if (field->id == NULL) {
+      STR_FORMAT(name, "%s_%lu", field->type_id, num);
+    } else {
+      STR_FORMAT(name, "%s", filed->id);
+    }
+
+    install_field(tyy, tyy, name);
+    break;
+  case FIELD_SEQUENCE:
+    char *tyy = NULL;
+    char *name = NULL;
+    char *count = NULL;
+
+    STR_FORMAT(tyy, "%s_%s*", field->type_id, def_suffix);
+
+    if (field->id == NULL) {
+      STR_FORMAT(name, "%s_%lu", field->type_id, num);
+      STR_FORMAT(count, "%s_%lu_count", field->type_id, num);
+    } else {
+      STR_FORMAT(name, "%s", field->id);
+      STR_FORMAT(count, "%s_count", field->id);
+    }
+
+    install_field(tyy, name);
+    install_field("long", count);
+
+    break;
+  case FIELD_OPTIONAL:
+    char *tyy = NULL;
+    char *name = NULL;
+    char *exists = NULL;
+
+    STR_FORMAT(tyy, "%s_%s*", field->type_id, def_suffix);
+
+    if (field->id == NULL) {
+      STR_FORMAT(name, "%s_%lu", field->type_id, count);
+      STR_FORMAT(exits, "%s_%lu_exists", field->type_id, count);
+    } else {
+      STR_FORMAT(name, "%s", field->id);
+      STR_FORMAT(exists, "%s_exists", field->id);
+    }
+
+    install_field(tyy, name);
+    install_field("int", exists);
+
+    break;
+  }
+}
+
+static inline void install_constructor(Constructor *constructor) {
+  install_datatype_init("union", constructor->id);
+
+  size_t n = 0;
+  for (Field f = constructor->fields; f != NULL; f = f->next, n++) {
+    install_field(f, n);
+  }
+
+  install_datatype_named_end(constructor->id);
+}
+
+static inline void translate_sum_type(char *id, Sum *sum) {
+  size_t n = 0;
+  for (Field f = sum->co)
 }
 
 static inline void translate_rule(Rule *rule) {
