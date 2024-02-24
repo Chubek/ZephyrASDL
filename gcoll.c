@@ -17,7 +17,7 @@ GCNode *new_gc_node(void *data) {
   return node;
 }
 
-Heap *create_heap() {
+Heap *create_heap(void) {
   Heap *heap = (Heap *)malloc(sizeof(Heap));
   if (heap != NULL) {
     heap->head = NULL;
