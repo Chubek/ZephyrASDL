@@ -29,6 +29,7 @@
 char *def_suffix = "def";
 char *fn_suffix = "create";
 char *arg_suffix = "arg";
+char *kind_suffix = "kind";
 int indent_level = 0;
 Translator translator = {0};
 
@@ -237,19 +238,49 @@ static inline void install_field(Field *field, size_t num) {
 }
 
 static inline void install_constructor(Constructor *constructor) {
-  install_datatype_init("union", constructor->id);
-
   size_t n = 0;
   for (Field f = constructor->fields; f != NULL; f = f->next, n++) {
     install_field(f, n);
   }
+}
 
-  install_datatype_named_end(constructor->id);
+static inline void install_attributes(Field *attributes) {
+  size_t n = 0;
+  for (Field f = attributes; f != NULL; f = f->next, n++)
+    install_field(f, n);
+}
+
+static inline void install_kinds(Constructor *constructors) {
+  install_datatype_init("enum", " ");
+
+  for (Constructor *c = constructors; c != NULL; c = c->next) {
+    char *kind_name = NULL;
+    STR_FORMAT(kind_name, "%s_%s", c->id, kind_suffix);
+    install_datatype_field(kind_name, ",");
+  }
+
+  install_datatype_named_end("kind");
 }
 
 static inline void translate_sum_type(char *id, Sum *sum) {
-  size_t n = 0;
-  for (Field f = sum->co)
+  char *struct_name = NULL;
+  char *def_name = NULL;
+  STR_FORMAT(struct_name, "struct %s", id);
+  STR_FORMAT(def_name, "%s_%s", id, def_suffix);
+  install_typedef(struct_name, def_name);
+
+  install_datatype_init("struct", id);
+
+  install_kinds(sum->constructors);
+
+  for (Constructor *c = sum->constructors; c != NULL; c = c->next) {
+    install_datatype_init("union", cr->id);
+    install_constructor(c);
+    install_attributes(sum->attributes);
+    install_datatype_named_end(c->id);
+  }
+
+  install_datatype_unnamed_end();
 }
 
 static inline void translate_rule(Rule *rule) {
