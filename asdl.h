@@ -67,36 +67,18 @@ struct Translator {
    char *outpath;
 };
 
-struct GCNode {
-  void *data;
-  GCNode *next;
-  int marked;
-};
-
-struct Heap {
-  GCNode *head;
-};
-
 void add_field(char *type_id, int opt, char *id);
 void add_constructor(char *con_id, Field *fields);
 void add_sum_type(Constructor *constructors, Field *attributes);
 void add_product_type(Field *fields);
 
-GCNode *new_gc_node(void *data);
-Heap *create_heap(void);
-void *heap_alloc(Heap *heap, size_t size);
-void *heap_realloc(Heap *heap, void *data, size_t new_size);
-void mark(GCNode *node);
-void sweep(Heap *heap);
-void garbage_collect(Heap *heap);
-void dump_heap(Heap *heap);
-
 char *gc_strndup(const char *str, size_t n);
 
 void translate_rule_chain(Rule *rules);
 
+void assign_suffixes(char *def, char *fn, char *arg, char *kind);
 
-void init_translator(void);
+void init_translator(char*);
 void finalize_translator(void);
 void dump_translator(void);
 
