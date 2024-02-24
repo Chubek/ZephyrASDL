@@ -3,6 +3,7 @@
 #define GC_ALLOC(size) heap_alloc(absyn_heap, size)
 
 Heap *absyn_heap = NULL;
+
 Field *fields;
 Constructor *constructors;
 Rule *rules;
