@@ -28,6 +28,8 @@ extern Rule *rules;
 %type <cons_val> constructors
 %type <rule_val> sum prod type
 
+%start rules
+
 %%
 
 rules : rule
