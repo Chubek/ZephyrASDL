@@ -35,6 +35,7 @@ char *fn_suffix = "create";
 char *arg_suffix = "arg";
 char *kind_suffix = "kind";
 int indent_level = 0;
+
 Heap *translate_heap = NULL;
 Translator translator = {0};
 
@@ -152,12 +153,12 @@ static inline void install_datatype_unnamed_end(void) {
   EMIT_DEFS("};\n");
 }
 
-static inline void install_function_signature_init(const char *returns,
+static inline void install_funcdef_init(const char *returns,
                                                    const char *name) {
   EMIT_DEFS("%s %s(", returns, name);
 }
 
-static inline void install_function_signature_arg(const char *type,
+static inline void install_funcdef_arg(const char *type,
                                                   const char *name, bool last) {
   EMIT_DEFS("%s %s%s", type, name, last ? ") {\n" : ", ");
 }
@@ -323,7 +324,7 @@ static inline void install_constructor_function(char *id,
   STR_FORMAT(fnname, "create_%s", lc_ident);
 
   install_funcdecl_init(returns, fnname);
-  install_function_signature_init(returns, fnname);
+  install_funcdef_init(returns, fnname);
 
   size_t n = 0;
   for (Field *f = constructor->fields; f != NULL; f = f->next, n++) {
@@ -341,7 +342,7 @@ static inline void install_constructor_function(char *id,
     f->cache = argname;
 
     install_funcdecl_arg(argtyy, argname, f->next == NULL);
-    install_function_signature_arg(argtyy, argname, f->next == NULL);
+    install_funcdef_arg(argtyy, argname, f->next == NULL);
   }
 
   n = 0;
@@ -360,7 +361,7 @@ static inline void install_constructor_function(char *id,
     f->cache = argname;
 
     install_funcdecl_arg(argtyy, argname);
-    install_function_signature_arg(argtyy, argname, f->next == NULL);
+    install_funcdef_arg(argtyy, argname, f->next == NULL);
   }
 
   INC_INDENT();
