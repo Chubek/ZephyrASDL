@@ -1,6 +1,6 @@
 %{
 #include "asdl.h"
-#include "parse.tab.h"
+#include "y.tab.h"
 %}
 
 %x EMBED
