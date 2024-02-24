@@ -11,6 +11,8 @@
 
 #include "asdl.h"
 
+#alloc trans_heap, trans_alloc, trans_realloc, trans_dump
+
 #define STR_FORMAT(dest, fmt, ...)                                             \
   do {                                                                         \
     size_t l = strlen(fmt) + UCHAR_MAX;                                        \
@@ -36,7 +38,6 @@ char *arg_suffix = "arg";
 char *kind_suffix = "kind";
 int indent_level = 0;
 
-Heap *translate_heap = NULL;
 Translator translator = {0};
 
 void init_translator(char *outpath) {
@@ -46,7 +47,6 @@ void init_translator(char *outpath) {
   translator.appendage = tmpfile();
   translator.rules = NULL;
   translator.outpath = outpath;
-  translate_heap = create_heap();
 }
 
 void finalize_translator(void) {
@@ -84,7 +84,7 @@ void dump_translator(void) {
   fclose(translator.decls);
   fclose(translator.defs);
   fclose(translator.appendage);
-  dump_heap(translator_heap);
+  trans_dump();
 }
 
 static inline void print_indent(void) {
@@ -94,7 +94,7 @@ static inline void print_indent(void) {
 
 static inline char *gc_strdup(char *str) {
   size_t len = strlen(str);
-  char *dup = heap_alloc(translate_heap, len);
+  char *dup = trans_alloc(len);
   return memmove(dup, str, len);
 }
 
