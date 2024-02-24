@@ -30,10 +30,10 @@ Field *add_field(char *type_id, int modifier, char *id) {
   return field;
 }
 
-Constructor *add_constructor(char *con_id, Field *fields) {
+Constructor *add_constructor(char *id, Field *fields) {
   Constructor *constructor = (Constructor *)GC_ALLOC(sizeof(Constructor));
+  constructor->id = id;
   constructor->fields = fields;
-  constructor->num_fields = num_fields;
   constructor->next = constructors;
   constructors = constructor;
   return constructor;
