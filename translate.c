@@ -42,18 +42,7 @@ void init_translator(void) {
   translator.appendage = tmpfile();
   translator.rules = NULL;
   translator.outpath = NULL;
-}
-
-static inline char *to_lowercase(char *str) {
-  char *original, *copy;
-
-  original = copy = gc_strndup(str, strlen(str));
-
-  while (*copy++) {
-    *copy = tolower(*copy);
-  }
-
-  return original;
+  translate_heap = create_heap();
 }
 
 void finalize_translator(void) {
@@ -91,8 +80,26 @@ void dump_translator(void) {
   fclose(translator.decls);
   fclose(translator.defs);
   fclose(translator.appendage);
+  dump_heap(translator_heap);
 }
 
+static inline char *gc_strdup(char *str) {
+  size_t len = strlen(str);
+  char *dup = heap_alloc(len);
+  return memmove(dup, str, len);
+}
+
+static inline char *to_lowercase(char *str) {
+  char *original, *copy;
+
+  original = copy = gc_strdup(str);
+
+  while (*copy++) {
+    *copy = tolower(*copy);
+  }
+
+  return original;
+}
 static inline void install_typedef(const char *original, const char *alias,
                                    bool pointer) {
   EMIT_DECLS("typedef %s%s%s;\n", original, pointer ? " *" : " ", alias);
