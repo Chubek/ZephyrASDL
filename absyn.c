@@ -23,7 +23,13 @@ void finalize_absyn(void) { translate_rule_chain(rules); }
 
 void dump_absyn(void) { absyn_dump(); }
 
-Field *add_field(char *type_id, int modifier, char *id) {
+TypeId *create_typeid(TypeIdKind kind, char *value) {
+  TypeId *id = absyn_alloc(sizeof(TypeId));
+  id->kind = kind;
+  id->value = value;
+}
+
+Field *add_field(TypeId *type_id, int modifier, char *id) {
   Field *field = (Field *)absyn_alloc(sizeof(Field));
   field->type_id = type_id;
   field->kind = modifier;

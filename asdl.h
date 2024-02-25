@@ -12,14 +12,30 @@ typedef struct Field Field;
 typedef struct GCNode GCNode;
 typedef struct Heap Heap;
 typedef struct Translator Translator;
+typedef struct TypeId TypeId;
 
 typedef enum FieldKind FieldKind;
 typedef enum TypeKind TypeKind;
+typedef enum TypeIdKind TypeIdKind;
 
 struct Rule {
   char *id;
   Type *type;
   Rule *next;
+};
+
+struct TypeId {
+  enum TypeIdKind {
+     TYYNAME_STRING,
+     TYYNAME_INT,
+     TYYNANE_UINT,
+     TYYNAME_SIZE,
+     TYYNAME_USIZE,
+     TYYNAME_BOOL,
+     TYYNAME_IDENTIFIER,
+     TYYNAME_ID,
+  } kind;
+  char *value;
 };
 
 struct Type {
@@ -54,7 +70,7 @@ struct Field {
     FIELD_OPTIONAL,
     FIELD_NORMAL,
   } kind;
-  char *type_id;
+  TypeId *type_id;
   char *id;
   char *cache;
   Field *next;
@@ -69,7 +85,7 @@ struct Translator {
   char *outpath;
 };
 
-Field *add_field(char *type_id, int opt, char *id);
+Field *add_field(TypeId *type_id, int opt, char *id);
 Constructor *add_constructor(char *con_id, Field *fields);
 Rule *add_sum_type(Constructor *constructors, Field *attributes);
 Rule *add_product_type(Field *fields);

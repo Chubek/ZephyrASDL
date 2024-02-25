@@ -24,7 +24,7 @@ extern Rule *rules;
 }
 
 %token <str_val> CONS_IDENT TYPE_IDENT INIT_IDENT NAME
-%token ATTRIBUTES
+%token ATTRIBUTES BOOL SIZE USIZE INT UINT STRING IDENTIFIER
 
 %type <str_val> name_opt
 %type <field_val> fields fields_opt attrs
@@ -87,10 +87,20 @@ items : item
       | items ',' item
       ;
 
-item : TYPE_IDENT  name_opt	 	{ add_field($1, FIELD_NORMAL, $2);	}
-     | TYPE_IDENT '*' name_opt		{ add_field($1, FIELD_SEQUENCE, $3); 	}
-     | TYPE_IDENT '?' name_opt		{ add_field($1, FIELD_OPTIONAL, $3);    }
+item : type_id  name_opt	 	{ add_field($1, FIELD_NORMAL, $2);	}
+     | type_id '*' name_opt		{ add_field($1, FIELD_SEQUENCE, $3); 	}
+     | type_id '?' name_opt		{ add_field($1, FIELD_OPTIONAL, $3);    }
      ;
+
+type_id : TYPE_IDENT	{ $$ = create_typeid(TYYID_ID, $1); }
+	| BOOL		{ $$ = create_typeid(TYYID_BOOL, NULL); }
+	| SIZE		{ $$ = create_typeid(TYYID_SIZE, NULL); }
+	| USIZE		{ $$ = create_typeid(TYYID_USIZE, NULL); }
+	| INT		{ $$ = create_typeid(TYYID_INT, NULL); }
+	| UINT		{ $$ = create_typeid(TYYID_UINT, NULL); }
+	| STRING	{ $$ = create_typeid(TYYID_STRING, NULL); }
+	| IDENTIFIER    { $$ = create_typeid(TYYID_IDENTIFIER, NULL); }
+	;
 
 name_opt : NAME		{ $$ = $1; }
 	 |		{ $$ = NULL; }
