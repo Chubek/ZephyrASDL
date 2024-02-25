@@ -14,6 +14,8 @@
 #alloc trans_heap, trans_alloc, trans_realloc, trans_dump
 #hashfunc translate_hash
 
+#define MAX_TYYID 8
+
 #define STR_FORMAT(dest, fmt, ...)                                             \
   do {                                                                         \
     size_t l = strlen(fmt) + UCHAR_MAX;                                        \
@@ -121,6 +123,11 @@ static inline char *to_lowercase(char *str) {
 
   return original;
 }
+
+static inline void install_include(const char *file) {
+   EMIT_DECLS("#include <%s>", file);
+}
+
 static inline void install_typedef(const char *original, const char *alias,
                                    bool pointer) {
   EMIT_DECLS("typedef %s%s%s;\n", original, pointer ? " *" : " ", alias);
@@ -188,6 +195,37 @@ static inline void install_function_assign(const char *field,
 static inline void install_function_return(void) {
   print_indent();
   fputs("return p;\n}\n\n", translator.defs);
+}
+
+static inline char *get_type_id(TypeId *tyyid) {
+  char *id = (char *)trans_alloc(MAX_TYYID);
+
+  switch (tyyid->kind) {
+	case TYYID_BOOL:
+		strncat(id, "bool", MAX_TYYID);
+		return id;
+	case TYYID_INT:
+		strncat(id, "intmax_t", MAX_TYYID);
+		return id;
+	case TYYID_UINT:
+		strncat(id, "uintmax_t", MAX_TYYID);
+		return id;
+	case TYYID_SIZE:
+		strncat(id, "ssize_t", MAX_TYYID);
+		return id;
+	case TYYID_USIZE:
+		strncat(id, "size_t", MAX_TYYID);
+		return id;
+	case TYYID_STRING:
+		strncat(id, "uint8_t*", MAX_TYYID);
+		return id;
+	case TYYID_IDENTIFIER:
+		strncat(id, "char*", MAX_TYYID);
+		return  id;
+	default:
+		return tyyid->value;
+
+  }
 }
 
 static inline void translate_product_type(char *id, Product *product) {
@@ -439,6 +477,14 @@ static inline void translate_sum_type(char *id, Sum *sum) {
   }
 }
 
+static inline void install_standard_includes(void) {
+   install_include("stdio.h");
+   install_include("stdlib.h");
+   install_include("stddef.h");
+   install_include("stdbool.h");
+   install_include("stdint.h");
+}
+
 static inline void translate_rule(Rule *rule) {
   if (rule->type->kind == TYPE_PRODUCT)
     translate_sum_type(rule->id, rule->type->sum);
@@ -447,6 +493,8 @@ static inline void translate_rule(Rule *rule) {
 }
 
 void translate_rule_chain(Rule *rules) {
+  install_standard_includes();
+
   for (Rule *r = rules; r != NULL; r = r->next)
     translate_rule(r);
 }
