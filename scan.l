@@ -5,6 +5,9 @@
 
 %x EMBED
 
+type_id [a-z_][a-z0-9_]{1,32}
+cons_id [A-Z][a-zA-Z0-9_]{1,32}
+
 %%
 "%{"			   { BEGIN(EMBED); fputs("/* embed-begin */\n", yyout); }
 <EMBED>"%}"		   { BEGIN(INITIAL); fputs("\n/* embed-end */\n\n", yyout); }
@@ -18,10 +21,9 @@
 "string"		   { return STRING; }
 "identifier"		   { return IDENTIFIER; }
 "attributes"               { return ATTRIBUTES; }
-^[a-z][a-z0-9_]*	   { yylval.str_val = gc_strndup(yytext, yyleng); return INIT_IDENT; }
-[a-z_][a-z0-9_]*  	   { yylval.str_val = gc_strndup(yytext, yyleng); return TYPE_IDENT; }
-([A-Z][a-z]+)*[A-Z][a-z]*  { yylval.str_val = gc_strndup(yytext, yyleng); return CONS_IDENT; }
-[A-Za-z0-9_]+		   { yylval.str_val = gc_strndup(yytext, yyleng); return NAME; }
+^{type_id}	   	   { yylval.str_val = gc_strndup(yytext, yyleng); return INIT_IDENT; }
+{type_id}  	  	   { yylval.str_val = gc_strndup(yytext, yyleng); return TYPE_IDENT; }
+{cons_id}    		   { yylval.str_val = gc_strndup(yytext, yyleng); return CONS_IDENT; }
 [?*()|,:=]		   return *yytext;
 [ \t\r\n]                  ;  // Skip whitespace
 .                          ;

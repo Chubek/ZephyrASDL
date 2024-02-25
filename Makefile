@@ -34,10 +34,10 @@ translate.gen.c: translate.c
 	perl allocpp.pl -i translate.c -o translate.gen.c
 
 parse.tab.c parse.tab.h: parse.y
-	$(YACC) -o parse.tab.c parse.y
+	$(YACC) $(YDBG) -o parse.tab.c parse.y
 
 lex.yy.c: scan.l
-	$(LEX) scan.l
+	$(LEX) $(LDBG) scan.l
 
 clean:
 	rm -f $(BINARY) $(OBJS) $(GEN_OBJS) $(YACC_OBJS) $(LEX_OBJS) \

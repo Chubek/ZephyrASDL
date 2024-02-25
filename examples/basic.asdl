@@ -1,5 +1,5 @@
 stmt = Concat(stmt, stmt)
-     | Compound(stmt* s1, stmt? s2)
+     | Compound(stmt* sa, stmt? sb)
      | Single(expr)
      ;
 

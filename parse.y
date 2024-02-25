@@ -24,7 +24,7 @@ extern Rule *rules;
    TypeId *typeid_val;
 }
 
-%token <str_val> CONS_IDENT TYPE_IDENT INIT_IDENT NAME
+%token <str_val> CONS_IDENT TYPE_IDENT INIT_IDENT
 %token ATTRIBUTES BOOL SIZE USIZE INT UINT STRING IDENTIFIER
 
 %type <str_val> name_opt
@@ -104,7 +104,7 @@ type_id : TYPE_IDENT	{ $$ = create_typeid(TYYNAME_ID, $1); }
 	| IDENTIFIER    { $$ = create_typeid(TYYNAME_IDENTIFIER, NULL); }
 	;
 
-name_opt : NAME		{ $$ = $1; }
+name_opt : TYPE_IDENT	{ $$ = $1; }
 	 |		{ $$ = NULL; }
 	 ;
 
