@@ -88,4 +88,6 @@ void init_absyn(void);
 void finalize_absyn(void);
 void dump_absyn(void);
 
+void emit_prelude(char c);
+
 #endif
