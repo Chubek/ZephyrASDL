@@ -57,6 +57,10 @@ void init_translator(char *outpath) {
   translator.outpath = outpath;
 }
 
+void emit_prelude(char c) {
+  putc(c, translatro.prelude);
+}
+
 void finalize_translator(void) {
   FILE *outfile = stdout;
   int c;
