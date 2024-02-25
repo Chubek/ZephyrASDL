@@ -1,63 +1,56 @@
-BIN_DEST = asdl
-MAN_DEST = man/man1
+# Adjustable variables
+CC := gcc
+YACC := bison -dy
+LEX := flex
+BINARY := asdl
+DESTDIR := /usr/local/bin
+MANDIR := /usr/local/share/man/man1
 
-YACC_TAB = parse.tab.h
+# Source files
+SRCS := absyn.c asdl.c translate.c
+GEN_SRCS := absyn.gen.c translate.gen.c
+YACC_SRCS := parse.y
+LEX_SRCS := scan.l
 
-PERL_ABSYN_DEST = absyn.gen.c
-LEX_DEST = lex.yy.c
-YACC_DEST = parse.tab.c
+# Generated files
+OBJS := $(SRCS:.c=.o)
+GEN_OBJS := $(GEN_SRCS:.c=.o)
+YACC_OBJS := $(YACC_SRCS:.y=.tab.o)
+LEX_OBJS := lex.yy.o
 
-ENTRY_POINT = asdl.c
+# Targets
+all: $(BINARY)
 
-YACC_SOURCE = parse.y
-LEX_SOURCE = scan.l
-PERL_ABSYN_SOURCE = absyn.c
-TRANS_SOURCE = translate.c
-C_SOURCE = $(ENTRY_POINT) $(PERL_ABSYN_DEST) $(TRANS_SOURCE) $(LEX_DEST) $(YACC_DEST)
+$(BINARY): $(OBJS) $(GEN_OBJS) $(YACC_OBJS) $(LEX_OBJS)
+	$(CC) $(CFLAGS) -o $@ $^
 
-GEN_FILES = $(LEX_DEST) $(YACC_DEST) $(PERL_ABSYN_DEST) $(YACC_TAB) $(BIN_DEST)
+%.o: %.c
+	$(CC) $(CFLAGS) -c -o $@ $<
 
-PERL = perl
-CC = gcc
-LEX = flex
-YACC = bison
-INSTALL = install
-MANDB = mandb
+absyn.gen.c: absyn.c
+	perl allocpp.pl -i absyn.c -o absyn.gen.c
 
-MAN_SOURCE = asdl.1
+translate.gen.c: translate.c
+	perl allocpp.pl -i translate.c -o translate.gen.c
 
-PERL_SCRIPT = AllocPP.pl
+parse.tab.c parse.tab.h: parse.y
+	$(YACC) -o parse.tab.c parse.y
 
-DESTDIR = /usr/local/
-BINDIR = bin
+lex.yy.c: scan.l
+	$(LEX) scan.l
 
-all : $(BIN_DEST)
+clean:
+	rm -f $(BINARY) $(OBJS) $(GEN_OBJS) $(YACC_OBJS) $(LEX_OBJS) \
+		absyn.gen.c translate.gen.c parse.tab.c parse.tab.h lex.yy.c
+	@echo "Clean complete."
 
-$(BIN_DEST) : $(LEX_DEST)
-	$(CC) -o $(BIN_DEST) $(DEBUG) $(C_SOURCE)
+install: $(BINARY) companions/asdl.1
+	mkdir -p $(DESTDIR)
+	cp $(BINARY) $(DESTDIR)
+	mkdir -p $(MANDIR)
+	cp companions/asdl.1 $(MANDIR)
+	mandb
+	@echo "Install complete."
 
-$(LEX_DEST) : $(YACC_DEST)
-	$(LEX) $(LDBG) $(LEX_SOURCE)
-
-$(YACC_DEST) : $(PERL_ABSYN_DEST)
-	$(YACC) -d$(YDBG) $(YACC_SOURCE)
-
-$(PERL_ABSYN_DEST) : $(PERL_ABSYN_SOURCE)
-	$(PERL) $(PERL_SCRIPT) -i $(PERL_ABSYN_SOURCE) -o $(PERL_ABSYN_DEST)
-
-.PHONY : clean
-clean :
-	rm -f $(GEN_FILES)
-
-install :
-	$(INSTALL) -d $(DESTDIR)$(BINDIR)
-	$(INSTALL) -m 755 $(BIN_DEST) $(DESTDIR)$(BINDIR)
-	$(INSTALL) -d $(DESTDIR)$(MAN_DEST)
-	$(INSTALL) -m 644 $(MAN_SOURCE) $(DESTDIR)$(MAN_DEST)
-	$(MANDB)
-
-uninstall :
-	rm -f $(DESTDIR)$(BINDIR)/$(BIN_DEST)
-	rm -f $(DESTDIR)$(MAN_DEST)/asdl.1
-	$(MANDB)
+.PHONY: all clean install
 
