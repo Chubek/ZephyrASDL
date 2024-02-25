@@ -35,11 +35,19 @@
 #define INDENT "    "
 #endif
 
-char *def_suffix = "def";
-char *fn_suffix = "create";
-char *arg_suffix = "arg";
-char *kind_suffix = "kind";
-int indent_level = 0;
+static const *char BOOL = "bool";
+static const *char INT = "intmax_t";
+static const *char UINT = "uintmax_t";
+static const *char SIZE = "ssize_t";
+static const *char USIZE = "size_t";
+static const *char STRING = "uint8_t*";
+static const *char IDENTIFIER = "char*";
+
+static char *def_suffix = "def";
+static char *fn_suffix = "create";
+static char *arg_suffix = "arg";
+static char *kind_suffix = "kind";
+static int indent_level = 0;
 
 Translator translator = {0};
 
@@ -198,30 +206,21 @@ static inline void install_function_return(void) {
 }
 
 static inline char *get_type_id(TypeId *tyyid) {
-  char *id = (char *)trans_alloc(MAX_TYYID);
-
   switch (tyyid->kind) {
 	case TYYID_BOOL:
-		strncat(id, "bool", MAX_TYYID);
-		return id;
+		return BOOL;
 	case TYYID_INT:
-		strncat(id, "intmax_t", MAX_TYYID);
-		return id;
+		return INT;
 	case TYYID_UINT:
-		strncat(id, "uintmax_t", MAX_TYYID);
-		return id;
+		return UINT;
 	case TYYID_SIZE:
-		strncat(id, "ssize_t", MAX_TYYID);
-		return id;
+		return SIZE;
 	case TYYID_USIZE:
-		strncat(id, "size_t", MAX_TYYID);
-		return id;
+		return USIZE;
 	case TYYID_STRING:
-		strncat(id, "uint8_t*", MAX_TYYID);
-		return id;
+		return STRING;
 	case TYYID_IDENTIFIER:
-		strncat(id, "char*", MAX_TYYID);
-		return  id;
+		return IDENTIFIER;
 	default:
 		return tyyid->value;
 
@@ -248,11 +247,11 @@ static inline void translate_product_type(char *id, Product *product) {
     char *argtyy = NULL;
     char *argname = NULL;
     char *cache = NULL;
-    STR_FORMAT(argtyy, "%s_%s", f->type_id, def_suffix);
+    STR_FORMAT(argtyy, "%s_%s", get_type_id(f->type_id), def_suffix);
 
     if (f->id == NULL) {
       STR_FORMAT(argname, "%s_%s%lu", argtyy, arg_suffix, n);
-      STR_FORMAT(cache, "%s %s_%lu", argtyy, f->type_id, n);
+      STR_FORMAT(cache, "%s %s_%lu", argtyy, get_type_id(f->type_id), n);
     } else {
       STR_FORMAT(argname, "%s_%s", f->id, arg_suffix);
       STR_FORMAT(cache, "%s %s", argtyy, f->id);
@@ -279,10 +278,10 @@ static inline void install_asdl_field(Field *field, size_t num) {
   case FIELD_NORMAL:
     tyy = NULL;
     name = NULL;
-    STR_FORMAT(tyy, "%s_%s", field->type_id, def_suffix);
+    STR_FORMAT(tyy, "%s_%s", get_type_id(field->type_id), def_suffix);
 
     if (field->id == NULL) {
-      STR_FORMAT(name, "%s_%lu", field->type_id, num);
+      STR_FORMAT(name, "%s_%lu", get_type_id(field->type_id), num);
     } else {
       STR_FORMAT(name, "%s", field->id);
     }
@@ -293,11 +292,11 @@ static inline void install_asdl_field(Field *field, size_t num) {
     tyy = NULL;
     name = NULL;
 
-    STR_FORMAT(tyy, "%s_%s*", field->type_id, def_suffix);
+    STR_FORMAT(tyy, "%s_%s*", get_type_id(field->type_id), def_suffix);
 
     if (field->id == NULL) {
-      STR_FORMAT(name, "%s_%lu", field->type_id, num);
-      STR_FORMAT(count, "%s_%lu_count", field->type_id, num);
+      STR_FORMAT(name, "%s_%lu", get_type_id(field->type_id), num);
+      STR_FORMAT(count, "%s_%lu_count", get_type_id(field->type_id), num);
     } else {
       STR_FORMAT(name, "%s", field->id);
       STR_FORMAT(count, "%s_count", field->id);
@@ -311,11 +310,11 @@ static inline void install_asdl_field(Field *field, size_t num) {
     tyy = NULL;
     name = NULL;
 
-    STR_FORMAT(tyy, "%s_%s*", field->type_id, def_suffix);
+    STR_FORMAT(tyy, "%s_%s*", get_type_id(field->type_id), def_suffix);
 
     if (field->id == NULL) {
-      STR_FORMAT(name, "%s_%lu", field->type_id, num);
-      STR_FORMAT(exists, "%s_%lu_exists", field->type_id, num);
+      STR_FORMAT(name, "%s_%lu", get_type_id(field->type_id), num);
+      STR_FORMAT(exists, "%s_%lu_exists", get_type_id(field->type_id), num);
     } else {
       STR_FORMAT(name, "%s", field->id);
       STR_FORMAT(exists, "%s_exists", field->id);
@@ -386,10 +385,10 @@ static inline void install_constructor_function(char *id,
     argtyy = NULL;
     argname = NULL;
 
-    STR_FORMAT(argtyy, "%s_%s", f->type_id, def_suffix);
+    STR_FORMAT(argtyy, "%s_%s", get_type_id(f->type_id), def_suffix);
 
     if (f->id == NULL) {
-      STR_FORMAT(argname, "%s_%lu", f->type_id, n);
+      STR_FORMAT(argname, "%s_%lu", get_type_id(f->type_id), n);
     } else {
       STR_FORMAT(argname, "%s", f->id);
     }
@@ -405,10 +404,10 @@ static inline void install_constructor_function(char *id,
     argtyy = NULL;
     argname = NULL;
 
-    STR_FORMAT(argtyy, "%s_%s", f->type_id, def_suffix);
+    STR_FORMAT(argtyy, "%s_%s", get_type_id(f->type_id), def_suffix);
 
     if (f->id == NULL) {
-      STR_FORMAT(argname, "%s_%lu", f->type_id, n);
+      STR_FORMAT(argname, "%s_%lu", get_type_id(f->type_id), n);
     } else {
       STR_FORMAT(argname, "%s", f->id);
     }
