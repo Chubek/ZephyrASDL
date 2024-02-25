@@ -75,16 +75,19 @@ void parse_arguments(int argc, char **argv) {
   init_absyn();
 }
 
-int main(int argc, char **argv) {
+void do_at_exit(void) {
+  dump_absyn();
+  dump_translator();
+}
+
+int main(int argc, char **argv) { 
   parse_arguments(argc, argv);
+  atexit(do_at_exit);
 
   yyparse();
 
   finalize_absyn();
   finalize_translator();
-
-  dump_absyn();
-  dump_translator();
 
   if (yyin != stdin)
     fclose(yyin);
