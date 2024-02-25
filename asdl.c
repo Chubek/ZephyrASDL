@@ -4,26 +4,26 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 #include <sysexits.h>
+#include <unistd.h>
 
 #include "asdl.h"
 
 extern FILE *yyin;
 extern int yyparse(void);
 
-
 static inline void print_help_and_exit() {
-    printf("Usage: asdl [-o output] [-d def_suffix] [-f fn_suffix] [-k kind_suffix] [-a arg_suffix] FILE\n");
-    printf("\n");
-    printf("Options:\n");
-    printf("  -o output      Specify the output file\n");
-    printf("  -d def_suffix  Specify the suffix for typedefs\n");
-    printf("  -f fn_suffix   Specify the suffix for functions\n");
-    printf("  -k kind_suffix Specify the suffix for kind types\n");
-    printf("  -a arg_suffix  Specify the suffix for arguments\n");
-    printf("\n");
-    exit(EX_USAGE);
+  printf("Usage: asdl [-o output] [-d def_suffix] [-f fn_suffix] [-k "
+         "kind_suffix] [-a arg_suffix] FILE\n");
+  printf("\n");
+  printf("Options:\n");
+  printf("  -o output      Specify the output file\n");
+  printf("  -d def_suffix  Specify the suffix for typedefs\n");
+  printf("  -f fn_suffix   Specify the suffix for functions\n");
+  printf("  -k kind_suffix Specify the suffix for kind types\n");
+  printf("  -a arg_suffix  Specify the suffix for arguments\n");
+  printf("\n");
+  exit(EX_USAGE);
 }
 
 void parse_arguments(int argc, char **argv) {
@@ -60,7 +60,8 @@ void parse_arguments(int argc, char **argv) {
   }
 
   if (optind != argc - 2 && !isatty(STDIN_FILENO)) {
-    fprintf(stderr, "Error: no input file given, neither via arguments nor STDIN\n");
+    fprintf(stderr,
+            "Error: no input file given, neither via arguments nor STDIN\n");
     exit(EXIT_FAILURE);
   } else {
     yyin = fopen(argv[optind], "r");

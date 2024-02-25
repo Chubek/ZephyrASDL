@@ -42,10 +42,10 @@ int indent_level = 0;
 Translator translator = {0};
 
 void assign_suffixes(char *def, char *fn, char *arg, char *kind) {
-   def_suffix = def;
-   fn_suffix = fn;
-   arg_suffix = arg;
-   kind_suffix = kind;
+  def_suffix = def;
+  fn_suffix = fn;
+  arg_suffix = arg;
+  kind_suffix = kind;
 }
 
 void init_translator(char *outpath) {
@@ -57,9 +57,7 @@ void init_translator(char *outpath) {
   translator.outpath = outpath;
 }
 
-void emit_prelude(char c) {
-  putc(c, translatro.prelude);
-}
+void emit_prelude(char c) { putc(c, translator.prelude); }
 
 void finalize_translator(void) {
   FILE *outfile = stdout;
@@ -70,10 +68,10 @@ void finalize_translator(void) {
       outfile = fopen(translator.outpath, "w");
 
   while ((c = fgetc(translator.prelude) != EOF))
-     fputc(c, outfile);
+    fputc(c, outfile);
 
   fputc('\n', outfile);
-  
+
   while ((c = fgetc(translator.decls) != EOF))
     fputc(c, outfile);
 
@@ -83,7 +81,7 @@ void finalize_translator(void) {
     fputc(c, outfile);
 
   fputc('\n', outfile);
-  
+
   while ((c = fgetc(translator.appendage) != EOF))
     fputc(c, outfile);
 
@@ -167,13 +165,12 @@ static inline void install_datatype_unnamed_end(void) {
   fputs("};\n", translator.defs);
 }
 
-static inline void install_funcdef_init(const char *returns,
-                                                   const char *name) {
+static inline void install_funcdef_init(const char *returns, const char *name) {
   EMIT_DEFS("%s %s(", returns, name);
 }
 
-static inline void install_funcdef_arg(const char *type,
-                                                  const char *name, bool last) {
+static inline void install_funcdef_arg(const char *type, const char *name,
+                                       bool last) {
   EMIT_DEFS("%s %s%s", type, name, last ? ") {\n" : ", ");
 }
 
@@ -343,9 +340,8 @@ static inline void install_constructor_function(char *id,
   install_funcdecl_init(returns, fnname);
   install_funcdef_init(returns, fnname);
 
-   char *argtyy = NULL;
-   char *argname = NULL;
-
+  char *argtyy = NULL;
+  char *argname = NULL;
 
   size_t n = 0;
   for (Field *f = constructor->fields; f != NULL; f = f->next, n++) {
@@ -388,7 +384,7 @@ static inline void install_constructor_function(char *id,
   INC_INDENT();
 
   install_function_alloc(id);
- 
+
   char *assignname = NULL;
 
   for (Field *f = constructor->fields; f != NULL; f = f->next) {

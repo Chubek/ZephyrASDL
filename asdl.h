@@ -61,12 +61,12 @@ struct Field {
 };
 
 struct Translator {
-   FILE *prelude;
-   FILE *decls;
-   FILE *defs;
-   FILE *appendage;
-   Rule *rules;
-   char *outpath;
+  FILE *prelude;
+  FILE *decls;
+  FILE *defs;
+  FILE *appendage;
+  Rule *rules;
+  char *outpath;
 };
 
 Field *add_field(char *type_id, int opt, char *id);
@@ -80,7 +80,7 @@ void translate_rule_chain(Rule *rules);
 
 void assign_suffixes(char *def, char *fn, char *arg, char *kind);
 
-void init_translator(char*);
+void init_translator(char *);
 void finalize_translator(void);
 void dump_translator(void);
 
