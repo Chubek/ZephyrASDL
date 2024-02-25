@@ -80,7 +80,7 @@ void do_at_exit(void) {
   dump_translator();
 }
 
-int main(int argc, char **argv) { 
+int main(int argc, char **argv) {
   parse_arguments(argc, argv);
   atexit(do_at_exit);
 

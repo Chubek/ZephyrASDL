@@ -26,14 +26,14 @@ struct Rule {
 
 struct TypeId {
   enum TypeIdKind {
-     TYYNAME_STRING,
-     TYYNAME_INT,
-     TYYNAME_UINT,
-     TYYNAME_SIZE,
-     TYYNAME_USIZE,
-     TYYNAME_BOOL,
-     TYYNAME_IDENTIFIER,
-     TYYNAME_ID,
+    TYYNAME_STRING,
+    TYYNAME_INT,
+    TYYNAME_UINT,
+    TYYNAME_SIZE,
+    TYYNAME_USIZE,
+    TYYNAME_BOOL,
+    TYYNAME_IDENTIFIER,
+    TYYNAME_ID,
   } kind;
   char *value;
 };

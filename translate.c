@@ -123,40 +123,27 @@ void print_indent(void) {
     fputs(INDENT, translator.defs);
 }
 
-char *gc_strdup(char *str) {
-  size_t len = strlen(str);
-  char *dup = trans_alloc(len);
-  return memmove(dup, str, len);
-}
-
 char *to_lowercase(char *str) {
-  char *original, *copy;
+  size_t len = strlen(str);
+  char *dup = gc_strndup(str, len);
 
-  original = copy = gc_strdup(str);
+  while (len--)
+    dup[len] = tolower(dup[len]);
 
-  while (*copy++) {
-    *copy = tolower(*copy);
-  }
-
-  return original;
+  return dup;
 }
 
-void install_include(const char *file) {
-   EMIT_DECLS("#include <%s>", file);
-}
+void install_include(const char *file) { EMIT_DECLS("#include <%s>", file); }
 
-void install_typedef(const char *original, const char *alias,
-                                   bool pointer) {
+void install_typedef(const char *original, const char *alias, bool pointer) {
   EMIT_DECLS("typedef %s%s%s;\n", original, pointer ? " *" : " ", alias);
 }
 
-void install_funcdecl_init(const char *returns,
-                                         const char *name) {
+void install_funcdecl_init(const char *returns, const char *name) {
   EMIT_DECLS("%s %s(", returns, name);
 }
 
-void install_funcdecl_arg(const char *type, const char *name,
-                                        bool last) {
+void install_funcdecl_arg(const char *type, const char *name, bool last) {
   EMIT_DECLS("%s %s%s", type, name, last ? ");\n" : ", ");
 }
 
@@ -193,8 +180,7 @@ void install_funcdef_init(const char *returns, const char *name) {
   EMIT_DEFS("%s %s(", returns, name);
 }
 
-void install_funcdef_arg(const char *type, const char *name,
-                                       bool last) {
+void install_funcdef_arg(const char *type, const char *name, bool last) {
   EMIT_DEFS("%s %s%s", type, name, last ? ") {\n" : ", ");
 }
 
@@ -203,8 +189,7 @@ void install_function_alloc(const char *type) {
   EMIT_DEFS("%s *p = ALLOC(sizeof(%s_%s));\n\n", type, type, def_suffix);
 }
 
-void install_function_assign(const char *field,
-                                           const char *value) {
+void install_function_assign(const char *field, const char *value) {
   print_indent();
   EMIT_DEFS("p->%s = %s;\n", field, value);
 }
@@ -216,23 +201,22 @@ void install_function_return(void) {
 
 const char *get_type_id(TypeId *tyyid) {
   switch (tyyid->kind) {
-	case TYYNAME_BOOL:
-		return BOOL;
-	case TYYNAME_INT:
-		return INT;
-	case TYYNAME_UINT:
-		return UINT;
-	case TYYNAME_SIZE:
-		return SIZE;
-	case TYYNAME_USIZE:
-		return USIZE;
-	case TYYNAME_STRING:
-		return STRING;
-	case TYYNAME_IDENTIFIER:
-		return IDENTIFIER;
-	default:
-		return tyyid->value;
-
+  case TYYNAME_BOOL:
+    return BOOL;
+  case TYYNAME_INT:
+    return INT;
+  case TYYNAME_UINT:
+    return UINT;
+  case TYYNAME_SIZE:
+    return SIZE;
+  case TYYNAME_USIZE:
+    return USIZE;
+  case TYYNAME_STRING:
+    return STRING;
+  case TYYNAME_IDENTIFIER:
+    return IDENTIFIER;
+  default:
+    return tyyid->value;
   }
 }
 
@@ -373,9 +357,8 @@ void install_kinds(Constructor *constructors) {
   install_datatype_named_end("kind");
 }
 
-void install_constructor_function(char *id,
-                                                Constructor *constructor,
-                                                Field *attributes) {
+void install_constructor_function(char *id, Constructor *constructor,
+                                  Field *attributes) {
   char *lc_ident = to_lowercase(constructor->id);
 
   char *returns = NULL;
@@ -486,11 +469,11 @@ void translate_sum_type(char *id, Sum *sum) {
 }
 
 void install_standard_includes(void) {
-   install_include("stdio.h");
-   install_include("stdlib.h");
-   install_include("stddef.h");
-   install_include("stdbool.h");
-   install_include("stdint.h");
+  install_include("stdio.h");
+  install_include("stdlib.h");
+  install_include("stddef.h");
+  install_include("stdbool.h");
+  install_include("stdint.h");
 }
 
 void translate_rule(Rule *rule) {

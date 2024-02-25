@@ -64,7 +64,7 @@ Rule *add_sum_type(Constructor *constructors, Field *attributes) {
 Rule *add_product_type(Field *fields) {
   Rule *rule = (Rule *)absyn_alloc(sizeof(Rule));
   rule->type = (Type *)absyn_alloc(sizeof(Type));
-  rule->type->product = (Product*)absyn_alloc(sizeof(Product));
+  rule->type->product = (Product *)absyn_alloc(sizeof(Product));
   rule->type->product->fields = fields;
   rule->type->kind = TYPE_PRODUCT;
   rule->next = rules;
