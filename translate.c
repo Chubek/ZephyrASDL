@@ -14,7 +14,7 @@
 #alloc trans_heap, trans_alloc, trans_realloc, trans_dump
 #hashfunc translate_hash
 
-#define MAX_TYYID 8
+#define MAX_TYYNAME 8
 
 #define STR_FORMAT(dest, fmt, ...)                                             \
   do {                                                                         \
@@ -35,13 +35,13 @@
 #define INDENT "    "
 #endif
 
-static const *char BOOL = "bool";
-static const *char INT = "intmax_t";
-static const *char UINT = "uintmax_t";
-static const *char SIZE = "ssize_t";
-static const *char USIZE = "size_t";
-static const *char STRING = "uint8_t*";
-static const *char IDENTIFIER = "char*";
+static const char *BOOL = "bool";
+static const char *INT = "intmax_t";
+static const char *UINT = "uintmax_t";
+static const char *SIZE = "ssize_t";
+static const char *USIZE = "size_t";
+static const char *STRING = "uint8_t*";
+static const char *IDENTIFIER = "char*";
 
 static char *def_suffix = "def";
 static char *fn_suffix = "create";
@@ -205,21 +205,21 @@ static inline void install_function_return(void) {
   fputs("return p;\n}\n\n", translator.defs);
 }
 
-static inline char *get_type_id(TypeId *tyyid) {
+static inline const char *get_type_id(TypeId *tyyid) {
   switch (tyyid->kind) {
-	case TYYID_BOOL:
+	case TYYNAME_BOOL:
 		return BOOL;
-	case TYYID_INT:
+	case TYYNAME_INT:
 		return INT;
-	case TYYID_UINT:
+	case TYYNAME_UINT:
 		return UINT;
-	case TYYID_SIZE:
+	case TYYNAME_SIZE:
 		return SIZE;
-	case TYYID_USIZE:
+	case TYYNAME_USIZE:
 		return USIZE;
-	case TYYID_STRING:
+	case TYYNAME_STRING:
 		return STRING;
-	case TYYID_IDENTIFIER:
+	case TYYNAME_IDENTIFIER:
 		return IDENTIFIER;
 	default:
 		return tyyid->value;

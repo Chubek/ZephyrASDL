@@ -1,10 +1,3 @@
-%%
-typedef int int_tyy;
-typedef char *string_tyy;
-
-%%
-
-
 stmt = Concat(stmt, stmt)
      | Compound(stmt* s1, stmt? s2)
      | Single(expr)

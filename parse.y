@@ -21,6 +21,7 @@ extern Rule *rules;
    Field *field_val;
    Constructor *cons_val;
    Rule *rule_val;
+   TypeId *typeid_val;
 }
 
 %token <str_val> CONS_IDENT TYPE_IDENT INIT_IDENT NAME
@@ -30,6 +31,7 @@ extern Rule *rules;
 %type <field_val> fields fields_opt attrs
 %type <cons_val> constructors
 %type <rule_val> sum prod type
+%type <typeid_val> type_id
 
 %start asdl
 
@@ -92,14 +94,14 @@ item : type_id  name_opt	 	{ add_field($1, FIELD_NORMAL, $2);	}
      | type_id '?' name_opt		{ add_field($1, FIELD_OPTIONAL, $3);    }
      ;
 
-type_id : TYPE_IDENT	{ $$ = create_typeid(TYYID_ID, $1); }
-	| BOOL		{ $$ = create_typeid(TYYID_BOOL, NULL); }
-	| SIZE		{ $$ = create_typeid(TYYID_SIZE, NULL); }
-	| USIZE		{ $$ = create_typeid(TYYID_USIZE, NULL); }
-	| INT		{ $$ = create_typeid(TYYID_INT, NULL); }
-	| UINT		{ $$ = create_typeid(TYYID_UINT, NULL); }
-	| STRING	{ $$ = create_typeid(TYYID_STRING, NULL); }
-	| IDENTIFIER    { $$ = create_typeid(TYYID_IDENTIFIER, NULL); }
+type_id : TYPE_IDENT	{ $$ = create_typeid(TYYNAME_ID, $1); }
+	| BOOL		{ $$ = create_typeid(TYYNAME_BOOL, NULL); }
+	| SIZE		{ $$ = create_typeid(TYYNAME_SIZE, NULL); }
+	| USIZE		{ $$ = create_typeid(TYYNAME_USIZE, NULL); }
+	| INT		{ $$ = create_typeid(TYYNAME_INT, NULL); }
+	| UINT		{ $$ = create_typeid(TYYNAME_UINT, NULL); }
+	| STRING	{ $$ = create_typeid(TYYNAME_STRING, NULL); }
+	| IDENTIFIER    { $$ = create_typeid(TYYNAME_IDENTIFIER, NULL); }
 	;
 
 name_opt : NAME		{ $$ = $1; }

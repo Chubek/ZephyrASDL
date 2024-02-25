@@ -10,6 +10,13 @@
 <EMBED>"%}"		   { BEGIN(INITIAL); fputs("\n/* embed-end */\n\n", yyout); }
 <EMBED>.		   { emit_prelude(*yytext); }
 
+"bool"			   { return BOOL; }
+"size"			   { return SIZE; }
+"usize"			   { return USIZE; }
+"uint"			   { return UINT; }
+"int"			   { return INT; }
+"string"		   { return STRING; }
+"identifier"		   { return IDENTIFIER; }
 "attributes"               { return ATTRIBUTES; }
 ^[a-z][a-z0-9_]*	   { yylval.str_val = gc_strndup(yytext, yyleng); return INIT_IDENT; }
 [a-z_][a-z0-9_]*  	   { yylval.str_val = gc_strndup(yytext, yyleng); return TYPE_IDENT; }

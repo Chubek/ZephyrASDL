@@ -28,7 +28,7 @@ struct TypeId {
   enum TypeIdKind {
      TYYNAME_STRING,
      TYYNAME_INT,
-     TYYNANE_UINT,
+     TYYNAME_UINT,
      TYYNAME_SIZE,
      TYYNAME_USIZE,
      TYYNAME_BOOL,
@@ -85,6 +85,7 @@ struct Translator {
   char *outpath;
 };
 
+TypeId *create_typeid(TypeIdKind kind, char *value);
 Field *add_field(TypeId *type_id, int opt, char *id);
 Constructor *add_constructor(char *con_id, Field *fields);
 Rule *add_sum_type(Constructor *constructors, Field *attributes);
