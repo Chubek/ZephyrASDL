@@ -15,7 +15,7 @@ LEX_SRCS := scan.l
 # Generated files
 OBJS := $(SRCS:.c=.o)
 GEN_OBJS := $(GEN_SRCS:.c=.o)
-YACC_OBJS := y.tab.o
+YACC_OBJS := $(YACC_SRCS:.y=.tab.o)
 LEX_OBJS := lex.yy.o
 
 # Targets
@@ -34,14 +34,14 @@ translate.gen.c: translate.c
 	perl allocpp.pl -i translate.c -o translate.gen.c
 
 parse.tab.c parse.tab.h: parse.y
-	$(YACC) -dy parse.y
+	$(YACC) -o parse.tab.c parse.y
 
 lex.yy.c: scan.l
 	$(LEX) scan.l
 
 clean:
 	rm -f $(BINARY) $(OBJS) $(GEN_OBJS) $(YACC_OBJS) $(LEX_OBJS) \
-		absyn.gen.c translate.gen.c y.tab.c y.tab.h lex.yy.c
+		absyn.gen.c translate.gen.c parse.tab.c parse.tab.h lex.yy.c
 	@echo "Clean complete."
 
 install: $(BINARY) companions/asdl.1

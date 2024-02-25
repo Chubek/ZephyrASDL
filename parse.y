@@ -7,6 +7,8 @@
 
 #include "asdl.h"
 
+extern int yylex(void);
+int yyerror(const char *);
 
 extern Field *fields;
 extern Constructor *constructors;
@@ -29,13 +31,16 @@ extern Rule *rules;
 %type <cons_val> constructors
 %type <rule_val> sum prod type
 
-%start rules
+%start asdl
 
 %%
 
+asdl : rules
+     |;
+
 rules : rule
       | rules rule
-      |;
+      ;
 
 rule : INIT_IDENT assign type semi_opt	{ $3->id = $1; }
      ;
@@ -72,7 +77,8 @@ constr : CONS_IDENT fields_opt		{ add_constructor($1, $2); }
        ;
 
 fields_opt : '(' items ')'		{ $$ = fields; fields = NULL; }
-           |;
+           |				{ $$ = NULL; }
+	   ;
 
 fields : '(' items ')'			{ $$ = fields; fields = NULL; }
        ;

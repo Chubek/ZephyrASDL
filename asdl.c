@@ -52,7 +52,7 @@ void parse_arguments(int argc, char **argv) {
       kind_suffix = optarg;
       break;
     case 'h':
-      display_help_and_exit();
+      print_help_and_exit();
       break;
     default:
       break;
