@@ -55,16 +55,19 @@ void parse_arguments(int argc, char **argv) {
       print_help_and_exit();
       break;
     default:
-      break;
+      fprintf(stderr, "Error: wrong argument, pass -h to view help\n");
+      exit(EXIT_FAILURE);
     }
   }
 
-  if (optind != argc - 2 && !isatty(STDIN_FILENO)) {
+  if (optind >= argc && isatty(STDIN_FILENO)) {
     fprintf(stderr,
             "Error: no input file given, neither via arguments nor STDIN\n");
     exit(EXIT_FAILURE);
-  } else {
+  } else if (optind < argc && isatty(STDIN_FILENO)) {
     yyin = fopen(argv[optind], "r");
+  } else if (optind < argc && !isatty(STDIN_FILENO)) {
+    yyin = stdin;
   }
 
   assign_suffixes(def_suffix, fn_suffix, arg_suffix, kind_suffix);
