@@ -73,26 +73,35 @@ void finalize_translator(void) {
   FILE *outfile = stdout;
   int c;
 
+  rewind(translator.prelude);
+  rewind(translator.decls);
+  rewind(translator.defs);
+  rewind(translator.appendage);
+
   if (translator.outpath != NULL)
     if (access(translator.outpath, F_OK | W_OK) == 0)
       outfile = fopen(translator.outpath, "w");
 
-  while ((c = fgetc(translator.prelude) != EOF))
+  c = 0;
+  while ((c = fgetc(translator.prelude)) != EOF)
     fputc(c, outfile);
 
   fputc('\n', outfile);
 
-  while ((c = fgetc(translator.decls) != EOF))
+  c = 0;
+  while ((c = fgetc(translator.decls)) != EOF)
     fputc(c, outfile);
 
   fputc('\n', outfile);
 
-  while ((c = fgetc(translator.defs) != EOF))
+  c = 0;
+  while ((c = fgetc(translator.defs)) != EOF)
     fputc(c, outfile);
 
   fputc('\n', outfile);
 
-  while ((c = fgetc(translator.appendage) != EOF))
+  c = 0;
+  while ((c = fgetc(translator.appendage)) != EOF)
     fputc(c, outfile);
 
   fputc('\n', outfile);
@@ -109,18 +118,18 @@ void dump_translator(void) {
   trans_dump();
 }
 
-static inline void print_indent(void) {
+void print_indent(void) {
   for (int i = 0; i < indent_level; i++)
     fputs(INDENT, translator.defs);
 }
 
-static inline char *gc_strdup(char *str) {
+char *gc_strdup(char *str) {
   size_t len = strlen(str);
   char *dup = trans_alloc(len);
   return memmove(dup, str, len);
 }
 
-static inline char *to_lowercase(char *str) {
+char *to_lowercase(char *str) {
   char *original, *copy;
 
   original = copy = gc_strdup(str);
@@ -132,80 +141,80 @@ static inline char *to_lowercase(char *str) {
   return original;
 }
 
-static inline void install_include(const char *file) {
+void install_include(const char *file) {
    EMIT_DECLS("#include <%s>", file);
 }
 
-static inline void install_typedef(const char *original, const char *alias,
+void install_typedef(const char *original, const char *alias,
                                    bool pointer) {
   EMIT_DECLS("typedef %s%s%s;\n", original, pointer ? " *" : " ", alias);
 }
 
-static inline void install_funcdecl_init(const char *returns,
+void install_funcdecl_init(const char *returns,
                                          const char *name) {
   EMIT_DECLS("%s %s(", returns, name);
 }
 
-static inline void install_funcdecl_arg(const char *type, const char *name,
+void install_funcdecl_arg(const char *type, const char *name,
                                         bool last) {
   EMIT_DECLS("%s %s%s", type, name, last ? ");\n" : ", ");
 }
 
-static inline void install_macro(const char *name, const char *def) {
+void install_macro(const char *name, const char *def) {
   EMIT_DEFS("#define %s %s\n", name, def);
 }
 
-static inline void install_field(const char *type, const char *name) {
+void install_field(const char *type, const char *name) {
   print_indent();
   EMIT_DEFS("%s %s;", type, name);
 }
 
-static inline void install_datatype_init(const char *kind, const char *name) {
+void install_datatype_init(const char *kind, const char *name) {
   print_indent();
   fputs("%s %s {\n", translator.defs);
 }
 
-static inline void install_datatype_field(const char *field, const char *end) {
+void install_datatype_field(const char *field, const char *end) {
   print_indent();
   EMIT_DEFS("%s%s", field, end);
 }
 
-static inline void install_datatype_named_end(const char *name) {
+void install_datatype_named_end(const char *name) {
   print_indent();
   EMIT_DEFS("} %s;\n", name);
 }
 
-static inline void install_datatype_unnamed_end(void) {
+void install_datatype_unnamed_end(void) {
   print_indent();
   fputs("};\n", translator.defs);
 }
 
-static inline void install_funcdef_init(const char *returns, const char *name) {
+void install_funcdef_init(const char *returns, const char *name) {
   EMIT_DEFS("%s %s(", returns, name);
 }
 
-static inline void install_funcdef_arg(const char *type, const char *name,
+void install_funcdef_arg(const char *type, const char *name,
                                        bool last) {
   EMIT_DEFS("%s %s%s", type, name, last ? ") {\n" : ", ");
 }
 
-static inline void install_function_alloc(const char *type) {
+void install_function_alloc(const char *type) {
   print_indent();
   EMIT_DEFS("%s *p = ALLOC(sizeof(%s_%s));\n\n", type, type, def_suffix);
 }
 
-static inline void install_function_assign(const char *field,
+void install_function_assign(const char *field,
                                            const char *value) {
   print_indent();
   EMIT_DEFS("p->%s = %s;\n", field, value);
 }
 
-static inline void install_function_return(void) {
+void install_function_return(void) {
   print_indent();
   fputs("return p;\n}\n\n", translator.defs);
 }
 
-static inline const char *get_type_id(TypeId *tyyid) {
+const char *get_type_id(TypeId *tyyid) {
   switch (tyyid->kind) {
 	case TYYNAME_BOOL:
 		return BOOL;
@@ -227,7 +236,7 @@ static inline const char *get_type_id(TypeId *tyyid) {
   }
 }
 
-static inline void translate_product_type(char *id, Product *product) {
+void translate_product_type(char *id, Product *product) {
   char *tyy = NULL;
   char *def = NULL;
   char *fn = NULL;
@@ -268,7 +277,7 @@ static inline void translate_product_type(char *id, Product *product) {
   install_datatype_unnamed_end();
 }
 
-static inline void install_asdl_field(Field *field, size_t num) {
+void install_asdl_field(Field *field, size_t num) {
   char *tyy = NULL;
   char *name = NULL;
   char *count = NULL;
@@ -327,7 +336,7 @@ static inline void install_asdl_field(Field *field, size_t num) {
   }
 }
 
-static inline void install_constructor(Constructor *constructor) {
+void install_constructor(Constructor *constructor) {
   INC_INDENT();
 
   size_t n = 0;
@@ -338,7 +347,7 @@ static inline void install_constructor(Constructor *constructor) {
   DEC_INDENT();
 }
 
-static inline void install_attributes(Field *attributes) {
+void install_attributes(Field *attributes) {
   INC_INDENT();
 
   size_t n = 0;
@@ -348,7 +357,7 @@ static inline void install_attributes(Field *attributes) {
   DEC_INDENT();
 }
 
-static inline void install_kinds(Constructor *constructors) {
+void install_kinds(Constructor *constructors) {
   install_datatype_init("enum", " ");
 
   INC_INDENT();
@@ -364,7 +373,7 @@ static inline void install_kinds(Constructor *constructors) {
   install_datatype_named_end("kind");
 }
 
-static inline void install_constructor_function(char *id,
+void install_constructor_function(char *id,
                                                 Constructor *constructor,
                                                 Field *attributes) {
   char *lc_ident = to_lowercase(constructor->id);
@@ -445,7 +454,7 @@ static inline void install_constructor_function(char *id,
   DEC_INDENT();
 }
 
-static inline void translate_sum_type(char *id, Sum *sum) {
+void translate_sum_type(char *id, Sum *sum) {
   char *struct_name = NULL;
   char *def_name = NULL;
   STR_FORMAT(struct_name, "struct %s", id);
@@ -476,7 +485,7 @@ static inline void translate_sum_type(char *id, Sum *sum) {
   }
 }
 
-static inline void install_standard_includes(void) {
+void install_standard_includes(void) {
    install_include("stdio.h");
    install_include("stdlib.h");
    install_include("stddef.h");
@@ -484,11 +493,11 @@ static inline void install_standard_includes(void) {
    install_include("stdint.h");
 }
 
-static inline void translate_rule(Rule *rule) {
+void translate_rule(Rule *rule) {
   if (rule->type->kind == TYPE_PRODUCT)
-    translate_sum_type(rule->id, rule->type->sum);
-  else
     translate_product_type(rule->id, rule->type->product);
+  else
+    translate_sum_type(rule->id, rule->type->sum);
 }
 
 void translate_rule_chain(Rule *rules) {
