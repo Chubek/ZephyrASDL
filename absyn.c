@@ -1,6 +1,13 @@
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "asdl.h"
 
 #alloc absyn_heap, absyn_alloc, absyn_realloc, absyn_dump
+#hashfunc absyn_hash
 
 Field *fields;
 Constructor *constructors;
@@ -19,7 +26,7 @@ void dump_absyn(void) { absyn_dump(); }
 Field *add_field(char *type_id, int modifier, char *id) {
   Field *field = (Field *)absyn_alloc(sizeof(Field));
   field->type_id = type_id;
-  field->modifier = modifier;
+  field->kind = modifier;
   field->id = id;
   field->cache = NULL;
   field->next = fields;
@@ -41,7 +48,7 @@ Rule *add_sum_type(Constructor *constructors, Field *attributes) {
   rule->type = (Type *)absyn_alloc(sizeof(Type));
   rule->type->sum->constructors = constructors;
   rule->type->sum->attributes = attributes;
-  rule->kind = TYPE_SUM;
+  rule->type->kind = TYPE_SUM;
   rule->next = rules;
   rules = rule;
   return rule;

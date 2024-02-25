@@ -14,7 +14,7 @@
 [A-Za-z_][a-zA-Z0-9]*	   { yylval.str_val = gc_strndup(yytext, yyleng); return NAME; }
 ^[a-z][a-z0-9_]*	   { yylval.str_val = gc_strndup(yytext, yyleng); return INIT_IDENT; }
 [a-z_][a-z0-9_]*  	   { yylval.str_val = gc_strndup(yytext, yyleng); return TYPE_IDENT; }
-([A-Z][a-z]+)*[A-Z][a-z]*  { yylval.str_val = gc_strndup(yytext, yyleng); return CON_IDENT; }
+([A-Z][a-z]+)*[A-Z][a-z]*  { yylval.str_val = gc_strndup(yytext, yyleng); return CONS_IDENT; }
 [?*()|,:=]		   return *yytext;
 [ \t\r\n]                  ;  // Skip whitespace
 .                          ;

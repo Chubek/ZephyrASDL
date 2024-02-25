@@ -11,6 +11,7 @@ typedef struct Constructor Constructor;
 typedef struct Field Field;
 typedef struct GCNode GCNode;
 typedef struct Heap Heap;
+typedef struct Translator Translator;
 
 typedef enum FieldKind FieldKind;
 typedef enum TypeKind TypeKind;
@@ -44,6 +45,7 @@ struct Product {
 struct Constructor {
   char *id;
   Field *fields;
+  Constructor *next;
 };
 
 struct Field {
@@ -67,10 +69,10 @@ struct Translator {
    char *outpath;
 };
 
-void add_field(char *type_id, int opt, char *id);
-void add_constructor(char *con_id, Field *fields);
-void add_sum_type(Constructor *constructors, Field *attributes);
-void add_product_type(Field *fields);
+Field *add_field(char *type_id, int opt, char *id);
+Constructor *add_constructor(char *con_id, Field *fields);
+Rule *add_sum_type(Constructor *constructors, Field *attributes);
+Rule *add_product_type(Field *fields);
 
 char *gc_strndup(const char *str, size_t n);
 

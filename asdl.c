@@ -19,7 +19,7 @@ void parse_arguments(int argc, char **argv) {
   char *outpath = NULL;
   yyin = stdin;
 
-  while ((c = getopt("o:d:f:a:k:h")) != -1) {
+  while ((c = getopt(argc, argv, "o:d:f:a:k:h")) != -1) {
     switch (c) {
     case 'o':
       outpath = optarg;
@@ -45,15 +45,15 @@ void parse_arguments(int argc, char **argv) {
   }
 
   if (optind != argc - 2 && !isatty(STDIN_FILENO)) {
-    fprintf("Error: no input file given, neither via arguments nor STDIN\n");
+    fprintf(stderr, "Error: no input file given, neither via arguments nor STDIN\n");
     exit(EXIT_FAILURE);
   } else {
-    yyin = fopen(arg[optind], "r");
+    yyin = fopen(argv[optind], "r");
   }
 
   assign_suffixes(def_suffix, fn_suffix, arg_suffix, kind_suffix);
-  initialize_translator(outpath);
-  initialize_absyn();
+  init_translator(outpath);
+  init_absyn();
 }
 
 int main(int argc, char **argv) {

@@ -24,6 +24,7 @@ extern Rule *rules;
 %token <str_val> CONS_IDENT TYPE_IDENT INIT_IDENT NAME
 %token ATTRIBUTES
 
+%type <str_val> name_opt
 %type <field_val> fields fields_opt attrs
 %type <cons_val> constructors
 %type <rule_val> sum prod type
@@ -36,7 +37,7 @@ rules : rule
       | rules rule
       |;
 
-rule : INIT_IDENT assign type semi_opt	{ $2->id = $1; }
+rule : INIT_IDENT assign type semi_opt	{ $3->id = $1; }
      ;
 
 semi_opt : ';'
@@ -80,15 +81,24 @@ items : item
       | items ',' item
       ;
 
-pair : TYPE_IDENT  name_opt	 	{ add_field($1, FIELD_NORMAL, $2);	}
+item : TYPE_IDENT  name_opt	 	{ add_field($1, FIELD_NORMAL, $2);	}
      | TYPE_IDENT '*' name_opt		{ add_field($1, FIELD_SEQUENCE, $3); 	}
      | TYPE_IDENT '?' name_opt		{ add_field($1, FIELD_OPTIONAL, $3);    }
      ;
 
 name_opt : NAME		{ $$ = $1; }
-	 |;		{ $$ = NULL; }
+	 |		{ $$ = NULL; }
+	 ;
+
+%%
 
 
+int yyerror(const char *msg) {
+   fputs("Parsing error occurred: ", stderr);
+   fputs(msg, stderr);
+   fputs("\n", stderr);
+   exit(EXIT_FAILURE);
+}
 
 
 

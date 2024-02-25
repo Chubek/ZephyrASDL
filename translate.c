@@ -12,6 +12,7 @@
 #include "asdl.h"
 
 #alloc trans_heap, trans_alloc, trans_realloc, trans_dump
+#hashfunc translate_hash
 
 #define STR_FORMAT(dest, fmt, ...)                                             \
   do {                                                                         \
@@ -64,22 +65,22 @@ void finalize_translator(void) {
     if (access(translator.outpath, F_OK | W_OK) == 0)
       outfile = fopen(translator.outpath, "w");
 
-  while ((c = fgetc(translator.prelude) != EOF)
+  while ((c = fgetc(translator.prelude) != EOF))
      fputc(c, outfile);
-
+
   fputc('\n', outfile);
   
-  while ((c = fgetc(translator.decls) != EOF)
+  while ((c = fgetc(translator.decls) != EOF))
     fputc(c, outfile);
 
   fputc('\n', outfile);
 
-  while ((c = fgetc(translator.defs) != EOF)
+  while ((c = fgetc(translator.defs) != EOF))
     fputc(c, outfile);
 
   fputc('\n', outfile);
   
-  while ((c = fgetc(translator.appendage) != EOF)
+  while ((c = fgetc(translator.appendage) != EOF))
     fputc(c, outfile);
 
   fputc('\n', outfile);
@@ -98,7 +99,7 @@ void dump_translator(void) {
 
 static inline void print_indent(void) {
   for (int i = 0; i < indent_level; i++)
-    fputs(translator.defs, INDENT);
+    fputs(INDENT, translator.defs);
 }
 
 static inline char *gc_strdup(char *str) {
@@ -144,7 +145,7 @@ static inline void install_field(const char *type, const char *name) {
 
 static inline void install_datatype_init(const char *kind, const char *name) {
   print_indent();
-  EMIT_DEFS("%s %s {\n");
+  fputs("%s %s {\n", translator.defs);
 }
 
 static inline void install_datatype_field(const char *field, const char *end) {
@@ -159,7 +160,7 @@ static inline void install_datatype_named_end(const char *name) {
 
 static inline void install_datatype_unnamed_end(void) {
   print_indent();
-  EMIT_DEFS("};\n");
+  fputs("};\n", translator.defs);
 }
 
 static inline void install_funcdef_init(const char *returns,
@@ -185,13 +186,13 @@ static inline void install_function_assign(const char *field,
 
 static inline void install_function_return(void) {
   print_indent();
-  EMIT_DEFS("return p;\n}\n\n");
+  fputs("return p;\n}\n\n", translator.defs);
 }
 
 static inline void translate_product_type(char *id, Product *product) {
   char *tyy = NULL;
   char *def = NULL;
-  char **fn = NULL;
+  char *fn = NULL;
   STR_FORMAT(tyy, "union %s", id);
   STR_FORMAT(def, "%s_%s", id, def_suffix);
   STR_FORMAT(fn, "%s_%s", id, fn_suffix);
@@ -229,25 +230,29 @@ static inline void translate_product_type(char *id, Product *product) {
   install_datatype_unnamed_end();
 }
 
-static inline void install_field(Field *field, size_t num) {
+static inline void install_asdl_field(Field *field, size_t num) {
+  char *tyy = NULL;
+  char *name = NULL;
+  char *count = NULL;
+  char *exists = NULL;
+
   switch (field->kind) {
   case FIELD_NORMAL:
-    char *tyy = NULL;
-    char *name = NULL;
+    tyy = NULL;
+    name = NULL;
     STR_FORMAT(tyy, "%s_%s", field->type_id, def_suffix);
 
     if (field->id == NULL) {
       STR_FORMAT(name, "%s_%lu", field->type_id, num);
     } else {
-      STR_FORMAT(name, "%s", filed->id);
+      STR_FORMAT(name, "%s", field->id);
     }
 
-    install_field(tyy, tyy, name);
+    install_field(tyy, name);
     break;
   case FIELD_SEQUENCE:
-    char *tyy = NULL;
-    char *name = NULL;
-    char *count = NULL;
+    tyy = NULL;
+    name = NULL;
 
     STR_FORMAT(tyy, "%s_%s*", field->type_id, def_suffix);
 
@@ -264,15 +269,14 @@ static inline void install_field(Field *field, size_t num) {
 
     break;
   case FIELD_OPTIONAL:
-    char *tyy = NULL;
-    char *name = NULL;
-    char *exists = NULL;
+    tyy = NULL;
+    name = NULL;
 
     STR_FORMAT(tyy, "%s_%s*", field->type_id, def_suffix);
 
     if (field->id == NULL) {
-      STR_FORMAT(name, "%s_%lu", field->type_id, count);
-      STR_FORMAT(exits, "%s_%lu_exists", field->type_id, count);
+      STR_FORMAT(name, "%s_%lu", field->type_id, num);
+      STR_FORMAT(exists, "%s_%lu_exists", field->type_id, num);
     } else {
       STR_FORMAT(name, "%s", field->id);
       STR_FORMAT(exists, "%s_exists", field->id);
@@ -289,8 +293,8 @@ static inline void install_constructor(Constructor *constructor) {
   INC_INDENT();
 
   size_t n = 0;
-  for (Field f = constructor->fields; f != NULL; f = f->next, n++) {
-    install_field(f, n);
+  for (Field *f = constructor->fields; f != NULL; f = f->next, n++) {
+    install_asdl_field(f, n);
   }
 
   DEC_INDENT();
@@ -300,8 +304,8 @@ static inline void install_attributes(Field *attributes) {
   INC_INDENT();
 
   size_t n = 0;
-  for (Field f = attributes; f != NULL; f = f->next, n++)
-    install_field(f, n);
+  for (Field *f = attributes; f != NULL; f = f->next, n++)
+    install_asdl_field(f, n);
 
   DEC_INDENT();
 }
@@ -335,10 +339,14 @@ static inline void install_constructor_function(char *id,
   install_funcdecl_init(returns, fnname);
   install_funcdef_init(returns, fnname);
 
+   char *argtyy = NULL;
+   char *argname = NULL;
+
+
   size_t n = 0;
   for (Field *f = constructor->fields; f != NULL; f = f->next, n++) {
-    char *argtyy = NULL;
-    char *argname = NULL;
+    argtyy = NULL;
+    argname = NULL;
 
     STR_FORMAT(argtyy, "%s_%s", f->type_id, def_suffix);
 
@@ -356,8 +364,8 @@ static inline void install_constructor_function(char *id,
 
   n = 0;
   for (Field *f = attributes; f != NULL; f = f->next, n++) {
-    char *argtyy = NULL;
-    char *argname = NULL;
+    argtyy = NULL;
+    argname = NULL;
 
     STR_FORMAT(argtyy, "%s_%s", f->type_id, def_suffix);
 
@@ -369,16 +377,18 @@ static inline void install_constructor_function(char *id,
 
     f->cache = argname;
 
-    install_funcdecl_arg(argtyy, argname);
+    install_funcdecl_arg(argtyy, argname, f->next == NULL);
     install_funcdef_arg(argtyy, argname, f->next == NULL);
   }
 
   INC_INDENT();
 
   install_function_alloc(id);
+ 
+  char *assignname = NULL;
 
   for (Field *f = constructor->fields; f != NULL; f = f->next) {
-    char *assignname = NULL;
+    assignname = NULL;
 
     STR_FORMAT(assignname, "%s->%s", lc_ident, f->cache);
 
@@ -386,7 +396,7 @@ static inline void install_constructor_function(char *id,
   }
 
   for (Field *f = attributes; f != NULL; f = f->next) {
-    char *assignname = NULL;
+    assignname = NULL;
 
     STR_FORMAT(assignname, "%s->%s", lc_ident, f->cache);
 
@@ -403,7 +413,7 @@ static inline void translate_sum_type(char *id, Sum *sum) {
   char *def_name = NULL;
   STR_FORMAT(struct_name, "struct %s", id);
   STR_FORMAT(def_name, "%s_%s", id, def_suffix);
-  install_typedef(struct_name, def_name);
+  install_typedef(struct_name, def_name, true);
 
   install_datatype_init("struct", id);
 
