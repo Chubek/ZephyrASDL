@@ -32,7 +32,7 @@ void parse_arguments(int argc, char **argv) {
 
   char *def_suffix = "def", *fn_suffix = "fn", *arg_suffix = "arg",
        *kind_suffix = "kind";
-  char *fn_prefix = "";
+  char *fn_prefix = NULL;
   char *outpath = NULL;
   yyin = stdin;
 
