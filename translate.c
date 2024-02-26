@@ -268,7 +268,7 @@ void install_funcdef_arg(const char *type, const char *name, bool last) {
 
 void install_function_alloc(const char *type) {
   print_indent();
-  PRINTF_DEFS("%s* p = ALLOC(sizeof(%s_%s));\n\n", type, type, def_suffix);
+  PRINTF_DEFS("%s p = ALLOC(sizeof(%s));\n\n", type, type);
 }
 
 void install_function_assign(const char *field, const char *value) {
@@ -321,6 +321,21 @@ const char *get_argname(TypeId *tyyid) {
   default:
     return tyyid->value;
   }
+}
+
+static inline int random_integer(void) {
+  srand(time(NULL));
+  return rand();
+}
+
+void install_stub(char *id) {
+  char *enumeration = NULL;
+  char *macro_name = NULL;
+
+  STR_FORMAT(enumeration, "%d", random_integer());
+  STR_FORMAT(macro_name, "ENUM_%s", to_uppercase(id));
+
+  install_macro(macro_name, enumeration);
 }
 
 void translate_product_type(char *id, Product *product) {
@@ -437,6 +452,11 @@ void install_asdl_field(Field *field, size_t num) {
 }
 
 void install_constructor(Constructor *constructor) {
+  if (constructor->fields == NULL) {
+    install_stub(constructor->id);
+    return;
+  }
+
   INC_INDENT();
 
   size_t n = 0;
@@ -475,6 +495,10 @@ void install_kinds(Constructor *constructors) {
 
 void install_constructor_function(char *id, Constructor *constructor,
                                   Field *attributes) {
+
+  if (constructor->fields == NULL)
+    return;
+
   char *lc_ident = to_lowercase(constructor->id);
 
   char *returns = NULL;
@@ -534,9 +558,13 @@ void install_constructor_function(char *id, Constructor *constructor,
     install_funcdef_arg(argtyy, argname, f->next == NULL);
   }
 
+  char *ptyy = NULL;
+
+  STR_FORMAT(ptyy, "%s_%s", id, def_suffix);
+
   INC_INDENT();
 
-  install_function_alloc(id);
+  install_function_alloc(ptyy);
 
   PUTS_DEFS("\n");
 
@@ -549,7 +577,7 @@ void install_constructor_function(char *id, Constructor *constructor,
   for (Field *f = constructor->fields; f != NULL; f = f->next) {
     assignname = NULL;
 
-    STR_FORMAT(assignname, "%s->%s", lc_ident, f->cache);
+    STR_FORMAT(assignname, "%s.%s", lc_ident, f->cache);
 
     install_function_assign(assignname, "NULL");
   }
@@ -557,7 +585,7 @@ void install_constructor_function(char *id, Constructor *constructor,
   for (Field *f = attributes; f != NULL; f = f->next) {
     assignname = NULL;
 
-    STR_FORMAT(assignname, "%s->%s", lc_ident, f->cache);
+    STR_FORMAT(assignname, "%s.%s", lc_ident, f->cache);
 
     install_function_assign(assignname, "NULL");
   }
@@ -584,7 +612,7 @@ void translate_sum_type(char *id, Sum *sum) {
     install_datatype_init("union", c->id);
     install_constructor(c);
     install_attributes(sum->attributes);
-    install_datatype_named_end(c->id);
+    install_datatype_named_end(to_lowercase(c->id));
   }
 
   DEC_INDENT();

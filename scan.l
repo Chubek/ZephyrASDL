@@ -5,16 +5,22 @@
 
 %x EMBED
 %x APPEND
+%x COMMENT
 
 type_id [a-z_][a-z0-9_]{1,32}
 cons_id [A-Z][a-zA-Z0-9_]{1,32}
 
 %%
-"^%{$"			   { BEGIN(EMBED); }
-<EMBED>"^%}$"		   { BEGIN(INITIAL); }
+
+"#"[ \t]+		   { BEGIN(COMMENT); }
+<COMMENT>.		   ;
+<COMMENT>\n		   { BEGIN(INITIAL); }
+
+^"%{"$			   { BEGIN(EMBED); }
+<EMBED>^"%}"$		   { BEGIN(INITIAL); }
 <EMBED>.|\n		   { emit_prelude(*yytext); }
 
-"^%%$"			   { BEGIN(APPEND); }
+^"%%"$			   { BEGIN(APPEND); }
 <APPEND><<EOF>>		   { BEGIN(INITIAL); }
 <APPEND>.|\n		   { emit_appendage(*yytext); }
 
