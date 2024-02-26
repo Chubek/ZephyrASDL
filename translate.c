@@ -156,13 +156,26 @@ void print_indent(void) {
 
 char *to_lowercase(char *str) {
   size_t len = strlen(str);
-  char *dup = gc_strndup(str, len);
+  char *dup = trans_alloc(len);
+  memmove(dup, str, len);
 
   while (len--)
     dup[len] = tolower(dup[len]);
 
   return dup;
 }
+
+char *to_uppercase(char *str) {
+  size_t len = strlen(str);
+  char *dup = trans_alloc(len);
+  memmove(dup, str, len);
+
+  while (len--)
+    dup[len] = toupper(dup[len]);
+
+  return dup;
+}
+
 
 void install_include(const char *file) {
   PRINTF_PRELUDE("#include <%s>\n", file);
@@ -423,7 +436,7 @@ void install_kinds(Constructor *constructors) {
 
   for (Constructor *c = constructors; c != NULL; c = c->next) {
     char *kind_name = NULL;
-    STR_FORMAT(kind_name, "%s_%s", to_lowercase(c->id), kind_suffix);
+    STR_FORMAT(kind_name, "%s_%s", to_uppercase(c->id), kind_suffix);
     install_datatype_field(kind_name, ",");
   }
 
@@ -497,7 +510,13 @@ void install_constructor_function(char *id, Constructor *constructor,
 
   install_function_alloc(id);
 
+  PUTS_DEFS("\n");
+
   char *assignname = NULL;
+
+  STR_FORMAT(assignname, "%s_%s", to_uppercase(constructor->id), kind_suffix);
+
+  install_function_assign("kind", assignname);
 
   for (Field *f = constructor->fields; f != NULL; f = f->next) {
     assignname = NULL;
