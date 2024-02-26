@@ -79,6 +79,7 @@ int main() {
 ## FILES
 
 * **MANPAGE.md**: This documentation in form of Markdown.
+* **asdl.1**: This documentation in ROFF format.
 * **asdl.vim**: VimScript syntax highlighter (you can copy it to the `/syntax` directory of NeoVim or Vim).
 * **regex.asdl** and **basic.asdl**: Examples
 

@@ -48,10 +48,13 @@ The documentation for ASDL language can be found at the original paper:
 
 This implementation adds two YACC-like extensions to the file:
 
+.TP
 1- You can enclose C code between `%{` and `%}`, this will be inserted at the BEGINNING of the file before the translation.
+.TP
 2- You can insert a `%%` after the tree grammar, and anything you insert after it, C code that is, will be inserted AFTER the translation.
-
-There are now several more built-in types: `int`, `uint`, `string`, `identifier`, `size`, `usize`, `boolean`
+.TP
+3- There are now several more built-in types: 
+.B `int`, `uint`, `string`, `identifier`, `size`, `usize`, `boolean`
 
 Also, see EXAMPLE to see how you can insert comments.
 
@@ -89,6 +92,9 @@ int main() {
 .TP
 .B MANPAGE.md
 This documentation in form of Markdown.
+.TP
+.B asdl.1
+This documentation in ROFF format.
 .TP
 .B asdl.vim
 VimScript syntax highlighter (you can copy it to the `/syntax` directory of NeoVim or Vim).
