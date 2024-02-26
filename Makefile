@@ -5,6 +5,7 @@ LEX := flex
 BINARY := asdl
 DESTDIR := /usr/local/bin
 MANDIR := /usr/local/share/man/man1
+DOCDIR := /usr/local/share/doc/asdl
 
 # Source files
 SRCS := asdl.c
@@ -50,6 +51,7 @@ install: $(BINARY) companions/asdl.1
 	mkdir -p $(MANDIR)
 	cp companions/asdl.1 $(MANDIR)
 	mandb
+	cp -r companions $(DOCDIR)
 	@echo "Install complete."
 
 .PHONY: all clean install
