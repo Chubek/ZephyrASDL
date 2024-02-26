@@ -82,6 +82,7 @@ int main() {
 * **asdl.1**: This documentation in ROFF format.
 * **asdl.vim**: VimScript syntax highlighter (you can copy it to the `/syntax` directory of NeoVim or Vim).
 * **regex.asdl** and **basic.asdl**: Examples
+* **GRAMMAR.ebnf**: The grammar for ASDL in EBNF syntax
 
 ## COPYRIGHT
 
