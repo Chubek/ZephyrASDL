@@ -40,8 +40,8 @@ static const char *INT = "intmax_t";
 static const char *UINT = "uintmax_t";
 static const char *SIZE = "ssize_t";
 static const char *USIZE = "size_t";
-static const char *STRING = "uint8_t*";
-static const char *IDENTIFIER = "char*";
+static const char *STRING = "string_t";
+static const char *IDENTIFIER = "identifier_t";
 
 static char *def_suffix = "def";
 static char *fn_suffix = "create";
@@ -81,6 +81,8 @@ void finalize_translator(void) {
   if (translator.outpath != NULL)
     if (access(translator.outpath, F_OK | W_OK) == 0)
       outfile = fopen(translator.outpath, "w");
+
+  fputc('\n', outfile);
 
   c = 0;
   while ((c = fgetc(translator.prelude)) != EOF)
@@ -133,10 +135,12 @@ char *to_lowercase(char *str) {
   return dup;
 }
 
-void install_include(const char *file) { EMIT_DECLS("#include <%s>", file); }
+void install_include(const char *file) {
+  EMIT_PRELUDE("#include <%s>\n", file);
+}
 
 void install_typedef(const char *original, const char *alias, bool pointer) {
-  EMIT_DECLS("typedef %s%s%s;\n", original, pointer ? " *" : " ", alias);
+  EMIT_PRELUDE("typedef %s%s%s;\n", original, pointer ? " *" : " ", alias);
 }
 
 void install_funcdecl_init(const char *returns, const char *name) {
@@ -158,7 +162,7 @@ void install_field(const char *type, const char *name) {
 
 void install_datatype_init(const char *kind, const char *name) {
   print_indent();
-  fputs("%s %s {\n", translator.defs);
+  EMIT_DEFS("%s %s {\n", kind, name);
 }
 
 void install_datatype_field(const char *field, const char *end) {
@@ -240,7 +244,12 @@ void translate_product_type(char *id, Product *product) {
     char *argtyy = NULL;
     char *argname = NULL;
     char *cache = NULL;
-    STR_FORMAT(argtyy, "%s_%s", get_type_id(f->type_id), def_suffix);
+
+    if (f->type_id->kind == TYYNAME_ID) {
+      STR_FORMAT(argtyy, "%s_%s", get_type_id(f->type_id), def_suffix);
+    } else {
+      STR_FORMAT(argtyy, "%s", get_type_id(f->type_id));
+    }
 
     if (f->id == NULL) {
       STR_FORMAT(argname, "%s_%s%lu", argtyy, arg_suffix, n);
@@ -271,7 +280,11 @@ void install_asdl_field(Field *field, size_t num) {
   case FIELD_NORMAL:
     tyy = NULL;
     name = NULL;
-    STR_FORMAT(tyy, "%s_%s", get_type_id(field->type_id), def_suffix);
+    if (field->type_id->kind == TYYNAME_ID) {
+      STR_FORMAT(tyy, "%s_%s", get_type_id(field->type_id), def_suffix);
+    } else {
+      STR_FORMAT(tyy, "%s", get_type_id(field->type_id));
+    }
 
     if (field->id == NULL) {
       STR_FORMAT(name, "%s_%lu", get_type_id(field->type_id), num);
@@ -285,7 +298,11 @@ void install_asdl_field(Field *field, size_t num) {
     tyy = NULL;
     name = NULL;
 
-    STR_FORMAT(tyy, "%s_%s*", get_type_id(field->type_id), def_suffix);
+    if (field->type_id->kind == TYYNAME_ID) {
+      STR_FORMAT(tyy, "%s_%s*", get_type_id(field->type_id), def_suffix);
+    } else {
+      STR_FORMAT(tyy, "%s*", get_type_id(field->type_id));
+    }
 
     if (field->id == NULL) {
       STR_FORMAT(name, "%s_%lu", get_type_id(field->type_id), num);
@@ -303,7 +320,11 @@ void install_asdl_field(Field *field, size_t num) {
     tyy = NULL;
     name = NULL;
 
-    STR_FORMAT(tyy, "%s_%s*", get_type_id(field->type_id), def_suffix);
+    if (field->type_id->kind == TYYNAME_ID) {
+      STR_FORMAT(tyy, "%s_%s", get_type_id(field->type_id), def_suffix);
+    } else {
+      STR_FORMAT(tyy, "%s", get_type_id(field->type_id));
+    }
 
     if (field->id == NULL) {
       STR_FORMAT(name, "%s_%lu", get_type_id(field->type_id), num);
@@ -377,7 +398,11 @@ void install_constructor_function(char *id, Constructor *constructor,
     argtyy = NULL;
     argname = NULL;
 
-    STR_FORMAT(argtyy, "%s_%s", get_type_id(f->type_id), def_suffix);
+    if (f->type_id->kind == TYYNAME_ID) {
+      STR_FORMAT(argtyy, "%s_%s", get_type_id(f->type_id), def_suffix);
+    } else {
+      STR_FORMAT(argtyy, "%s", get_type_id(f->type_id));
+    }
 
     if (f->id == NULL) {
       STR_FORMAT(argname, "%s_%lu", get_type_id(f->type_id), n);
@@ -396,7 +421,11 @@ void install_constructor_function(char *id, Constructor *constructor,
     argtyy = NULL;
     argname = NULL;
 
-    STR_FORMAT(argtyy, "%s_%s", get_type_id(f->type_id), def_suffix);
+    if (f->type_id->kind == TYYNAME_ID) {
+      STR_FORMAT(argtyy, "%s_%s", get_type_id(f->type_id), def_suffix);
+    } else {
+      STR_FORMAT(argtyy, "%s", get_type_id(f->type_id));
+    }
 
     if (f->id == NULL) {
       STR_FORMAT(argname, "%s_%lu", get_type_id(f->type_id), n);
@@ -474,6 +503,12 @@ void install_standard_includes(void) {
   install_include("stddef.h");
   install_include("stdbool.h");
   install_include("stdint.h");
+  fputc('\n', translator.prelude);
+}
+
+void install_standard_typedefs(void) {
+  install_typedef("uint8_t", "string_t", true);
+  install_typedef("char", "identifier_t", true);
 }
 
 void translate_rule(Rule *rule) {
