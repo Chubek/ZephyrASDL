@@ -1,6 +1,6 @@
 # Syntactic Grammar
 
-definitions	::= { definition }
+definitions	::= prelude { definition } "%%" c-code
 definition	::= type_id '=' type
 
 type		::= sum_type | product_type
@@ -13,18 +13,27 @@ constructor	::= con_id [ fields ]
 
 fields		::= '(' field { ',' field } ')'
 
-field 		::= type_id [ '?' | '*' ] [ id ]
+field 		::= ( type_id | predef-types ) [ '?' | '*' ] [ id ]
 
+prelude		::= "%{" c-code "%}"
 
 
 # Lexical Grammar
  
+predef-types	::= "int" 
+		 | "uint"
+ 		 | "size" 
+		 | "usize"
+		 | "boolean" 
+		 | "string"
+		 | "identifier"
+
 id		::= con_id | type_id
 
 con_id		::= [A-Z][a-zA-Z0-9_]*
-type_id		:;= [a-z][a-z0-9_]*
+type_id		::= [a-z][a-z0-9_]*
 
-
+c-code		::= ? valid-c-code ?
 
 
 
