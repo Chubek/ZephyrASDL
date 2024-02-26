@@ -579,7 +579,7 @@ void install_constructor_function(char *id, Constructor *constructor,
 
     STR_FORMAT(assignname, "%s.%s", lc_ident, f->cache);
 
-    install_function_assign(assignname, "NULL");
+    install_function_assign(assignname, f->cache);
   }
 
   for (Field *f = attributes; f != NULL; f = f->next) {
@@ -587,7 +587,7 @@ void install_constructor_function(char *id, Constructor *constructor,
 
     STR_FORMAT(assignname, "%s.%s", lc_ident, f->cache);
 
-    install_function_assign(assignname, "NULL");
+    install_function_assign(assignname, f->cache);
   }
 
   install_function_return();
