@@ -43,6 +43,14 @@ static const char *USIZE = "size_t";
 static const char *STRING = "string_t";
 static const char *IDENTIFIER = "identifier_t";
 
+static const char *BOOL_NAME = "boolean";
+static const char *INT_NAME = "int";
+static const char *UINT_NAME = "uint";
+static const char *SIZE_NAME = "size";
+static const char *USIZE_NAME = "usize";
+static const char *STRING_NAME = "string";
+static const char *IDENTIFIER_NAME = "identifier";
+
 static char *def_suffix = "def";
 static char *fn_suffix = "create";
 static char *arg_suffix = "arg";
@@ -157,7 +165,7 @@ void install_macro(const char *name, const char *def) {
 
 void install_field(const char *type, const char *name) {
   print_indent();
-  EMIT_DEFS("%s %s;", type, name);
+  EMIT_DEFS("%s %s;\n", type, name);
 }
 
 void install_datatype_init(const char *kind, const char *name) {
@@ -167,7 +175,7 @@ void install_datatype_init(const char *kind, const char *name) {
 
 void install_datatype_field(const char *field, const char *end) {
   print_indent();
-  EMIT_DEFS("%s%s", field, end);
+  EMIT_DEFS("%s%s\n", field, end);
 }
 
 void install_datatype_named_end(const char *name) {
@@ -224,6 +232,27 @@ const char *get_type_id(TypeId *tyyid) {
   }
 }
 
+const char *get_argname(TypeId *tyyid) {
+   switch (tyyid->kind) {
+  case TYYNAME_BOOL:
+    return BOOL_NAME;
+  case TYYNAME_INT:
+    return INT_NAME;
+  case TYYNAME_UINT:
+    return UINT_NAME;
+  case TYYNAME_SIZE:
+    return SIZE_NAME;
+  case TYYNAME_USIZE:
+    return USIZE_NAME;
+  case TYYNAME_STRING:
+    return STRING_NAME;
+  case TYYNAME_IDENTIFIER:
+    return IDENTIFIER_NAME;
+  default:
+    return tyyid->value;
+  }
+}
+
 void translate_product_type(char *id, Product *product) {
   char *tyy = NULL;
   char *def = NULL;
@@ -252,17 +281,13 @@ void translate_product_type(char *id, Product *product) {
     }
 
     if (f->id == NULL) {
-      STR_FORMAT(argname, "%s_%s%lu", argtyy, arg_suffix, n);
-      STR_FORMAT(cache, "%s %s_%lu", argtyy, get_type_id(f->type_id), n);
+      STR_FORMAT(argname, "%s_%s%lu", get_argname(f->type_id), arg_suffix, n);
     } else {
       STR_FORMAT(argname, "%s_%s", f->id, arg_suffix);
-      STR_FORMAT(cache, "%s %s", argtyy, f->id);
     }
 
     install_funcdecl_arg(argtyy, argname, f->next == NULL);
     install_datatype_field(cache, ";");
-
-    f->cache = cache;
   }
 
   DEC_INDENT();
@@ -287,7 +312,7 @@ void install_asdl_field(Field *field, size_t num) {
     }
 
     if (field->id == NULL) {
-      STR_FORMAT(name, "%s_%lu", get_type_id(field->type_id), num);
+      STR_FORMAT(name, "%s_%lu", get_argname(field->type_id), num);
     } else {
       STR_FORMAT(name, "%s", field->id);
     }
@@ -305,8 +330,8 @@ void install_asdl_field(Field *field, size_t num) {
     }
 
     if (field->id == NULL) {
-      STR_FORMAT(name, "%s_%lu", get_type_id(field->type_id), num);
-      STR_FORMAT(count, "%s_%lu_count", get_type_id(field->type_id), num);
+      STR_FORMAT(name, "%s_%lu", get_argname(field->type_id), num);
+      STR_FORMAT(count, "%s_%lu_count", get_argname(field->type_id), num);
     } else {
       STR_FORMAT(name, "%s", field->id);
       STR_FORMAT(count, "%s_count", field->id);
@@ -327,15 +352,15 @@ void install_asdl_field(Field *field, size_t num) {
     }
 
     if (field->id == NULL) {
-      STR_FORMAT(name, "%s_%lu", get_type_id(field->type_id), num);
-      STR_FORMAT(exists, "%s_%lu_exists", get_type_id(field->type_id), num);
+      STR_FORMAT(name, "%s_%lu", get_argname(field->type_id), num);
+      STR_FORMAT(exists, "%s_%lu_exists", get_argname(field->type_id), num);
     } else {
       STR_FORMAT(name, "%s", field->id);
       STR_FORMAT(exists, "%s_exists", field->id);
     }
 
     install_field(tyy, name);
-    install_field("int", exists);
+    install_field("bool", exists);
 
     break;
   }
@@ -405,7 +430,7 @@ void install_constructor_function(char *id, Constructor *constructor,
     }
 
     if (f->id == NULL) {
-      STR_FORMAT(argname, "%s_%lu", get_type_id(f->type_id), n);
+      STR_FORMAT(argname, "%s_%lu", get_argname(f->type_id), n);
     } else {
       STR_FORMAT(argname, "%s", f->id);
     }
@@ -428,7 +453,7 @@ void install_constructor_function(char *id, Constructor *constructor,
     }
 
     if (f->id == NULL) {
-      STR_FORMAT(argname, "%s_%lu", get_type_id(f->type_id), n);
+      STR_FORMAT(argname, "%s_%lu", get_argname(f->type_id), n);
     } else {
       STR_FORMAT(argname, "%s", f->id);
     }
@@ -524,3 +549,6 @@ void translate_rule_chain(Rule *rules) {
   for (Rule *r = rules; r != NULL; r = r->next)
     translate_rule(r);
 }
+
+
+
