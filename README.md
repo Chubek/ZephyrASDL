@@ -1,23 +1,37 @@
 # Zephyr ASDL Implementation
 
-This is an implmentation of the Zephyr ASDL language as described [in this paper](https://www.cs.princeton.edu/~appel/papers/asdl97.pdf).
+This is an implmentation of the Zephyr ASDL language as described [in this 1997 paper](https://www.cs.princeton.edu/~appel/papers/asdl97.pdf) by Wang, Appel, Korn and Serra.
 
-One addition has been made, just like in Lex and Yacc, you can insert a prelude into the final file, just put what you wish to include between a pair of `%%`s (with a newline after the first delimiter, and before the second one).
+ASDL is a domain-specific language that is used to describe syntax of a language. You specify tree grammars, and these tree grammars are translated into C code. This C code contains the Abstract Syntax Tree declarations and definitions. 
 
-You can see `examples/basic.asdl` to get a clue. Please read the paper for more info on what ASDL is, as the people who came up with it explain it best.
+There are plans to add more translations. D, Rust and Python would be good.
 
-## How to Install
+You can read the documentation for this program at `companions/MANPAGE.md`.
+
+# How to Install
+
+You need:
+
+1- An implementation of Lex, e.g. Flex
+2- An implementation of Yacc, e.g. Bison
+3- Perl
+
+After installing these (for example, with `apt-get`) you can run:
 
 ```
-sudo apt-get install flex bison
-make && make install
+make && sudo make install
+```
+
+After that, bring up the manpage and see what is added to the language:
+
+```
 man 1 asdl
 ```
 
-## Uses for Zephyr ASDL
+Otherwise, if you want to know how to write ASDL code, read the paper.
 
-This domain-specific language is mostly used to serialize a tree description into an Abstract Syntax Tree (AST) in the target language.
 
-## Notice
+If you need to contact me, you can do so via email: `chubakbidpaa [at] riseup [dot] net`.
 
-Default types described by paper (`identifier` and `int`) are not (or yet to be) included. You can use a couple of `typedef` statements to have them in your file by inserting them as preludes between two `%%`s.
+Thanks to anyone who uses this program.
+
