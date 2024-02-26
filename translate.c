@@ -23,10 +23,26 @@
     snprintf(dest, l, fmt, __VA_ARGS__);                                       \
   } while (0)
 
-#define EMIT_PRELUDE(fmt, ...) fprintf(translator.prelude, fmt, __VA_ARGS__)
-#define EMIT_DECLS(fmt, ...) fprintf(translator.decls, fmt, __VA_ARGS__)
-#define EMIT_DEFS(fmt, ...) fprintf(translator.defs, fmt, __VA_ARGS__)
-#define EMIT_APPENDAGE(fmt, ...) fprintf(translator.appendage, fmt, __VA_ARGS__)
+#define PRINTF_PRELUDE(fmt, ...) fprintf(translator.prelude, fmt, __VA_ARGS__)
+#define PRINTF_DECLS(fmt, ...) fprintf(translator.decls, fmt, __VA_ARGS__)
+#define PRINTF_DEFS(fmt, ...) fprintf(translator.defs, fmt, __VA_ARGS__)
+#define PRINTF_APPENDAGE(fmt, ...)                                             \
+  fprintf(translator.appendage, fmt, __VA_ARGS__)
+
+#define PUTC_PRELUDE(c) fputc(c, translator.appendage)
+#define PUTC_DECLS(c) fputc(c, translator.appendage)
+#define PUTC_DEFS(c) fputc(c, translator.appendage)
+#define PUTC_APPENDAGE(c) fputc(c, translator.appendage)
+
+#define PUTS_PRELUDE(s) fputs(s, translator.appendage)
+#define PUTS_DECLS(s) fputs(s, translator.appendage)
+#define PUTS_DEFS(s) fputs(s, translator.appendage)
+#define PUTS_APPENDAGE(s) fputs(s, translator.appendage)
+
+#define NEWLINE_PRELUDE() fputs("\n", translator.appendage)
+#define NEWLINE_DECLS() fputs("\n", translator.appendage)
+#define NEWLINE_DEFS() fputs("\n", translator.appendage)
+#define NEWLINE_APPENDAGE() fputs("\n", translator.appendage)
 
 #define INC_INDENT() indent_level++
 #define DEC_INDENT() indent_level--
@@ -51,10 +67,13 @@ static const char *USIZE_NAME = "usize";
 static const char *STRING_NAME = "string";
 static const char *IDENTIFIER_NAME = "identifier";
 
+static char *fn_prefix = "";
+
 static char *def_suffix = "def";
 static char *fn_suffix = "create";
 static char *arg_suffix = "arg";
 static char *kind_suffix = "kind";
+
 static int indent_level = 0;
 
 Translator translator = {0};
@@ -66,6 +85,8 @@ void assign_suffixes(char *def, char *fn, char *arg, char *kind) {
   kind_suffix = kind;
 }
 
+void assign_prefixes(char *fn) { fn_prefix = fn; }
+
 void init_translator(char *outpath) {
   translator.prelude = tmpfile();
   translator.decls = tmpfile();
@@ -75,7 +96,8 @@ void init_translator(char *outpath) {
   translator.outpath = outpath;
 }
 
-void emit_prelude(char c) { putc(c, translator.prelude); }
+void emit_prelude(char c) { PUTC_PRELUDE(c); }
+void emit_appendage(char c) { PUTC_APPENDAGE(c); }
 
 void finalize_translator(void) {
   FILE *outfile = stdout;
@@ -87,8 +109,7 @@ void finalize_translator(void) {
   rewind(translator.appendage);
 
   if (translator.outpath != NULL)
-    if (access(translator.outpath, F_OK | W_OK) == 0)
-      outfile = fopen(translator.outpath, "w");
+    outfile = fopen(translator.outpath, "w");
 
   fputc('\n', outfile);
 
@@ -130,7 +151,7 @@ void dump_translator(void) {
 
 void print_indent(void) {
   for (int i = 0; i < indent_level; i++)
-    fputs(INDENT, translator.defs);
+    PUTS_DEFS(INDENT);
 }
 
 char *to_lowercase(char *str) {
@@ -144,71 +165,73 @@ char *to_lowercase(char *str) {
 }
 
 void install_include(const char *file) {
-  EMIT_PRELUDE("#include <%s>\n", file);
+  PRINTF_PRELUDE("#include <%s>\n", file);
 }
 
 void install_typedef(const char *original, const char *alias, bool pointer) {
-  EMIT_PRELUDE("typedef %s%s%s;\n", original, pointer ? " *" : " ", alias);
+  PRINTF_PRELUDE("typedef %s%s%s;\n", original, pointer ? " *" : " ", alias);
 }
 
 void install_funcdecl_init(const char *returns, const char *name) {
-  EMIT_DECLS("%s %s(", returns, name);
+  PRINTF_DECLS("%s %s %s(", fn_prefix, returns, name);
 }
 
 void install_funcdecl_arg(const char *type, const char *name, bool last) {
-  EMIT_DECLS("%s %s%s", type, name, last ? ");\n" : ", ");
+  PRINTF_DECLS("%s %s%s", type, name, last ? ");\n" : ", ");
 }
 
+void install_pp_directive(const char *dir) { PRINTF_DECLS("#%s\n", dir); }
+
 void install_macro(const char *name, const char *def) {
-  EMIT_DEFS("#define %s %s\n", name, def);
+  PRINTF_DECLS("#define %s %s\n", name, def);
 }
 
 void install_field(const char *type, const char *name) {
   print_indent();
-  EMIT_DEFS("%s %s;\n", type, name);
+  PRINTF_DEFS("%s %s;\n", type, name);
 }
 
 void install_datatype_init(const char *kind, const char *name) {
   print_indent();
-  EMIT_DEFS("%s %s {\n", kind, name);
+  PRINTF_DEFS("%s %s {\n", kind, name);
 }
 
 void install_datatype_field(const char *field, const char *end) {
   print_indent();
-  EMIT_DEFS("%s%s\n", field, end);
+  PRINTF_DEFS("%s%s\n", field, end);
 }
 
 void install_datatype_named_end(const char *name) {
   print_indent();
-  EMIT_DEFS("} %s;\n", name);
+  PRINTF_DEFS("} %s;\n", name);
 }
 
 void install_datatype_unnamed_end(void) {
   print_indent();
-  fputs("};\n", translator.defs);
+  PUTS_DEFS("};\n");
 }
 
 void install_funcdef_init(const char *returns, const char *name) {
-  EMIT_DEFS("%s %s(", returns, name);
+  PRINTF_DEFS("%s %s %s(", fn_prefix, returns, name);
 }
 
 void install_funcdef_arg(const char *type, const char *name, bool last) {
-  EMIT_DEFS("%s %s%s", type, name, last ? ") {\n" : ", ");
+  PRINTF_DEFS("%s %s%s", type, name, last ? ") {\n" : ", ");
 }
 
 void install_function_alloc(const char *type) {
   print_indent();
-  EMIT_DEFS("%s *p = ALLOC(sizeof(%s_%s));\n\n", type, type, def_suffix);
+  PRINTF_DEFS("%s* p = ALLOC(sizeof(%s_%s));\n\n", type, type, def_suffix);
 }
 
 void install_function_assign(const char *field, const char *value) {
   print_indent();
-  EMIT_DEFS("p->%s = %s;\n", field, value);
+  PRINTF_DEFS("p->%s = %s;\n", field, value);
 }
 
 void install_function_return(void) {
   print_indent();
-  fputs("return p;\n}\n\n", translator.defs);
+  PUTS_DEFS("return p;\n}\n\n");
 }
 
 const char *get_type_id(TypeId *tyyid) {
@@ -233,7 +256,7 @@ const char *get_type_id(TypeId *tyyid) {
 }
 
 const char *get_argname(TypeId *tyyid) {
-   switch (tyyid->kind) {
+  switch (tyyid->kind) {
   case TYYNAME_BOOL:
     return BOOL_NAME;
   case TYYNAME_INT:
@@ -515,7 +538,7 @@ void translate_sum_type(char *id, Sum *sum) {
 
   install_datatype_unnamed_end();
 
-  fputs("\n\n\n", translator.defs);
+  PUTS_DEFS("\n\n\n");
 
   for (Constructor *c = sum->constructors; c != NULL; c = c->next) {
     install_constructor_function(id, c, sum->attributes);
@@ -536,6 +559,18 @@ void install_standard_typedefs(void) {
   install_typedef("char", "identifier_t", true);
 }
 
+void install_alloc_macro(void) {
+  install_pp_directive("ifndef ALLOC");
+  install_macro("ALLOC(size)", "malloc(size)");
+  install_pp_directive("endif");
+}
+
+void install_realloc_macro(void) {
+  install_pp_directive("ifndef REALLOC");
+  install_macro("REALLOC(mem, size)", "realloc(mem, size)");
+  install_pp_directive("endif");
+}
+
 void translate_rule(Rule *rule) {
   if (rule->type->kind == TYPE_PRODUCT)
     translate_product_type(rule->id, rule->type->product);
@@ -549,6 +584,3 @@ void translate_rule_chain(Rule *rules) {
   for (Rule *r = rules; r != NULL; r = r->next)
     translate_rule(r);
 }
-
-
-

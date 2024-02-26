@@ -14,7 +14,7 @@ extern int yyparse(void);
 
 static inline void print_help_and_exit() {
   printf("Usage: asdl [-o output] [-d def_suffix] [-f fn_suffix] [-k "
-         "kind_suffix] [-a arg_suffix] FILE\n");
+         "kind_suffix] [-a arg_suffix] [-p fn_prefix] FILE\n");
   printf("\n");
   printf("Options:\n");
   printf("  -o output      Specify the output file\n");
@@ -22,6 +22,7 @@ static inline void print_help_and_exit() {
   printf("  -f fn_suffix   Specify the suffix for functions\n");
   printf("  -k kind_suffix Specify the suffix for kind types\n");
   printf("  -a arg_suffix  Specify the suffix for arguments\n");
+  printf("  -p fn_prefix   Specify the prefix for function signatures\n");
   printf("\n");
   exit(EX_USAGE);
 }
@@ -31,10 +32,11 @@ void parse_arguments(int argc, char **argv) {
 
   char *def_suffix = "def", *fn_suffix = "fn", *arg_suffix = "arg",
        *kind_suffix = "kind";
+  char *fn_prefix = "";
   char *outpath = NULL;
   yyin = stdin;
 
-  while ((c = getopt(argc, argv, "o:d:f:a:k:h")) != -1) {
+  while ((c = getopt(argc, argv, "o:d:f:a:k:p:h")) != -1) {
     switch (c) {
     case 'o':
       outpath = optarg;
@@ -51,6 +53,9 @@ void parse_arguments(int argc, char **argv) {
     case 'k':
       kind_suffix = optarg;
       break;
+    case 'p':
+      fn_prefix = optarg;
+      break;
     case 'h':
       print_help_and_exit();
       break;
@@ -65,12 +70,19 @@ void parse_arguments(int argc, char **argv) {
             "Error: no input file given, neither via arguments nor STDIN\n");
     exit(EXIT_FAILURE);
   } else if (optind < argc && isatty(STDIN_FILENO)) {
-    yyin = fopen(argv[optind], "r");
+    if (access(argv[optind], F_OK | R_OK) == 0)
+      yyin = fopen(argv[optind], "r");
+    else {
+      fprintf(stderr, "Error: input file is not readable, or does not exist");
+      exit(EXIT_FAILURE);
+    }
   } else if (optind < argc && !isatty(STDIN_FILENO)) {
     yyin = stdin;
   }
 
+  assign_prefixes(fn_prefix);
   assign_suffixes(def_suffix, fn_suffix, arg_suffix, kind_suffix);
+
   init_translator(outpath);
   init_absyn();
 }

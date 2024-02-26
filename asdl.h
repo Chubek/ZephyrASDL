@@ -95,6 +95,7 @@ char *gc_strndup(const char *str, size_t n);
 
 void translate_rule_chain(Rule *rules);
 
+void assign_prefixes(char *fn);
 void assign_suffixes(char *def, char *fn, char *arg, char *kind);
 
 void init_translator(char *);
@@ -106,5 +107,6 @@ void finalize_absyn(void);
 void dump_absyn(void);
 
 void emit_prelude(char c);
+void emit_appendage(char c);
 
 #endif
