@@ -52,6 +52,7 @@ install: $(BINARY) companions/asdl.1
 	cp companions/asdl.1 $(MANDIR)
 	mandb
 	cp -r companions $(DOCDIR)
+	cp -r examples $(DOCDIR)/examples
 	@echo "Install complete."
 
 .PHONY: all clean install
