@@ -4,14 +4,19 @@
 %}
 
 %x EMBED
+%x APPEND
 
 type_id [a-z_][a-z0-9_]{1,32}
 cons_id [A-Z][a-zA-Z0-9_]{1,32}
 
 %%
-"%{"			   { BEGIN(EMBED); fputs("/* embed-begin */\n", yyout); }
-<EMBED>"%}"		   { BEGIN(INITIAL); fputs("\n/* embed-end */\n\n", yyout); }
-<EMBED>.		   { emit_prelude(*yytext); }
+"^%{$"			   { BEGIN(EMBED); }
+<EMBED>"^%}$"		   { BEGIN(INITIAL); }
+<EMBED>.|\n		   { emit_prelude(*yytext); }
+
+"^%%$"			   { BEGIN(APPEND); }
+<APPEND><<EOF>>		   { BEGIN(INITIAL); }
+<APPEND>.|\n		   { emit_appendage(*yytext); }
 
 "bool"			   { return BOOL; }
 "size"			   { return SIZE; }
