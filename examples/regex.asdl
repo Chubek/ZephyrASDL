@@ -1,17 +1,16 @@
 %{
+#include <stddef.h>
 
-#include <stdint.h>
-
-typedef uint8_t char_tyy;
-typedef int int_tyy;
-
+char *input = NULL;
 %}
 
-regex = Cat(regex, regex)
-      | Alt(regex, regex)
-      | Kleene(regex)
-      | Character(char)
-      | CharacterRange(char, char)
+# Abstract syntax tree for regex
+
+regex = Cat(regex, regex) # Concatenation
+      | Alt(regex, regex) # Alternation
+      | Kleene(regex) # Kleene star
+      | Character(int)
+      | CharacterRange(int, int)
       | AtleatOnce(regex)
       | AtleastZero(regex)
       | Exactly(int)
@@ -24,4 +23,7 @@ regex = Cat(regex, regex)
 
 %%
 
-#include <abb>
+int main(void) {
+  input = "abbaba";
+  printf("%s\n", input);
+}
