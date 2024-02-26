@@ -2,11 +2,13 @@
 
 asdl(1) is an implementation of the ZephyrASDL language, specified in 1997 by Appel, Wang, Korn and Serra in paper 'Zephyr Abstract Syntax Description Language'. The following document is guide on how to write ASDL specs, and use the asdl(1) translator utility which translates ASDL specs to C code.
 
+**Note**: When we are referring to our implementation of ASDL, we'll use asdl(1). We will use 'ASDL' when referring to the language as a whole.
+
 # Navigation
 
 * [Using asdl(1)](#using-asdl-1): How to use the utility
-
-
+* [The ASDL and asdl(1) Grammar](#the-asdl-and-asdl-1-grammar): The grammar that asdl(1) accepts, in EBNF Format
+* [Details of ASDL](#details-of-asdl): How to Define ASTs in ASDiL
 
 
 # Using asdl(1)
@@ -46,5 +48,49 @@ ADD_kind
 
 * fn\_prefix: (empty by default) You can use this to declare `static` or `static inline` functions. Just pass what you want prefixed before the function declaration.
 
+# The ASDL and asdl(1) Grammar
+
+asdl(1) defines a superset for Zephyr ASDL. This superset includes extended pre-defined types, and Yacc-like embeds. The grammar which asdl(1) acceps can be described in EBNF format as:
+
+```
+# Syntactic Grammar
+
+definitions	::= prelude { definition } "%%" c-code
+definition	::= type_id '=' type
+
+type		::= sum_type | product_type
+
+product_type	::= fields
+
+sum_type   	::= constructor { '|' constructor } [ "attributes" fields ]
+
+constructor	::= con_id [ fields ]
+
+fields		::= '(' field { ',' field } ')'
+
+field 		::= ( type_id | predef-types ) [ '?' | '*' ] [ id ]
+
+prelude		::= "%{" c-code "%}"
 
 
+# Lexical Grammar
+ 
+predef-types	::= "int" 
+		| "uint"
+ 		| "size" 
+		| "usize"
+		| "boolean" 
+		| "string"
+		| "identifier"
+
+id		::= con_id | type_id
+
+con_id		::= [A-Z][a-zA-Z0-9_]*
+type_id		::= [a-z][a-z0-9_]*
+
+c-code		::= ? valid-c-code ?
+```
+
+# Details of ASDL
+
+ASDL language

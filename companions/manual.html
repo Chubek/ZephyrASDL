@@ -1,0 +1,74 @@
+<h1>ASDL: An implementation of the Zephyr ASDL Language, Targeting C</h1>
+<h2>Version 1.1</h2>
+<h2>SYNTAX</h2>
+<pre><code>asdl [-o output_file] [-d def_suffix] [-f fn_suffix] [-k kind_suffix] [-a arg_suffix] [-p fn_prefix] INPUT_FILE
+</code></pre>
+<h2>OPTIONS</h2>
+<ul>
+<li>output_file: The output file (STDOUT by default)</li>
+<li>def_suffix: Suffix used for typedef aliases (<em>def</em> by default).</li>
+<li>fn_suffix: Suffix used for function names (<em>fn</em> by default).</li>
+<li>kind_sufifx: Suffix used for kind enumeration names (<em>kind</em> by default).</li>
+<li>arg_suffix: Suffix used for argument names (<em>arg</em> by default).</li>
+<li>fn_prefix: Suffix used for function signatures (empty by default, you can use <code>static</code> or <code>static inline</code>).</li>
+</ul>
+<h2>ARGUMENTS</h2>
+<ul>
+<li>INPUT_FILE: The ASDL specification file (STDIN by default)</li>
+</ul>
+<h2>DESCRIPTION</h2>
+<p>ASDL is an implementation of the Zephyr ASDL language, as specified by Wang, Appel, Korn, Serra in 1997 paper 'The Zephyr Abstract Syntax Description Language' (linked below).</p>
+<p>Zephyr ASDL was originally implemented in C, and its targts included C, C++, Stnadard ML and so on. However, this implementation was bootstrapped onto itself, and besides that, it relied on SUIF for compilation. This version has lite dependencies and is much more hassle-free. However, it just targets C (at this moment).</p>
+<p>ASDL language is a tree grammar used to describe language syntax, the output can be used to construct Abstract Syntax Trees.</p>
+<p>The current version (1.1) is stable. It outputs correct code, with zero warnings or errors (as far as tested).</p>
+<h2>ASDL DOCUMENTATION</h2>
+<p>The documentation for ASDL language can be found at the original papger (<a href="https://www.cs.princeton.edu/~appel/papers/asdl97.pdf">https://www.cs.princeton.edu/~appel/papers/asdl97.pdf</a>).</p>
+<p>This implementation adds two YACC-like extensions to the file:</p>
+<p>1- You can enclose C code between <code>%{</code> and <code>%}</code>, this will be inserted at the BEGINNING of the file before the translation. 2- You can insert a <code>%%</code> after the tree grammar, and anything you insert after it, C code that is, will be inserted AFTER the translation.</p>
+<p>There are now several more built-in types: <code>int</code>, <code>uint</code>, <code>string</code>, <code>identifier</code>, <code>size</code>, <code>usize</code>, <code>boolean</code></p>
+<p>Also, see EXAMPLE to see how you can insert comments.</p>
+<h2>EXAMPLE</h2>
+<p>This is a very basic ASDL that describes the syntax for <strong>m4(1)</strong> (the appendages are nonesense):</p>
+<pre><code>%{
+
+#include &lt;stddef.h&gt;
+
+static int IN = 0;
+
+%}
+
+# This is a comment
+
+m4 = Macro(identifier name, macro definition) # Another comment
+   | NumberedArgument(int num)
+   | WildCardArgument
+   | CommaSepArgument
+   ;
+
+
+%%
+
+int main() {
+  return IN;
+}
+
+</code></pre>
+<h2>FILES</h2>
+<ul>
+<li><strong>MANPAGE.md</strong>: This documentation in form of Markdown.</li>
+<li><strong>manual.html</strong>: This documentation in form of HTML.</li>
+<li><strong>asdl.1</strong>: This documentation in ROFF man page format.</li>
+<li><strong>TEXINFO.md</strong>: The Texinfo documentation in form of Markdown.</li>
+<li><strong>asdl.texi</strong>: The Texinfo documentation in native format.</li>
+<li><strong>guide.html</strong>: The Texinfo documentation in form of HTML.</li>
+<li><strong>asdl.vim</strong>: VimScript syntax highlighter (you can copy it to the <code>/syntax</code> directory of NeoVim or Vim).</li>
+<li><strong>GRAMMAR.ebnf</strong>: The grammar for ASDL in EBNF syntax</li>
+<li><strong>examples/regex.asdl</strong>: Usage example #1</li>
+<li><strong>examples/basicl.asdl</strong>: Usage example #2</li>
+</ul>
+<h2>COPYRIGHT</h2>
+<p>2024 - Chubak Bidpaa (chubakbidpaa@riseup.net)</p>
+<p>Released under GPL Version 3-or-later license.</p>
+<p>Redistribution of this program complies with the conventions of above mentioned license.</p>
+<h2>SEE ALSO</h2>
+<p><strong>yacc(1)</strong>, <strong>lex(1)</strong>, <strong>peg(1)</strong>, <strong>bnfc(1)</strong></p>

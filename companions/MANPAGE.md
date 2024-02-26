@@ -79,10 +79,15 @@ int main() {
 ## FILES
 
 * **MANPAGE.md**: This documentation in form of Markdown.
-* **asdl.1**: This documentation in ROFF format.
+* **manual.html**: This documentation in form of HTML.
+* **asdl.1**: This documentation in ROFF man page format.
+* **TEXINFO.md**: The Texinfo documentation in form of Markdown.
+* **asdl.texi**: The Texinfo documentation in native format.
+* **guide.html**: The Texinfo documentation in form of HTML.
 * **asdl.vim**: VimScript syntax highlighter (you can copy it to the `/syntax` directory of NeoVim or Vim).
-* **regex.asdl** and **basic.asdl**: Examples
 * **GRAMMAR.ebnf**: The grammar for ASDL in EBNF syntax
+* **examples/regex.asdl**: Usage example #1
+* **examples/basicl.asdl**: Usage example #2
 
 ## COPYRIGHT
 
