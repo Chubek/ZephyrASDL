@@ -1,6 +1,6 @@
 # Syntactic Grammar
 
-definitions	::= prelude { definition } "%%" c-code
+definitions	::= prelude { definition | comment } "%%" c-code
 definition	::= type_id '=' type
 
 type		::= sum_type | product_type
@@ -35,5 +35,5 @@ type_id		::= [a-z][a-z0-9_]*
 
 c-code		::= ? valid-c-code ?
 
-
+comments	::= "# " .+ \n
 
