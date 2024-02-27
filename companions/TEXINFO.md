@@ -93,4 +93,9 @@ c-code		::= ? valid-c-code ?
 
 # Details of ASDL
 
-ASDL language
+As specified in the paper, a normal ASDL specification for parts of cpp(1) -- the C preprocessor, looks like this:
+
+```
+cpp = ObjMcro(identifier name, string definition)
+    | FunMacro(identifier name, argument* args, 
+```

@@ -8,7 +8,7 @@ endif
 
 syntax include @asdlCCode syntax/c.vim
 
-syntax region asdlPrelude start="\n%{" end="\n%}\n" contains=@asdlCCode
+syntax region asdlPrelude start="%{\n" end="\n%}\n" contains=@asdlCCode
 syntax region asdlAppend start="\n%%\n" end="\%$" contains=@asdlCCode
 syntax region asdlComment start="\s*#\s*" end="\n"
 
