@@ -178,7 +178,7 @@ void dump_translator(void) {
   trans_dump();
 }
 
-void print_indent(void) {
+static inline void print_indent(void) {
   for (int i = 0; i < indent_level; i++)
     PUTS_DEFS(INDENT);
 }
@@ -233,6 +233,32 @@ void install_macro(const char *name, const char *def) {
 void install_field(const char *type, const char *name) {
   print_indent();
   PRINTF_DEFS("%s %s;\n", type, name);
+}
+
+void install_sequence_field(char *type, char *name) {
+  print_indent();
+  PUTS_DEFS("struct {\n");
+  INC_INDENT();
+  print_indent();
+  PRINTF_DEFS("%s %s;\n", type, name);
+  print_indent();
+  PRINTF_DEFS("ssize_t %s_count;\n", name);
+  DEC_INDENT();
+  print_indent();
+  PRINTF_DEFS("} %s_seq;\n", name);
+}
+
+void install_optional_field(char *type, char *name) {
+  print_indent();
+  PUTS_DEFS("struct {\n");
+  INC_INDENT();
+  print_indent();
+  PRINTF_DEFS("%s %s;\n", type, name);
+  print_indent();
+  PRINTF_DEFS("bool %s_exists;\n", name);
+  DEC_INDENT();
+  print_indent();
+  PRINTF_DEFS("} %s_opt;\n", name);
 }
 
 void install_datatype_init(const char *kind, const char *name) {
@@ -422,9 +448,7 @@ void install_asdl_field(Field *field, size_t num) {
       STR_FORMAT(count, "%s_count", field->id);
     }
 
-    install_field(tyy, name);
-    install_field("long", count);
-
+    install_sequence_field(tyy, name);
     break;
   case FIELD_OPTIONAL:
     tyy = NULL;
@@ -444,9 +468,7 @@ void install_asdl_field(Field *field, size_t num) {
       STR_FORMAT(exists, "%s_exists", field->id);
     }
 
-    install_field(tyy, name);
-    install_field("bool", exists);
-
+    install_optional_field(tyy, name);
     break;
   }
 }
@@ -577,22 +599,85 @@ void install_constructor_function(char *id, Constructor *constructor,
   for (Field *f = constructor->fields; f != NULL; f = f->next) {
     assignname = NULL;
 
-    STR_FORMAT(assignname, "%s.%s", lc_ident, f->cache);
+    if (f->kind == FIELD_SEQUENCE) {
+      STR_FORMAT(assignname, "%s.%s_seq.%s", lc_ident, f->cache, f->cache);
+      install_function_assign(assignname, "NULL");
+      STR_FORMAT(assignname, "%s.%s_seq.%s_count", lc_ident, f->cache,
+                 f->cache);
+      install_function_assign(assignname, "0");
+      continue;
+    } else if (f->kind == FIELD_OPTIONAL) {
+      STR_FORMAT(assignname, "%s.%s_opt.%s", lc_ident, f->cache, f->cache);
+      install_function_assign(assignname, f->cache);
+      STR_FORMAT(assignname, "%s.%s_opt.%s_exists", lc_ident, f->cache,
+                 f->cache);
+      install_function_assign(assignname, "false");
+      continue;
+    }
 
+    STR_FORMAT(assignname, "%s.%s", lc_ident, f->cache);
     install_function_assign(assignname, f->cache);
   }
 
   for (Field *f = attributes; f != NULL; f = f->next) {
     assignname = NULL;
 
-    STR_FORMAT(assignname, "%s.%s", lc_ident, f->cache);
+    if (f->kind == FIELD_SEQUENCE) {
+      STR_FORMAT(assignname, "%s.%s_seq.%s", lc_ident, f->cache, f->cache);
+      install_function_assign(assignname, "NULL");
+      STR_FORMAT(assignname, "%s.%s_seq.%s_count", lc_ident, f->cache,
+                 f->cache);
+      install_function_assign(assignname, "0");
+      continue;
+    } else if (f->kind == FIELD_OPTIONAL) {
+      STR_FORMAT(assignname, "%s.%s_opt.%s", lc_ident, f->cache, f->cache);
+      install_function_assign(assignname, f->cache);
+      STR_FORMAT(assignname, "%s.%s_opt.%s_exists", lc_ident, f->cache,
+                 f->cache);
+      install_function_assign(assignname, "false");
+      continue;
+    }
 
+    STR_FORMAT(assignname, "%s.%s", lc_ident, f->cache);
     install_function_assign(assignname, f->cache);
   }
 
   install_function_return();
 
   DEC_INDENT();
+}
+
+void install_append_function(char *id, char *def_name) {
+  char *fn_name = NULL;
+  char *argtyy_head = NULL;
+  char *argname_head = NULL;
+  char *argname_append = NULL;
+
+  STR_FORMAT(fn_name, "append_%s", id);
+  STR_FORMAT(argtyy_head, "%s*", def_name);
+  STR_FORMAT(argname_head, "%s_head", def_name);
+  STR_FORMAT(argname_append, "%s_append", id);
+
+  install_funcdecl_init("void", fn_name);
+  install_funcdef_init("void", fn_name);
+
+  install_funcdecl_arg(argtyy_head, argname_head, false);
+  install_funcdef_arg(argtyy_head, argname_head, false);
+
+  install_funcdecl_arg(def_name, argname_append, true);
+  install_funcdef_arg(def_name, argname_append, true);
+
+  INC_INDENT();
+
+  print_indent();
+  PRINTF_DEFS("%s->next = *%s;\n", argname_append, argname_head);
+
+  print_indent();
+  PRINTF_DEFS("*%s = %s;\n", argname_head, argname_append);
+
+  DEC_INDENT();
+
+  PUTS_DEFS("\n}\n\n");
 }
 
 void translate_sum_type(char *id, Sum *sum) {
@@ -608,12 +693,19 @@ void translate_sum_type(char *id, Sum *sum) {
 
   install_kinds(sum->constructors);
 
+  if (sum->constructors == NULL) {
+    fprintf(stderr, "Error: empty tree\n");
+    exit(EXIT_FAILURE);
+  }
+
   for (Constructor *c = sum->constructors; c != NULL; c = c->next) {
     install_datatype_init("union", c->id);
     install_constructor(c);
     install_attributes(sum->attributes);
     install_datatype_named_end(to_lowercase(c->id));
   }
+
+  install_field(def_name, "next");
 
   DEC_INDENT();
 
@@ -624,6 +716,10 @@ void translate_sum_type(char *id, Sum *sum) {
   for (Constructor *c = sum->constructors; c != NULL; c = c->next) {
     install_constructor_function(id, c, sum->attributes);
   }
+
+  PUTS_DEFS("\n\n");
+
+  install_append_function(id, def_name);
 }
 
 void install_standard_includes(void) {
@@ -667,6 +763,7 @@ void translate_rule(Rule *rule) {
 
 void translate_rule_chain(Rule *rules) {
   install_standard_includes();
+  install_standard_typedefs();
   install_alloc_macro();
   install_realloc_macro();
   install_free_macro();
