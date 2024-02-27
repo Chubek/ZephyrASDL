@@ -1,29 +1,40 @@
 " Vim syntax file
 " Language: ASDL
-" Author: Chubak Bidpaa
+" Author: [Your Name]
 
 if exists("b:current_syntax")
     finish
 endif
 
-syntax include @asdlCCode syntax/c.vim
+syn include @asdlCcode syntax/c.vim
 
-syntax region asdlPrelude start="\S%{\S" end="\S%}\S" contains=@asdlCCode
-syntax region asdlAppend start="\n%%\n" end="\%$" contains=@asdlCCode
-syntax region asdlComment start="\s*#\s*" end="\n"
+" Embeds
+syn region asdlPrelude start="%{" end="%}" contains=@asdlCcode contained
+syn region asdlAppend start="^%%" end="\%$" contains=@asdlCcode
 
-syntax match asdlOperator /\v[=|;,:]/
+" The keywords for asdl(1) -- the superset
+syn keyword asdlKeyword int uint 
+syn keyword asdlKeyword size usize 
+syn keyword asdlKeyword boolean string identifier
 
-syntax match asdlConId /[A-Z][a-zA-Z0-9_]*/
-syntax match asdlTypeId /[a-z][a-z0-9_]*/
 
-syntax keyword asdlKeywords bool int uint size usize string identifier
+" The operators (basically to look 'good'!)
+syn match asdlOperator "\v[|;?*=:]"
 
-highlight link asdlOperator Operator
-highlight link asdlConId Identifier
-highlight link asdlTypeId Type
-highlight link asdlKeywords Keyword
-highlight link asdlComment Comment
+" Comments
+syn match asdlComment "\v#.*$"
 
-let b:current_syntax = "asdl"
+" Constructor identifiers
+syn match asdlConIdent "\v[A-Z][a-zA-Z0-9_]*"
 
+" Type identifiers
+syn match asdlTypeIdent "\v[a-z][a-z0-9_]*"
+
+" Linking
+hi link asdlKeyword Keyword
+hi link asdlComment Comment
+hi link asdlOperator Operator
+hi link asdlConIdent Identifier
+hi link asdlTypeIdent Type
+
+let b:curent_syntax = "asdl"
