@@ -6,6 +6,7 @@ BINARY := asdl
 DESTDIR := /usr/local/bin
 MANDIR := /usr/local/share/man/man1
 DOCDIR := /usr/local/share/doc/asdl
+INFODIR := /usr/share/info
 
 # Source files
 SRCS := asdl.c
@@ -42,7 +43,7 @@ lex.yy.c: scan.l
 
 clean:
 	rm -f $(BINARY) $(OBJS) $(GEN_OBJS) $(YACC_OBJS) $(LEX_OBJS) \
-		absyn.gen.c translate.gen.c parse.tab.c parse.tab.h lex.yy.c
+		absyn.gen.c translate.gen.c parse.tab.c parse.tab.h lex.yy.c asdl.info
 	@echo "Clean complete."
 
 install: $(BINARY) companions/asdl.1
@@ -53,6 +54,9 @@ install: $(BINARY) companions/asdl.1
 	mandb
 	cp -r companions $(DOCDIR)
 	cp -r examples $(DOCDIR)/examples
+	makeinfo companions/asdl.texi
+	mkdir -p $(INFODIR)
+	install-info --info-dir=$(INFODIR) asdl.info
 	@echo "Install complete."
 
 .PHONY: all clean install
