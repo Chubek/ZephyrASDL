@@ -1,7 +1,6 @@
-<h1>GNU Texinfo Documentation for ASDL</h1>
+<h1>Guide for ASDL and asdl(1)</h1>
 <p><code>asdl(1)</code> is an implementation of the ZephyrASDL language, specified in 1997 by Appel, Wang, Korn, and Serra in the paper 'Zephyr Abstract Syntax Description Language'. The following document is a guide on how to write ASDL specs and use the <code>asdl(1)</code> translator utility, which translates ASDL specs to C code.</p>
 <p><strong>Note</strong>: When referring to our implementation of ASDL, we'll use <code>asdl(1)</code>. We will use 'ASDL' when referring to the language as a whole.</p>
-<h2>Navigation</h2>
 <ul>
 <li><a href="#building-asdl-1">Building asdl(1)</a>: How to build the package with make(1) and companion files</li>
 <li><a href="#using-asdl-1">Using asdl(1)</a>: How to use the utility</li>
@@ -13,7 +12,7 @@
 <li><a href="#using-generated-files">Using Generated Files</a>: How to use the generated files</li>
 <li><a href="#future-of-asdl-1">Future of asdl(1)</a>: ASDL is an abandoned language, but asdl(1) is not!</li>
 </ul>
-<h2>Building asdl(1)</h2>
+<h3>Building asdl(1) <a id="building-asdl-1">[#]</a></h3>
 <p>To build asdl(1), just run <code>make</code>. To install it, run <code>make install</code>.</p>
 <p>In order to build asdl(1), you will need:</p>
 <ul>
@@ -23,7 +22,7 @@
 </ul>
 <p>After installation, you can browse the man page by typing <code>man 1 asdl</code> into terminal. You can page this document by <code>info asdl</code>. Examples and companions will be located in <code>/usr/local/share/doc/asdl</code> (emit <code>/local</code> if installed from a package manager).</p>
 <p>asdl(1) also comes with a VimScript which you can use with any implementation of Vim to have syntax highlighting. This file is called <code>asdl.vim</code>. Please consult Vim's documentation to see what needs to be done to add it to your editor.</p>
-<h2>Using asdl(1)</h2>
+<h3>Using asdl(1) <a id="using-asdl-1">[#]</a></h3>
 <p>The <code>asdl(1)</code> translator utility has several options and one argument. The syntax for invoking it is:</p>
 <pre><code>asdl [-o output_file] [-d def_suffix] [-f fn_suffix] [-k kind_suffix] [-a arg_suffix] [-p fn_prefix] INPUT_FILE
 </code></pre>
@@ -49,9 +48,9 @@
 <li><p><code>arg_suffix</code>: (default "arg") Basically, the argument name suffix. Nothing special about this one.</p></li>
 <li><p><code>fn_prefix</code>: (empty by default) You can use this to declare <code>static</code> or <code>static inline</code> functions. Just pass what you want prefixed before the function declaration.</p></li>
 </ul>
-<h2>The ASDL and asdl(1) Grammar</h2>
+<h3>The ASDL and asdl(1) Grammar <a id="the-asdl-and-asdl-1-grammar">[#]</a></h3>
 <p><code>asdl(1)</code> defines a superset for Zephyr ASDL. This superset includes extended pre-defined types and Yacc-like embeds. The grammar that <code>asdl(1)</code> accepts can be described in EBNF format as:</p>
-<pre class="ebnf"><code># Syntactic Grammar
+<pre class="ebnf"><code>### Syntactic Grammar
 
 definitions ::= prelude { definition | comment } &quot;%%&quot; c-code
 definition ::= type_id &#39;=&#39; type
@@ -71,7 +70,7 @@ field ::= ( type_id | predef-types ) [ &#39;?&#39; | &#39;*&#39; ] [ id ]
 prelude ::= &quot;%{&quot; c-code &quot;%}&quot;
 
 
-# Lexical Grammar
+### Lexical Grammar
  
 predef-types ::= &quot;int&quot; 
         | &quot;uint&quot;
@@ -88,10 +87,10 @@ type_id ::= [a-z][a-z0-9_]*
 
 c-code ::= ? valid-c-code ?
 
-comment ::= &quot;# &quot; .* \n
+comment ::= &quot;### &quot; .* \n
 
 </code></pre>
-<h2>Built-in Types</h2>
+<h3>Built-in Types <a id="the-built-in-types">[#]</a></h3>
 <p>ASDL only supports 2 built-in types (int and identifier). But asdl(1) supports:</p>
 <ul>
 <li>int, uint</li>
@@ -101,7 +100,7 @@ comment ::= &quot;# &quot; .* \n
 <li>string</li>
 </ul>
 <p><code>size</code> is translated to <code>ssize_t</code>. <code>usize</code> to <code>size_t</code>. <code>int</code> and <code>uint</code> are translated to <code>intmax_t</code> and <code>uintmax_t</code>. <code>identifier</code> is translated into <code>char*</code>. string to <code>uint8_t*</code>. And <code>boolean</code> to <code>bool</code>.</p>
-<h2>Details of ASDL Language</h2>
+<h3>Details of ASDL Language <a id="details-of-asdl-language">[#]</a></h3>
 <p>Based on the grammar above, the AST for <code>m4(1)</code> syntax would be:</p>
 <pre><code>m4 = Define(string name, m4 definition)
    | ArgumentRef(int num)
@@ -134,7 +133,7 @@ struct m4 {
    m4_def *next;
 };
 </code></pre>
-<h2>The Constrcutor Functions</h2>
+<h3>The Constrcutor Functions <a id="the-constructor-functions">[#]</a></h3>
 <p>With each constructor, a <code>create_&lt;constructor&gt;</code> function is generated, with its arguments being the fields. These functions use the <code>ALLOC</code> macro to allocate space for the structure. You can define your own <code>ALLOC</code> in the prelude:</p>
 <pre><code>%{
 #define ALLOC(size) calloc(1, size)
@@ -150,13 +149,13 @@ int main(void) {
   return 0;
 }
 </code></pre>
-<h2>Optional and Sequential Fields</h2>
+<h3>Optional and Sequential Fields <a id="optional-and-sequential-fields">[#]</a></h3>
 <p>One thing to note is, in ASDL, you can use <code>*</code> after a type id (for example, <code>string*</code>) to denote sequential fields and <code>?</code> after one to denote optional. In such cases, <code>asdl(1)</code> will emit a structure in place of these fields:</p>
 <ul>
 <li><p>For sequential fields, the structure adds a reference to the type and emits <code>ssize_t</code> variable to keep the count of it. You can see this in action in the example above.</p></li>
 <li><p>For the optional fields, the second option is a <code>bool</code> field, denoting if the item exists. No additional ref markers are generated.</p></li>
 </ul>
-<h2>The Append and Destroy Chain Functions</h2>
+<h3>The Append and Destroy Chain Functions</h3>
 <p>After <code>asdl(1)</code> generates the constructor functions, it emits an <code>append</code> function, which takes:</p>
 <ol>
 <li>A double-ref to the rule type.</li>
@@ -164,9 +163,9 @@ int main(void) {
 </ol>
 <p>Then, it uses the <code>next</code> item in the rule type (refer to the above example) to append item 2 to item 1. This way, you can use this function to keep a chain of singly-linked lists. A <code>destroy</code> function is also emitted so you can destroy the heap chain. The names of these functions are <code>append_&lt;rule&gt;_chain</code> and <code>destroy_&lt;rule&gt;_chain</code>. The <code>destroy</code> function uses the <code>FREE(mem)</code> macro which just like <code>ALLOC</code> you may re-define. By default, it's <code>free(mem)</code>.</p>
 <p><strong>Note</strong>: At this current version, you cannot change the suffixes and prefixes for generated functions unless for the ones specified in the <a href="#using-asdl-1">first section</a>. The ability will be added as soon as it is viable.</p>
-<h2>Using the Generated Files</h2>
+<h3>Using the Generated Files <a id="using-generated-files">[#]</a></h3>
 <p>You are free to use the generated files as you wish. One way is to generate the file as a header file (.h) and include it on top of your main file so C preprocessor can append it.</p>
 <p>Another way is to declare functions as extern, and compile the file alongside your main file.</p>
-<h2>Future of asdl(1)</h2>
+<h3>Future of asdl(1) <a id="future-of-asdl-1">[#]</a></h3>
 <p>In the future versions, tree-walker functions will be added. It was hesitant to add them at the moment because people would like to walk the trees with their own use in mind.</p>
 <p>Another feature which will be added in the future is generation of a separate header file that declares the functions and types.</p>

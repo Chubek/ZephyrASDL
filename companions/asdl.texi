@@ -1,22 +1,40 @@
-# Guide for ASDL and asdl(1)
+@ifnottex
+@node Top
+@top asdl(1)
+@end ifnottex
+
+@node Guide for ASDL and asdl(1)
+@chapter Guide for ASDL and asdl(1)
 
 `asdl(1)` is an implementation of the ZephyrASDL language, specified in 1997 by Appel, Wang, Korn, and Serra in the paper 'Zephyr Abstract Syntax Description Language'. The following document is a guide on how to write ASDL specs and use the `asdl(1)` translator utility, which translates ASDL specs to C code.
 
-**Note**: When referring to our implementation of ASDL, we'll use `asdl(1)`. We will use 'ASDL' when referring to the language as a whole.
+@emph{Note}: When referring to our implementation of ASDL, we'll use `asdl(1)`. We will use 'ASDL' when referring to the language as a whole.
+
+* [Building asdl(1)]:: How to build the package with make(1) and companion files
+* [Using asdl(1)]:: How to use the utility
+* [The ASDL and asdl(1) Grammar]:: The grammar that `asdl(1)` accepts, in EBNF Format
+* [The Built-in Types]:: The types which have been added to asdl(1) which may be used by default
+* [Details of ASDL Language]:: How to Define ASTs in ASDL
+* [The Constructor Functions]:: Constructor functions in generated files
+* [Optional and Sequential Fields]:: Fields with more than one members, and optional fields
+* [Using Generated Files]:: How to use the generated files
+* [Future of asdl(1)]:: ASDL is an abandoned language, but asdl(1) is not!
 
 
-* [Building asdl(1)](#building-asdl-1): How to build the package with make(1) and companion files
-* [Using asdl(1)](#using-asdl-1): How to use the utility
-* [The ASDL and asdl(1) Grammar](#the-asdl-and-asdl-1-grammar): The grammar that `asdl(1)` accepts, in EBNF Format
-* [The Built-in Types](#the-built-in-types): The types which have been added to asdl(1) which may be used by default
-* [Details of ASDL Language](#details-of-asdl-language): How to Define ASTs in ASDL
-* [The Constructor Functions](#the-constructor-functions): Constructor functions in generated files
-* [Optional and Seuential Fields](#optional-and-sequential-fields): Fields with more than one members, and optional fields
-* [Using Generated Files](#using-generated-files): How to use the generated files
-* [Future of asdl(1)](#future-of-asdl-1): ASDL is an abandoned language, but asdl(1) is not!
+@menu
+* Building asdl(1)::
+* Using asdl(1)::
+* The ASDL and asdl(1) Grammar::
+* The Built-in Types::
+* Details of ASDL Language::
+* The Constructor Functions::
+* Optional and Sequential Fields::
+* Using Generated Files::
+* Future of asdl(1)::
+@end menu
 
-
-### Building asdl(1) <a id="building-asdl-1">[#]</a>
+@node Building asdl(1)
+@section Building asdl(1)
 
 To build asdl(1), just run `make`. To install it, run `make install`.
 
@@ -26,51 +44,53 @@ In order to build asdl(1), you will need:
 * A C compiler (like GCC)
 * Perl
 
-After installation, you can browse the man page by typing `man 1 asdl` into terminal. You can page this document by `info asdl`. Examples and companions will be located in `/usr/local/share/doc/asdl` (emit `/local` if installed from a package manager).
+After installation, you can browse the man page by typing `man 1 asdl` into terminal. You can page this document by `info asdl`. Examples and companions will be located in `/usr/local/share/doc/asdl` (omit `/local` if installed from a package manager).
 
 asdl(1) also comes with a VimScript which you can use with any implementation of Vim to have syntax highlighting. This file is called `asdl.vim`. Please consult Vim's documentation to see what needs to be done to add it to your editor.
 
-### Using asdl(1) <a id="using-asdl-1">[#]</a>
+@node Using asdl(1)
+@section Using asdl(1)
 
 The `asdl(1)` translator utility has several options and one argument. The syntax for invoking it is:
 
-```
+@verbatim
 asdl [-o output_file] [-d def_suffix] [-f fn_suffix] [-k kind_suffix] [-a arg_suffix] [-p fn_prefix] INPUT_FILE
-```
+@end verbatim
 
 To explain each option in detail:
 
 * `output_file`: (default: STDOUT) This option specifies the output file for the translated C source. If it is not given, STDOUT is used.
  
-* `def_suffix`: (default: "def") This option specifies the suffix for typedefs. Basically, as we'll see, every tree has a name, and this name is translated into a nested data structure. Each structure is referred to by its typedef (which is a pointer alias). For example, for a structure named `stmt`, we get:
+* `def_suffix`: (default: "def") This option specifies the suffix for typedefs. Basically, as we'll see, every tree has a name, and this name is translated into a nested data structure. Each structure is referred to by its typedef (which is a pointer alias). For verbatim, for a structure named `stmt`, we get:
 
-```
+@verbatim
 typedef struct stmt *stmt_def;
-```
+@end verbatim
 
 * `fn_suffix`: (default: "create") This is actually the 'prefix', in a way, but since there's also an `fn_prefix`, we call it that. This marks the fragment of text which precedes the name of sub-tree in constructor functions. So if we have a sub-tree named 'Add' for the `stmt` tree, we get:
 
-```
+@verbatim
 stmt_def create_add(/* arguments */);
-```
+@end verbatim
 
 (Keep in mind that constructor functions are also declared).
 
 * `kind_suffix`: (default "kind") This is the suffix for enumerations. The translator emits two types of enumerations, one for stubs, one for each sub-tree in the tree. So the 'Add' subtree will have the kind:
 
-```
+@verbatim
 ADD_kind
-```
+@end verbatim
 
 * `arg_suffix`: (default "arg") Basically, the argument name suffix. Nothing special about this one.
 
 * `fn_prefix`: (empty by default) You can use this to declare `static` or `static inline` functions. Just pass what you want prefixed before the function declaration.
 
-### The ASDL and asdl(1) Grammar <a id="the-asdl-and-asdl-1-grammar">[#]</a>
+@node The ASDL and asdl(1) Grammar
+@section The ASDL and asdl(1) Grammar
 
 `asdl(1)` defines a superset for Zephyr ASDL. This superset includes extended pre-defined types and Yacc-like embeds. The grammar that `asdl(1)` accepts can be described in EBNF format as:
 
-```ebnf
+@verbatim
 ### Syntactic Grammar
 
 definitions ::= prelude { definition | comment } "%%" c-code
@@ -109,10 +129,10 @@ type_id ::= [a-z][a-z0-9_]*
 c-code ::= ? valid-c-code ?
 
 comment ::= "### " .* \n
+@end verbatim
 
-```
-
-### Built-in Types <a id="the-built-in-types">[#]</a>
+@node The Built-in Types
+@section The Built-in Types
 
 ASDL only supports 2 built-in types (int and identifier). But asdl(1) supports:
 
@@ -124,21 +144,22 @@ ASDL only supports 2 built-in types (int and identifier). But asdl(1) supports:
 
 `size` is translated to `ssize_t`. `usize` to `size_t`. `int` and `uint` are translated to `intmax_t` and `uintmax_t`. `identifier` is translated into `char*`. string to `uint8_t*`. And `boolean` to `bool`.
 
-### Details of ASDL Language <a id="details-of-asdl-language">[#]</a>
+@node Details of ASDL Language
+@section Details of ASDL Language
 
 Based on the grammar above, the AST for `m4(1)` syntax would be:
 
-```
+@verbatim
 m4 = Define(string name, m4 definition)
    | ArgumentRef(int num)
    | Token(string*)
-```
+@end verbatim
 
 Here, `Define`, `ArgumentRef`, and `Token` are each called *Constructors*. What's between open parenthesis and close parenthesis are called *Fields*. A Field has a *Type ID* and an OPTIONAL *Id*. The *Type ID* may be referred to recursively. The entire thing is a *Rule*.
 
 `asdl(1)` will generate a data structure for the `m4` rule. This structure would be:
 
-```
+@verbatim
 typedef struct m4 *m4_def; // this will be actually emitted before any rule is defined
 struct m4 {
    enum {
@@ -163,57 +184,50 @@ struct m4 {
    } value;
    m4_def *next;
 };
-```
+@end verbatim
 
-### The Constrcutor Functions <a id="the-constructor-functions">[#]</a>
+@node The Constructor Functions
+@section The Constructor Functions
 
 With each constructor, a `create_<constructor>` function is generated, with its arguments being the fields. These functions use the `ALLOC` macro to allocate space for the structure. You can define your own `ALLOC` in the prelude:
 
-```
+@verbatim
 %{
 #define ALLOC(size) calloc(1, size)
 %}
 
 m4 = ...
-```
+@end verbatim
 
 Now, as said before, you can always append your own C code after everything is done, à la Yacc:
 
-```
+@verbatim
 m4 = ...
 %%
 
 int main(void) {
   return 0;
 }
-```
+@end verbatim
 
-### Optional and Sequential Fields <a id="optional-and-sequential-fields">[#]</a>
+@node Optional and Sequential Fields
+@section Optional and Sequential Fields
 
-One thing to note is, in ASDL, you can use `*` after a type id (for example, `string*`) to denote sequential fields and `?` after one to denote optional. In such cases, `asdl(1)` will emit a structure in place of these fields:
+One thing to note is, in ASDL, you can use `*` after a type id (for verbatim, `string*`) to denote sequential fields and `?` after one to denote optional. In such cases, `asdl(1)` will emit a structure in place of these fields:
 
-* For sequential fields, the structure adds a reference to the type and emits `ssize_t` variable to keep the count of it. You can see this in action in the example above.
+* For sequential fields, the structure adds a reference to the type and emits `ssize_t` variable to keep the count of it. You can see this in action in the verbatim above.
 
 * For the optional fields, the second option is a `bool` field, denoting if the item exists. No additional ref markers are generated.
 
-### The Append and Destroy Chain Functions
-
-After `asdl(1)` generates the constructor functions, it emits an `append` function, which takes:
-
-1. A double-ref to the rule type.
-2. A single-ref to the rule type.
-
-Then, it uses the `next` item in the rule type (refer to the above example) to append item 2 to item 1. This way, you can use this function to keep a chain of singly-linked lists. A `destroy` function is also emitted so you can destroy the heap chain. The names of these functions are `append_<rule>_chain` and `destroy_<rule>_chain`. The `destroy` function uses the `FREE(mem)` macro which just like `ALLOC` you may re-define. By default, it's `free(mem)`.
-
-**Note**: At this current version, you cannot change the suffixes and prefixes for generated functions unless for the ones specified in the [first section](#using-asdl-1). The ability will be added as soon as it is viable.
-
-### Using the Generated Files <a id="using-generated-files">[#]</a>
+@node Using Generated Files
+@section Using Generated Files
 
 You are free to use the generated files as you wish. One way is to generate the file as a header file (.h) and include it on top of your main file so C preprocessor can append it. 
 
 Another way is to declare functions as extern, and compile the file alongside your main file.
 
-### Future of asdl(1) <a id="future-of-asdl-1">[#]</a>
+@node Future of asdl(1)
+@section Future of asdl(1)
 
 In the future versions, tree-walker functions will be added. It was hesitant to add them at the moment because people would like to walk the trees with their own use in mind.
 
