@@ -702,12 +702,12 @@ void translate_sum_type(char *id, Sum *sum) {
     exit(EXIT_FAILURE);
   }
 
-  install_datatype_init("struct", " ");
+  install_datatype_init("union", "");
 
   INC_INDENT();
 
   for (Constructor *c = sum->constructors; c != NULL; c = c->next) {
-    install_datatype_init("union", c->id);
+    install_datatype_init("struct", c->id);
     install_constructor(c);
     install_attributes(sum->attributes);
     install_datatype_named_end(to_lowercase(c->id));
