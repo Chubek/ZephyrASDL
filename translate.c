@@ -651,13 +651,13 @@ void install_constructor_function(char *id, Constructor *constructor,
   DEC_INDENT();
 }
 
-void install_append_function(char *id, char *def_name) {
+void install_append_function(const char *id, const char *def_name) {
   char *fn_name = NULL;
   char *argtyy_head = NULL;
   char *argname_head = NULL;
   char *argname_append = NULL;
 
-  STR_FORMAT(fn_name, "append_%s", id);
+  STR_FORMAT(fn_name, "append_%s_chain", id);
   STR_FORMAT(argtyy_head, "%s*", def_name);
   STR_FORMAT(argname_head, "%s_head", def_name);
   STR_FORMAT(argname_append, "%s_append", id);
@@ -682,6 +682,34 @@ void install_append_function(char *id, char *def_name) {
   DEC_INDENT();
 
   PUTS_DEFS("\n}\n\n");
+}
+
+void install_destroy_function(const char *id, const char *def_name) {
+  char *fn_name = NULL;
+  char *arg_tyy = NULL;
+  char *arg_name = NULL;
+
+  STR_FORMAT(fn_name, "destroy_%s_chain", id);
+  STR_FORMAT(arg_tyy, "%s*", def_name);
+  STR_FORMAT(arg_name, "%s_head", id);
+
+  install_funcdecl_init("void", fn_name);
+  install_funcdef_init("void", fn_name);
+
+  install_funcdecl_arg(arg_tyy, arg_name, true);
+  install_funcdef_arg(arg_tyy, arg_name, true);
+
+  INC_INDENT();
+  print_indent();  
+  PRINTF_DEFS("for (%s item = *%s; item != NULL; item = item->next) {\n", def_name, arg_name);
+  INC_INDENT();
+  print_indent();
+  PUTS_DEFS("FREE(item);\n");
+  DEC_INDENT();
+  print_indent();
+  PUTS_DEFS("}\n");
+  DEC_INDENT();
+  PUTS_DEFS("}\n\n");
 }
 
 void translate_sum_type(char *id, Sum *sum) {
@@ -732,6 +760,7 @@ void translate_sum_type(char *id, Sum *sum) {
   PUTS_DEFS("\n\n");
 
   install_append_function(id, def_name);
+  install_destroy_function(id, def_name);
 }
 
 void install_standard_includes(void) {
