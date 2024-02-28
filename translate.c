@@ -600,22 +600,24 @@ void install_constructor_function(char *id, Constructor *constructor,
     assignname = NULL;
 
     if (f->kind == FIELD_SEQUENCE) {
-      STR_FORMAT(assignname, "%s.%s_seq.%s", lc_ident, f->cache, f->cache);
+      STR_FORMAT(assignname, "value.%s.%s_seq.%s", lc_ident, f->cache,
+                 f->cache);
       install_function_assign(assignname, "NULL");
-      STR_FORMAT(assignname, "%s.%s_seq.%s_count", lc_ident, f->cache,
+      STR_FORMAT(assignname, "value.%s.%s_seq.%s_count", lc_ident, f->cache,
                  f->cache);
       install_function_assign(assignname, "0");
       continue;
     } else if (f->kind == FIELD_OPTIONAL) {
-      STR_FORMAT(assignname, "%s.%s_opt.%s", lc_ident, f->cache, f->cache);
+      STR_FORMAT(assignname, "value.%s.%s_opt.%s", lc_ident, f->cache,
+                 f->cache);
       install_function_assign(assignname, f->cache);
-      STR_FORMAT(assignname, "%s.%s_opt.%s_exists", lc_ident, f->cache,
+      STR_FORMAT(assignname, "value.%s.%s_opt.%s_exists", lc_ident, f->cache,
                  f->cache);
       install_function_assign(assignname, "false");
       continue;
     }
 
-    STR_FORMAT(assignname, "%s.%s", lc_ident, f->cache);
+    STR_FORMAT(assignname, "value.%s.%s", lc_ident, f->cache);
     install_function_assign(assignname, f->cache);
   }
 
@@ -623,22 +625,24 @@ void install_constructor_function(char *id, Constructor *constructor,
     assignname = NULL;
 
     if (f->kind == FIELD_SEQUENCE) {
-      STR_FORMAT(assignname, "%s.%s_seq.%s", lc_ident, f->cache, f->cache);
+      STR_FORMAT(assignname, "value.%s.%s_seq.%s", lc_ident, f->cache,
+                 f->cache);
       install_function_assign(assignname, "NULL");
-      STR_FORMAT(assignname, "%s.%s_seq.%s_count", lc_ident, f->cache,
+      STR_FORMAT(assignname, "value.%s.%s_seq.%s_count", lc_ident, f->cache,
                  f->cache);
       install_function_assign(assignname, "0");
       continue;
     } else if (f->kind == FIELD_OPTIONAL) {
-      STR_FORMAT(assignname, "%s.%s_opt.%s", lc_ident, f->cache, f->cache);
+      STR_FORMAT(assignname, "value.%s.%s_opt.%s", lc_ident, f->cache,
+                 f->cache);
       install_function_assign(assignname, f->cache);
-      STR_FORMAT(assignname, "%s.%s_opt.%s_exists", lc_ident, f->cache,
+      STR_FORMAT(assignname, "value.%s.%s_opt.%s_exists", lc_ident, f->cache,
                  f->cache);
       install_function_assign(assignname, "false");
       continue;
     }
 
-    STR_FORMAT(assignname, "%s.%s", lc_ident, f->cache);
+    STR_FORMAT(assignname, "value.%s.%s", lc_ident, f->cache);
     install_function_assign(assignname, f->cache);
   }
 
@@ -698,12 +702,20 @@ void translate_sum_type(char *id, Sum *sum) {
     exit(EXIT_FAILURE);
   }
 
+  install_datatype_init("struct", " ");
+
+  INC_INDENT();
+
   for (Constructor *c = sum->constructors; c != NULL; c = c->next) {
     install_datatype_init("union", c->id);
     install_constructor(c);
     install_attributes(sum->attributes);
     install_datatype_named_end(to_lowercase(c->id));
   }
+
+  DEC_INDENT();
+
+  install_datatype_named_end("value");
 
   install_field(def_name, "next");
 
