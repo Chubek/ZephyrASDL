@@ -8,7 +8,7 @@ asdl(1) is an implementation of the ZephyrASDL language, specified in 1997 by Ap
 
 * [Using asdl(1)](#using-asdl-1): How to use the utility
 * [The ASDL and asdl(1) Grammar](#the-asdl-and-asdl-1-grammar): The grammar that asdl(1) accepts, in EBNF Format
-* [Details of ASDL](#details-of-asdl): How to Define ASTs in ASDiL
+* [Details of ASDL Language](#details-of-asdl-language): How to Define ASTs in ASDL
 
 
 # Using asdl(1)
@@ -55,7 +55,7 @@ asdl(1) defines a superset for Zephyr ASDL. This superset includes extended pre-
 ```
 # Syntactic Grammar
 
-definitions	::= prelude { definition } "%%" c-code
+definitions	::= prelude { definition | comment } "%%" c-code
 definition	::= type_id '=' type
 
 type		::= sum_type | product_type
@@ -89,13 +89,99 @@ con_id		::= [A-Z][a-zA-Z0-9_]*
 type_id		::= [a-z][a-z0-9_]*
 
 c-code		::= ? valid-c-code ?
-```
 
-# Details of ASDL
-
-As specified in the paper, a normal ASDL specification for parts of cpp(1) -- the C preprocessor, looks like this:
+comment		::= "# " .* \n
 
 ```
-cpp = ObjMcro(identifier name, string definition)
-    | FunMacro(identifier name, argument* args, 
+
+# Details of ASDL Language
+
+Based on the grammar above, the AST for m4(1) syntax would be:
+
 ```
+m4 = Define(string name, m4 definition)
+   | ArgumentRef(int num)
+   | Token(string*)
+```
+
+
+Here, `Define`, `ArgumentRef` and `Token` are each called *Constructors*. What's between open parenthesis and close parenthesis are called *Fields*. a Field has a *Type ID* and an OPTIONAL *Id*. The *Type ID* may be referred to recursively. The entire thing is a *Rule*.
+
+asdl(1) will generate a data structure for the `m4` rule. This structure would be:
+
+```
+typedef struct m4 *m4_def; // this will be actually emitted before any rule is defined
+struct m4 {
+   enum {
+  	DEFINE_kind,
+	ARGUMENTREF_kind,
+	TOKEN_kind,
+   };
+   union {
+	struct Define {
+          uint8_t *name;
+          m4_def *definition;
+	} define;
+	struct ArgumentRef {
+          int num;
+	};
+	struct Token {
+           struct {
+	      uint8_t **string_0;
+	      ssize_t num_string_0;
+	   } token_seq;
+	};
+   } value;
+   m4_def *next;
+};
+```
+
+Witch each constructor, a `create_<constructor>` function is generated, with its arguments being the fields. These functions use the `ALLOC` macro to allocate space for the structure. You can define your own ALLOC in the prelude:
+
+```
+
+%{
+
+#define ALLOC(size) calloc(1, size)
+
+%}
+
+m4 = ...
+
+```
+
+
+Now, as said before, you can always append your own C code after everything is done, a la Yacc:
+
+
+```
+
+m4 = ...
+
+%%
+
+int main(void) {
+  return 0;
+}
+
+```
+
+
+One thing to note is, in ASDL, you can use `*` after a type id to denote sequential fields and `?` after one to denote optional. In such cases, asdl(1) will emit a structure in the stead of these fields:
+
+
+* For sequential fields, the structure add a reference to the type, and emits `ssize_t` variable to keep the count of it. You can see this in action in the example above.
+
+* For the optional fields, the second optiopn is a `bool` field, denoting if item exists. No additional ref markers are generated.
+
+After asdl(1) generates the constructor functions, it emits an `append` function, which takes:
+
+1- A double-ref to the rule type;
+2- A single-ref to the rule type;
+
+and then, it uses the `next` item in the rule type (refer to above example) to apppend item 2 to item 1. This way, you can use this function to keep a chain of singly-linked lists. A `destroy` function is also emitted, so you can destroy the heap.
+
+
+
+
+
