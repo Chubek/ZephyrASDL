@@ -13,7 +13,9 @@ You can read the documentation for this program at `companions/MANPAGE.md`.
 You need:
 
 1- An implementation of Lex, e.g. Flex
+
 2- An implementation of Yacc, e.g. Bison
+
 3- Perl
 
 After installing these (for example, with `apt-get`) you can run:
@@ -28,7 +30,13 @@ After that, bring up the manpage and see what is added to the language:
 man 1 asdl
 ```
 
-Otherwise, if you want to know how to write ASDL code, read the paper.
+You can also view the Texinfo with:
+
+```
+info asdl
+```
+
+The manpage and the Texinfo are available in `companions` under `manual.html` and `guide.html`. After installing, these files, along with examples, and everything within `companions` will be copied to `/usr/local/share/doc/asdl`. If you install via a package manager, omitt `/local`.
 
 
 If you need to contact me, you can do so via email: `chubakbidpaa [at] riseup [dot] net`.
