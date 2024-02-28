@@ -47,3 +47,6 @@ parse.h
 # Ignore accidental files
 ;
 :
+
+# Info files
+*.info
