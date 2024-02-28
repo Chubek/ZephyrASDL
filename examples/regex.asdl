@@ -1,7 +1,9 @@
 %{
-#include <stddef.h>
 
-char *input = NULL;
+#include <stdio.h>
+
+static char *input = NULL;
+
 %}
 
 # Abstract syntax tree for regex
