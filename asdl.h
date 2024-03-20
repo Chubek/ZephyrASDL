@@ -72,7 +72,7 @@ struct Field {
   } kind;
   TypeId *type_id;
   char *id;
-  char *cache;
+  char *cache[2];
   Field *next;
 };
 

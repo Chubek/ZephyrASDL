@@ -34,7 +34,7 @@ Field *add_field(TypeId *type_id, int modifier, char *id) {
   field->type_id = type_id;
   field->kind = modifier;
   field->id = id;
-  field->cache = NULL;
+  field->cache[0] = field->cache[1] = NULL;
   field->next = fields;
   fields = field;
   return field;

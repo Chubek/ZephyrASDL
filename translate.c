@@ -551,10 +551,17 @@ void install_constructor_function(char *id, Constructor *constructor,
       STR_FORMAT(argname, "%s", f->id);
     }
 
-    f->cache = argname;
+    f->cache[0] = argtyy;
+    f->cache[1] = argname;
 
     install_funcdecl_arg(argtyy, argname, f->next == NULL);
     install_funcdef_arg(argtyy, argname, f->next == NULL);
+
+    if (f->kind == FIELD_OPTIONAL) {
+	STR_FORMAT(argname, "%s_exists", f->cache[1]);
+	install_funcdecl_arg("bool", argname, false);
+	install_funcdef_arg("bool", argname, false);
+    }
   }
 
   n = 0;
@@ -574,10 +581,17 @@ void install_constructor_function(char *id, Constructor *constructor,
       STR_FORMAT(argname, "%s", f->id);
     }
 
-    f->cache = argname;
+    f->cache[0] = argtyy;
+    f->cache[1] = argname;
 
     install_funcdecl_arg(argtyy, argname, f->next == NULL);
     install_funcdef_arg(argtyy, argname, f->next == NULL);
+
+    if (f->kind == FIELD_OPTIONAL) {
+	STR_FORMAT(argname, "%s_exists", f->cache[1]);
+	install_funcdecl_arg("bool", argname, false);
+	install_funcdef_arg("bool", argname, false);
+    }
   }
 
   char *ptyy = NULL;
@@ -591,6 +605,7 @@ void install_constructor_function(char *id, Constructor *constructor,
   PUTS_DEFS("\n");
 
   char *assignname = NULL;
+  char *assignval = NULL;
 
   STR_FORMAT(assignname, "%s_%s", to_uppercase(constructor->id), kind_suffix);
 
@@ -598,52 +613,58 @@ void install_constructor_function(char *id, Constructor *constructor,
 
   for (Field *f = constructor->fields; f != NULL; f = f->next) {
     assignname = NULL;
+    assignval = NULL;
 
     if (f->kind == FIELD_SEQUENCE) {
-      STR_FORMAT(assignname, "value.%s.%s_seq.%s", lc_ident, f->cache,
-                 f->cache);
-      install_function_assign(assignname, "NULL");
-      STR_FORMAT(assignname, "value.%s.%s_seq.%s_count", lc_ident, f->cache,
-                 f->cache);
+      STR_FORMAT(assignname, "value.%s.%s_seq.%s", lc_ident, f->cache[1],
+                 f->cache[1]);
+      STR_FORMAT(assignval, "(%s*)%s", f->cache[0], f->cache[1]);
+      install_function_assign(assignname, assignval);
+      STR_FORMAT(assignname, "value.%s.%s_seq.%s_count", lc_ident, f->cache[1],
+                 f->cache[1]);
       install_function_assign(assignname, "0");
       continue;
     } else if (f->kind == FIELD_OPTIONAL) {
-      STR_FORMAT(assignname, "value.%s.%s_opt.%s", lc_ident, f->cache,
-                 f->cache);
-      install_function_assign(assignname, f->cache);
-      STR_FORMAT(assignname, "value.%s.%s_opt.%s_exists", lc_ident, f->cache,
-                 f->cache);
-      install_function_assign(assignname, "false");
+      STR_FORMAT(assignname, "value.%s.%s_opt.%s", lc_ident, f->cache[1],
+                 f->cache[1]);
+      install_function_assign(assignname, f->cache[1]);
+      STR_FORMAT(assignname, "value.%s.%s_opt.%s_exists", lc_ident, f->cache[1],
+                 f->cache[1]);
+      STR_FORMAT(assignval, "%s_exists", f->cache[1]);
+      install_function_assign(assignname, assignval);
       continue;
     }
 
-    STR_FORMAT(assignname, "value.%s.%s", lc_ident, f->cache);
-    install_function_assign(assignname, f->cache);
+    STR_FORMAT(assignname, "value.%s.%s", lc_ident, f->cache[1]);
+    install_function_assign(assignname, f->cache[1]);
   }
 
   for (Field *f = attributes; f != NULL; f = f->next) {
-    assignname = NULL;
-
+    assignname = NULL; 
+    assignval = NULL;
+ 
     if (f->kind == FIELD_SEQUENCE) {
-      STR_FORMAT(assignname, "value.%s.%s_seq.%s", lc_ident, f->cache,
-                 f->cache);
-      install_function_assign(assignname, "NULL");
-      STR_FORMAT(assignname, "value.%s.%s_seq.%s_count", lc_ident, f->cache,
-                 f->cache);
+      STR_FORMAT(assignname, "value.%s.%s_seq.%s", lc_ident, f->cache[1],
+                 f->cache[1]);
+      STR_FORMAT(assignval, "(%s*)%s", f->cache[0], f->cache[1]);
+      install_function_assign(assignname, assignval);
+      STR_FORMAT(assignname, "value.%s.%s_seq.%s_count", lc_ident, f->cache[1],
+                 f->cache[1]);
       install_function_assign(assignname, "0");
       continue;
     } else if (f->kind == FIELD_OPTIONAL) {
-      STR_FORMAT(assignname, "value.%s.%s_opt.%s", lc_ident, f->cache,
-                 f->cache);
-      install_function_assign(assignname, f->cache);
-      STR_FORMAT(assignname, "value.%s.%s_opt.%s_exists", lc_ident, f->cache,
-                 f->cache);
-      install_function_assign(assignname, "false");
+      STR_FORMAT(assignname, "value.%s.%s_opt.%s", lc_ident, f->cache[1],
+                 f->cache[1]);
+      install_function_assign(assignname, f->cache[1]);
+      STR_FORMAT(assignname, "value.%s.%s_opt.%s_exists", lc_ident, f->cache[1],
+                 f->cache[1]);
+      STR_FORMAT(assignval, "%s_exists", f->cache[1]); 
+      install_function_assign(assignname, assignval);
       continue;
     }
 
-    STR_FORMAT(assignname, "value.%s.%s", lc_ident, f->cache);
-    install_function_assign(assignname, f->cache);
+    STR_FORMAT(assignname, "value.%s.%s", lc_ident, f->cache[1]);
+    install_function_assign(assignname, f->cache[1]);
   }
 
   install_function_return();
