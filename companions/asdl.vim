@@ -23,4 +23,4 @@ syntax region asdlDefinitions start="^" end="%%" keepend contains=asdlId,asdlCon
 highlight link asdlPredefType Type
 highlight link asdlId Identifier
 highlight link asdlConId Constant
-highlight link asdlComment Commen
+highlight link asdlComment Comment
