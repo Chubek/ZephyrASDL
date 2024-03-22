@@ -1,40 +1,26 @@
 " Vim syntax file
 " Language: ASDL
-" Author: [Your Name]
+" Author: Chubak Bidpaa
 
-if exists("b:current_syntax")
-    finish
-endif
+" Clear old syntax items
+syntax clear
 
-syn include @asdlCcode syntax/c.vim
+" Define the main syntax groups
+syntax keyword asdlPredefType int uint size usize boolean string identifier contained
+syntax match asdlId "\v<[a-z][a-zA-Z0-9_]*>" contained
+syntax match asdlConId "\v<[A-Z][a-zA-Z0-9_]*>" contained
+syntax match asdlComment "#.*$" contained
 
-" Embeds
-syn region asdlPrelude start="%{" end="%}" contains=@asdlCcode contained
-syn region asdlAppend start="^%%" end="\%$" contains=@asdlCcode
+" Include C syntax for the embedded C code and ensure it's correctly scoped
+syntax region cCode start="%{" end="%}" keepend contains=@C
+syntax include @C syntax/c.vim
 
-" The keywords for asdl(1) -- the superset
-syn keyword asdlKeyword int uint 
-syn keyword asdlKeyword size usize 
-syn keyword asdlKeyword boolean string identifier
+" Define regions for ASDL structure, ensuring C code is properly contained and doesn't interfere
+syntax region asdlPrelude start="^%{" end="%}" keepend contains=cCode
+syntax region asdlDefinitions start="^" end="%%" keepend contains=asdlId,asdlConId,asdlPredefType,asdlComment,cCode
 
-
-" The operators (basically to look 'good'!)
-syn match asdlOperator "\v[|;?*=:]"
-
-" Comments
-syn match asdlComment "\v#.*$"
-
-" Constructor identifiers
-syn match asdlConIdent "\v[A-Z][a-zA-Z0-9_]*"
-
-" Type identifiers
-syn match asdlTypeIdent "\v[a-z][a-z0-9_]*"
-
-" Linking
-hi link asdlKeyword Keyword
-hi link asdlComment Comment
-hi link asdlOperator Operator
-hi link asdlConIdent Identifier
-hi link asdlTypeIdent Type
-
-let b:curent_syntax = "asdl"
+" Link the syntax groups to highlight groups
+highlight link asdlPredefType Type
+highlight link asdlId Identifier
+highlight link asdlConId Constant
+highlight link asdlComment Commen
