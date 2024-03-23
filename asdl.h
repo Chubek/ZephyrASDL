@@ -110,7 +110,7 @@ Constructor *add_constructor(char *con_id, Field *fields);
 Rule *add_sum_type(Constructor *constructors, Field *attributes);
 Rule *add_product_type(Field *fields);
 
-Symtable *create_symtable(void);
+Symtable *symtable_init(void);
 void symtable_insert(const char *key, const void *value);
 void *symtable_retrieve(const char *key);
 
