@@ -7,6 +7,15 @@
 
 #include "asdl.h"
 
+static inline char *dash_to_underscore(char *ident) {
+   char *replaced = ident;
+
+   while (*replaced++)
+   	*replaced = *replaced == '-' ? '_' : *replaced;
+
+   return ident;   
+}
+
 extern int yylex(void);
 int yyerror(const char *);
 
@@ -25,7 +34,7 @@ extern Rule *rules;
 }
 
 %token <str_val> CONS_IDENT TYPE_IDENT INIT_IDENT
-%token ATTRIBUTES BOOL SIZE USIZE INT UINT STRING IDENTIFIER
+%token ATTRIBUTES BOOL SIZE USIZE INT UINT SHORT USHORT CHAR UCHAR FLOAT DOUBLE STRING IDENTIFIER
 
 %type <str_val> name_opt
 %type <field_val> fields fields_opt attrs
@@ -44,7 +53,7 @@ rules : rule
       | rules rule
       ;
 
-rule : INIT_IDENT assign type semi_opt	{ $3->id = $1; }
+rule : INIT_IDENT assign type semi_opt	{ $3->id = dash_to_underscore($1); }
      ;
 
 semi_opt : ';'
@@ -75,7 +84,7 @@ constrs : constr
 	| constrs '|' constr
 	;
 
-constr : CONS_IDENT fields_opt		{ add_constructor($1, $2); }
+constr : CONS_IDENT fields_opt		{ add_constructor(dash_to_underscore($1), $2); }
        ;
 
 fields_opt : '(' items ')'		{ $$ = fields; fields = NULL; }
@@ -94,17 +103,23 @@ item : type_id  name_opt	 	{ add_field($1, FIELD_NORMAL, $2);	}
      | type_id '?' name_opt		{ add_field($1, FIELD_OPTIONAL, $3);    }
      ;
 
-type_id : TYPE_IDENT	{ $$ = create_typeid(TYYNAME_ID, $1); }
+type_id : TYPE_IDENT	{ $$ = create_typeid(TYYNAME_ID, dash_to_underscore($1)); }
 	| BOOL		{ $$ = create_typeid(TYYNAME_BOOL, NULL); }
 	| SIZE		{ $$ = create_typeid(TYYNAME_SIZE, NULL); }
 	| USIZE		{ $$ = create_typeid(TYYNAME_USIZE, NULL); }
 	| INT		{ $$ = create_typeid(TYYNAME_INT, NULL); }
 	| UINT		{ $$ = create_typeid(TYYNAME_UINT, NULL); }
+	| SHORT		{ $$ = create_typeid(TYYNAME_SHORT, NULL); }
+	| USHORT	{ $$ = create_typeid(TYYNAME_USHORT, NULL); }
+	| CHAR		{ $$ = create_typeid(TYYNAME_CHAR, NULL); }
+	| UCHAR		{ $$ = create_typeid(TYYNAME_UCHAR, NULL); }
+	| FLOAT		{ $$ = create_typeid(TYYNAME_FLOAT, NULL); }
+	| DOUBLE	{ $$ = create_typeid(TYYNAME_DOUBLE, NULL); }
 	| STRING	{ $$ = create_typeid(TYYNAME_STRING, NULL); }
 	| IDENTIFIER    { $$ = create_typeid(TYYNAME_IDENTIFIER, NULL); }
 	;
 
-name_opt : TYPE_IDENT	{ $$ = $1; }
+name_opt : TYPE_IDENT	{ $$ = dash_to_underscore($1); }
 	 |		{ $$ = NULL; }
 	 ;
 
