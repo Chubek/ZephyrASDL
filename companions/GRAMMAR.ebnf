@@ -28,6 +28,10 @@ field-type	::= predef-type | type-id
  
 predef-type	::= "int" 
 		 | "uint"
+		 | "byte"
+		 | "ubyte"
+		 | "long"
+		 | "ulong"
 		 | "char"
 		 | "uchar"
 		 | "short"
