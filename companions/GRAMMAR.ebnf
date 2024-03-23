@@ -1,39 +1,72 @@
-# Syntactic Grammar
+# Syntactic Grammar for Zephyr ASDL
 
-definitions	::= prelude { definition | comment } "%%" c-code
-definition	::= type_id '=' type
+definitions	::= [ prelude ] { definition | ignorable } [ conclude ]
 
-type		::= sum_type | product_type
+definition	::= type-id '=' type-definition [ ';' ]
 
-product_type	::= fields
-
-sum_type   	::= constructor { '|' constructor } [ "attributes" fields ]
-
-constructor	::= con_id [ fields ]
-
-fields		::= '(' field { ',' field } ')'
-
-field 		::= ( type_id | predef-types ) [ '?' | '*' ] [ id ]
+conclude	::= "%%" c-code end-of-file
 
 prelude		::= "%{" c-code "%}"
 
+type-definition	::= sum-type | product-type
 
-# Lexical Grammar
+product-type	::= fields-list
+
+sum-type   	::= constructor { '|' constructor } [ "attributes" fields-list ]
+
+constructor	::= con-id [ fields-list ]
+
+fields-list	::= '(' field { ',' field } ')'
+
+field 		::= field-type [ '?' | '*' ] [ field-name ]
+
+field-name	::= name-id
+
+field-type	::= predef-type | type-id
+
+# Lexical Grammar for Zephyr ASDL
  
-predef-types	::= "int" 
+predef-type	::= "int" 
 		 | "uint"
+		 | "char"
+		 | "uchar"
+		 | "short"
+		 | "ushort"
  		 | "size" 
 		 | "usize"
 		 | "boolean" 
 		 | "string"
+		 | "float"
+		 | "double"
 		 | "identifier"
 
-id		::= con_id | type_id
+name-id		::= letter { letter | digit | '_' }
 
-con_id		::= [A-Z][a-zA-Z0-9_]*
-type_id		::= [a-z][a-z0-9_]*
+con-id		::= upper { letter | digit | '_' }
 
-c-code		::= ? valid-c-code ?
+type-id		::= lower { lower | digit |  '_' }
 
-comments	::= "# " .+ \n
+letter		::= upper | lower
 
+digit		::= '0' | '1' | '2' | ... | '7' | '8' | '9'
+
+lower		::= 'a' | 'b' | 'c' | ... | 'x' | 'y' | 'z'
+
+upper		::= 'A' | 'B' | 'C' | ... | 'X' | 'Y' | 'Z'
+
+c-code		::= ? any valid-c-code ?
+
+ignorable	::= whitespace | comment
+
+comment		::= "# " { no-newline } newline
+
+no-newline	::= ? matches anything except newline ?
+
+whitespace	::= ' '
+		 | tabulator
+
+end-of-file	::= ? matches end of file ?
+
+tabulator	::= ? matches tab character ?
+
+newline		::= ? matches newline ?
