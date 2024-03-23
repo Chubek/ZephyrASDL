@@ -52,33 +52,45 @@
 #define INDENT "    "
 #endif
 
-static const char *BOOL = "bool";
-static const char *INT = "intmax_t";
-static const char *UINT = "uintmax_t";
-static const char *SHORT = "int16_t";
-static const char *USHORT = "uint16_t";
-static const char *CHAR = "int8_t";
-static const char *UCHAR = "uint8_t";
-static const char *FLOAT = "float";
-static const char *DOUBLE = "double";
+static const char *BOOLEAN = "bool";
+static const char *INT8 = "int8_t";
+static const char *UINT8 = "uint8_t";
+static const char *INT16 = "int16_t";
+static const char *UINT16 = "uint16_t";
+static const char *INT32 = "int32_t";
+static const char *UINT32 = "uint32_t";
+static const char *INT64 = "int64_t";
+static const char *UINT64 = "uint64_t";
+static const char *CHAR = "char";
+static const char *UCHAR = "unsigned char";
+static const char *FLOAT32 = "float";
+static const char *FLOAT64 = "double";
+static const char *FLOAT80 = "long double";
 static const char *SIZE = "ssize_t";
 static const char *USIZE = "size_t";
 static const char *STRING = "string_t";
 static const char *IDENTIFIER = "identifier_t";
+static const char *BYTEARRAY = "bytearray_t";
 
-static const char *BOOL_NAME = "boolean";
-static const char *INT_NAME = "int";
-static const char *UINT_NAME = "uint";
-static const char *SHORT_NAME = "short";
-static const char *USHORT_NAME = "ushort";
+static const char *BOOLEAN_NAME = "boolean";
+static const char *INT8_NAME = "int8";
+static const char *UINT8_NAME = "uint8";
+static const char *INT16_NAME = "int16";
+static const char *UINT16_NAME = "uint16";
+static const char *INT32_NAME = "int32";
+static const char *UINT32_NAME = "uint32";
+static const char *INT64_NAME = "int64";
+static const char *UINT64_NAME = "uint64";
 static const char *CHAR_NAME = "char";
 static const char *UCHAR_NAME = "uchar";
-static const char *FLOAT_NAME = "float";
-static const char *DOUBLE_NAME = "double";
+static const char *FLOAT32_NAME = "float32";
+static const char *FLOAT64_NAME = "float64";
+static const char *FLOAT80_NAME = "float80";
 static const char *SIZE_NAME = "size";
 static const char *USIZE_NAME = "usize";
 static const char *STRING_NAME = "string";
 static const char *IDENTIFIER_NAME = "identifier";
+static const char *BYTEARRAY_NAME = "bytearray";
 
 static char *fn_prefix = NULL;
 
@@ -325,24 +337,34 @@ void install_function_return(void) {
 
 const char *get_type_id(TypeId *tyyid) {
   switch (tyyid->kind) {
-  case TYYNAME_BOOL:
-    return BOOL;
-  case TYYNAME_INT:
-    return INT;
-  case TYYNAME_UINT:
-    return UINT;
-  case TYYNAME_SHORT:
-    return SHORT;
-  case TYYNAME_USHORT:
-    return USHORT;
+  case TYYNAME_BOOLEAN:
+    return BOOLEAN;
+  case TYYNAME_INT8:
+    return INT8;
+  case TYYNAME_UINT8:
+    return UINT8;
+  case TYYNAME_INT16:
+    return INT16;
+  case TYYNAME_UINT16:
+    return UINT16;
+  case TYYNAME_INT32:
+    return INT32;
+  case TYYNAME_UINT32:
+    return UINT32;
+  case TYYNAME_INT64:
+    return INT64;
+  case TYYNAME_UINT64:
+    return UINT64;
+  case TYYNAME_FLOAT32:
+    return FLOAT32;
+  case TYYNAME_FLOAT64:
+    return FLOAT64;
+  case TYYNAME_FLOAT80:
+    return FLOAT80;
   case TYYNAME_CHAR:
     return CHAR;
   case TYYNAME_UCHAR:
     return UCHAR;
-  case TYYNAME_FLOAT:
-    return FLOAT;
-  case TYYNAME_DOUBLE:
-    return DOUBLE;
   case TYYNAME_SIZE:
     return SIZE;
   case TYYNAME_USIZE:
@@ -351,31 +373,47 @@ const char *get_type_id(TypeId *tyyid) {
     return STRING;
   case TYYNAME_IDENTIFIER:
     return IDENTIFIER;
+  case TYYNAME_BYTEARRAY:
+    return BYTEARRAY;
   default:
+    if (symtable_retrieve(tyyid->value) == NULL) {
+	fprintf(stderr, "Error: undefined type `%s`\n", tyyid->value);
+	exit(EXIT_FAILURE);
+    }
     return tyyid->value;
   }
 }
 
 const char *get_argname(TypeId *tyyid) {
   switch (tyyid->kind) {
-  case TYYNAME_BOOL:
-    return BOOL_NAME;
-  case TYYNAME_INT:
-    return INT_NAME;
-  case TYYNAME_UINT:
-    return UINT_NAME;
-  case TYYNAME_SHORT:
-    return SHORT_NAME;
-  case TYYNAME_USHORT:
-    return USHORT_NAME;
+  case TYYNAME_BOOLEAN:
+    return BOOLEAN_NAME;
+  case TYYNAME_INT8:
+    return INT8_NAME;
+  case TYYNAME_UINT8:
+    return UINT8_NAME;
+  case TYYNAME_INT16:
+    return INT16_NAME;
+  case TYYNAME_UINT16:
+    return UINT16_NAME;
+  case TYYNAME_INT32:
+    return INT32_NAME;
+  case TYYNAME_UINT32:
+    return UINT32_NAME;
+  case TYYNAME_INT64:
+    return INT64_NAME;
+  case TYYNAME_UINT64:
+    return UINT64_NAME;
+  case TYYNAME_FLOAT32:
+    return FLOAT32_NAME;
+  case TYYNAME_FLOAT64:
+    return FLOAT64_NAME;
+  case TYYNAME_FLOAT80:
+    return FLOAT80_NAME;
   case TYYNAME_CHAR:
     return CHAR_NAME;
   case TYYNAME_UCHAR:
     return UCHAR_NAME;
-  case TYYNAME_FLOAT:
-    return FLOAT_NAME;
-  case TYYNAME_DOUBLE:
-    return DOUBLE_NAME;
   case TYYNAME_SIZE:
     return SIZE_NAME;
   case TYYNAME_USIZE:
@@ -384,13 +422,14 @@ const char *get_argname(TypeId *tyyid) {
     return STRING_NAME;
   case TYYNAME_IDENTIFIER:
     return IDENTIFIER_NAME;
+  case TYYNAME_BYTEARRAY:
+    return BYTEARRAY_NAME;
   default:
     return tyyid->value;
   }
 }
 
 static inline int random_integer(void) {
-  srand(time(NULL));
   return rand();
 }
 
@@ -415,7 +454,7 @@ void translate_product_type(char *id, Product *product) {
   install_typedef(tyy, def, true);
   install_funcdecl_init(def, fn);
 
-  install_datatype_init("union", id);
+  install_datatype_init("struct", id);
 
   INC_INDENT();
 
@@ -917,6 +956,7 @@ void install_standard_includes(void) {
 void install_standard_typedefs(void) {
   install_typedef("uint8_t", "string_t", true);
   install_typedef("char", "identifier_t", true);
+  install_typedef("uint8_t", "bytearray_t", true);
 }
 
 void install_alloc_macro(void) {
