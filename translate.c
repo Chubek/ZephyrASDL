@@ -445,7 +445,7 @@ void translate_product_type(char *id, Product *product) {
   char *tyy = NULL;
   char *def = NULL;
   char *fn = NULL;
-  STR_FORMAT(tyy, "union %s", id);
+  STR_FORMAT(tyy, "struct %s", id);
   STR_FORMAT(def, "%s_%s", id, def_suffix);
   STR_FORMAT(fn, "%s_%s", id, fn_suffix);
 
@@ -454,13 +454,19 @@ void translate_product_type(char *id, Product *product) {
 
   install_datatype_init("struct", id);
 
+  char *argtyy = NULL;
+  char *argname = NULL;
+  char *fieldname = NULL;
+  char *field = NULL;
+
   INC_INDENT();
 
   size_t n = 0;
   for (Field *f = product->fields; f != NULL; f = f->next, n++) {
-    char *argtyy = NULL;
-    char *argname = NULL;
-    char *cache = NULL;
+    argtyy = NULL;
+    argname = NULL;
+    fieldname = NULL;
+    field = NULL;
 
     if (f->type_id->kind == TYYNAME_ID) {
       STR_FORMAT(argtyy, "%s_%s", get_type_id(f->type_id), def_suffix);
@@ -470,12 +476,16 @@ void translate_product_type(char *id, Product *product) {
 
     if (f->id == NULL) {
       STR_FORMAT(argname, "%s_%s%lu", get_argname(f->type_id), arg_suffix, n);
+      STR_FORMAT(fieldname, "%s%lu", get_argname(f->type_id), n);
     } else {
       STR_FORMAT(argname, "%s_%s", f->id, arg_suffix);
+      STR_FORMAT(fieldname, "%s", f->id);
     }
 
+    STR_FORMAT(field, "%s %s", argtyy, fieldname);
+
     install_funcdecl_arg(argtyy, argname, f->next == NULL);
-    install_datatype_field(cache, ";");
+    install_datatype_field(field, ";");
   }
 
   DEC_INDENT();
