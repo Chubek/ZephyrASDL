@@ -25,6 +25,8 @@ cons_id [A-Z][a-zA-Z0-9_-]{1,32}
 <APPEND>.|\n		   { emit_appendage(*yytext); }
 
 "boolean"		   { return BOOLEAN; }
+"int"			   { return INT32; }
+"uint"			   { return UINT32; }
 "int8"			   { return INT8; }
 "uint8"			   { return UINT8; }
 "int16"			   { return INT16; }
