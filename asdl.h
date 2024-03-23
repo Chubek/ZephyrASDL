@@ -1,6 +1,7 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+#include <stdbool.h>
 #include <stddef.h>
 
 typedef struct Rule Rule;
@@ -38,12 +39,12 @@ struct TypeId {
     TYYNAME_UINT64,
     TYYNAME_FLOAT32,
     TYYNAME_FLOAT64,
-    TYYNAEM_FLOAT80,
+    TYYNAME_FLOAT80,
     TYYNAME_CHAR,
     TYYNAME_UCHAR,
     TYYNAME_SIZE,
     TYYNAME_USIZE,
-    TYYNAME_BOOL,
+    TYYNAME_BOOLEAN,
     TYYNAME_IDENTIFIER,
     TYYNAME_BYTEARRAY,
     TYYNAME_ID,
@@ -98,10 +99,10 @@ struct Translator {
   char *outpath;
 };
 
-struct Symbtable {
-   char *key;
-   void *value;
-   Symtable *next;
+struct Symtable {
+  char *key;
+  void *value;
+  Symtable *next;
 };
 
 TypeId *create_typeid(TypeIdKind kind, char *value);
@@ -113,6 +114,7 @@ Rule *add_product_type(Field *fields);
 Symtable *symtable_init(void);
 void symtable_insert(const char *key, const void *value);
 void *symtable_retrieve(const char *key);
+bool symtable_exists(const char *key);
 
 char *gc_strndup(const char *str, size_t n);
 

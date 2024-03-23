@@ -376,9 +376,9 @@ const char *get_type_id(TypeId *tyyid) {
   case TYYNAME_BYTEARRAY:
     return BYTEARRAY;
   default:
-    if (symtable_retrieve(tyyid->value) == NULL) {
-	fprintf(stderr, "Error: undefined type `%s`\n", tyyid->value);
-	exit(EXIT_FAILURE);
+    if (symtable_exists(tyyid->value) == false) {
+      fprintf(stderr, "Error: undefined type `%s`\n", tyyid->value);
+      exit(EXIT_FAILURE);
     }
     return tyyid->value;
   }
@@ -429,9 +429,7 @@ const char *get_argname(TypeId *tyyid) {
   }
 }
 
-static inline int random_integer(void) {
-  return rand();
-}
+static inline int random_integer(void) { return rand(); }
 
 void install_stub(char *id) {
   char *enumeration = NULL;
