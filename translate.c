@@ -230,6 +230,10 @@ void install_macro(const char *name, const char *def) {
   PRINTF_DECLS("#define %s %s\n", name, def);
 }
 
+void install_appendage_macro(const char *name, const char *def) {
+  PRINTF_APPENDAGE("#define %s %s\n", name, def);
+}
+
 void install_field(const char *type, const char *name) {
   print_indent();
   PRINTF_DEFS("%s %s;\n", type, name);
@@ -533,11 +537,13 @@ void install_constructor_function(char *id, Constructor *constructor,
 
   char *argtyy = NULL;
   char *argname = NULL;
+  char *swap = NULL;
 
   size_t n = 0;
   for (Field *f = constructor->fields; f != NULL; f = f->next, n++) {
     argtyy = NULL;
     argname = NULL;
+    swap = NULL;
 
     if (f->type_id->kind == TYYNAME_ID) {
       STR_FORMAT(argtyy, "%s_%s", get_type_id(f->type_id), def_suffix);
@@ -551,16 +557,27 @@ void install_constructor_function(char *id, Constructor *constructor,
       STR_FORMAT(argname, "%s", f->id);
     }
 
+    if (f->kind == FIELD_SEQUENCE) {
+      swap = argtyy;
+      STR_FORMAT(argtyy, "%s*", swap);
+    }
+
     f->cache[0] = argtyy;
     f->cache[1] = argname;
 
-    install_funcdecl_arg(argtyy, argname, f->next == NULL);
-    install_funcdef_arg(argtyy, argname, f->next == NULL);
+    install_funcdecl_arg(argtyy, argname,
+                         f->next == NULL && f->kind == FIELD_NORMAL);
+    install_funcdef_arg(argtyy, argname,
+                        f->next == NULL && f->kind == FIELD_NORMAL);
 
     if (f->kind == FIELD_OPTIONAL) {
-	STR_FORMAT(argname, "%s_exists", f->cache[1]);
-	install_funcdecl_arg("bool", argname, false);
-	install_funcdef_arg("bool", argname, false);
+      STR_FORMAT(argname, "%s_exists", f->cache[1]);
+      install_funcdecl_arg("bool", argname, f->next == NULL);
+      install_funcdef_arg("bool", argname, f->next == NULL);
+    } else if (f->kind == FIELD_SEQUENCE) {
+      STR_FORMAT(argname, "%s_count", f->cache[1]);
+      install_funcdecl_arg("ssize_t", argname, f->next == NULL);
+      install_funcdef_arg("ssize_t", argname, f->next == NULL);
     }
   }
 
@@ -568,6 +585,7 @@ void install_constructor_function(char *id, Constructor *constructor,
   for (Field *f = attributes; f != NULL; f = f->next, n++) {
     argtyy = NULL;
     argname = NULL;
+    swap = NULL;
 
     if (f->type_id->kind == TYYNAME_ID) {
       STR_FORMAT(argtyy, "%s_%s", get_type_id(f->type_id), def_suffix);
@@ -581,16 +599,27 @@ void install_constructor_function(char *id, Constructor *constructor,
       STR_FORMAT(argname, "%s", f->id);
     }
 
+    if (f->kind == FIELD_SEQUENCE) {
+      swap = argtyy;
+      STR_FORMAT(argtyy, "%s*", swap);
+    }
+
     f->cache[0] = argtyy;
     f->cache[1] = argname;
 
-    install_funcdecl_arg(argtyy, argname, f->next == NULL);
-    install_funcdef_arg(argtyy, argname, f->next == NULL);
+    install_funcdecl_arg(argtyy, argname,
+                         f->next == NULL && f->kind == FIELD_NORMAL);
+    install_funcdef_arg(argtyy, argname,
+                        f->next == NULL && f->kind == FIELD_NORMAL);
 
     if (f->kind == FIELD_OPTIONAL) {
-	STR_FORMAT(argname, "%s_exists", f->cache[1]);
-	install_funcdecl_arg("bool", argname, false);
-	install_funcdef_arg("bool", argname, false);
+      STR_FORMAT(argname, "%s_exists", f->cache[1]);
+      install_funcdecl_arg("bool", argname, f->next == NULL);
+      install_funcdef_arg("bool", argname, f->next == NULL);
+    } else if (f->kind == FIELD_SEQUENCE) {
+      STR_FORMAT(argname, "%s_count", f->cache[1]);
+      install_funcdecl_arg("ssize_t", argname, f->next == NULL);
+      install_funcdef_arg("ssize_t", argname, f->next == NULL);
     }
   }
 
@@ -607,6 +636,9 @@ void install_constructor_function(char *id, Constructor *constructor,
   char *assignname = NULL;
   char *assignval = NULL;
 
+  char *macro_name = NULL;
+  char *macro_def = NULL;
+
   STR_FORMAT(assignname, "%s_%s", to_uppercase(constructor->id), kind_suffix);
 
   install_function_assign("kind", assignname);
@@ -618,11 +650,22 @@ void install_constructor_function(char *id, Constructor *constructor,
     if (f->kind == FIELD_SEQUENCE) {
       STR_FORMAT(assignname, "value.%s.%s_seq.%s", lc_ident, f->cache[1],
                  f->cache[1]);
-      STR_FORMAT(assignval, "(%s*)%s", f->cache[0], f->cache[1]);
+      STR_FORMAT(assignval, "(%s)%s", f->cache[0], f->cache[1]);
       install_function_assign(assignname, assignval);
       STR_FORMAT(assignname, "value.%s.%s_seq.%s_count", lc_ident, f->cache[1],
                  f->cache[1]);
       install_function_assign(assignname, "0");
+
+      STR_FORMAT(macro_name, "GET_%s_%s(v)", lc_ident, f->cache[1]);
+      STR_FORMAT(macro_def, "v->value.%s.%s_seq.%s", lc_ident, f->cache[1],
+                 f->cache[1]);
+      install_appendage_macro(macro_name, macro_def);
+
+      STR_FORMAT(macro_name, "GET_%s_%s_count(v)", lc_ident, f->cache[1]);
+      STR_FORMAT(macro_def, "v->value.%s.%s_seq.%s_count", lc_ident,
+                 f->cache[1], f->cache[1]);
+      install_appendage_macro(macro_name, macro_def);
+
       continue;
     } else if (f->kind == FIELD_OPTIONAL) {
       STR_FORMAT(assignname, "value.%s.%s_opt.%s", lc_ident, f->cache[1],
@@ -632,25 +675,51 @@ void install_constructor_function(char *id, Constructor *constructor,
                  f->cache[1]);
       STR_FORMAT(assignval, "%s_exists", f->cache[1]);
       install_function_assign(assignname, assignval);
+
+      STR_FORMAT(macro_name, "GET_%s_%s(v)", lc_ident, f->cache[1]);
+      STR_FORMAT(macro_def, "v->value.%s.%s_opt.%s", lc_ident, f->cache[1],
+                 f->cache[1]);
+      install_appendage_macro(macro_name, macro_def);
+
+      STR_FORMAT(macro_name, "GET_%s_%s_exists(v)", lc_ident, f->cache[1]);
+      STR_FORMAT(macro_def, "v->value.%s.%s_opt.%s_exists", lc_ident,
+                 f->cache[1], f->cache[1]);
+      install_appendage_macro(macro_name, macro_def);
+
       continue;
     }
 
     STR_FORMAT(assignname, "value.%s.%s", lc_ident, f->cache[1]);
     install_function_assign(assignname, f->cache[1]);
+
+    STR_FORMAT(macro_name, "GET_%s_%s(v)", lc_ident, f->cache[1]);
+    STR_FORMAT(macro_def, "v->value.%s.%s", lc_ident, f->cache[1]);
+    install_appendage_macro(macro_name, macro_def);
   }
 
   for (Field *f = attributes; f != NULL; f = f->next) {
-    assignname = NULL; 
+    assignname = NULL;
     assignval = NULL;
- 
+
     if (f->kind == FIELD_SEQUENCE) {
       STR_FORMAT(assignname, "value.%s.%s_seq.%s", lc_ident, f->cache[1],
                  f->cache[1]);
-      STR_FORMAT(assignval, "(%s*)%s", f->cache[0], f->cache[1]);
+      STR_FORMAT(assignval, "(%s)%s", f->cache[0], f->cache[1]);
       install_function_assign(assignname, assignval);
       STR_FORMAT(assignname, "value.%s.%s_seq.%s_count", lc_ident, f->cache[1],
                  f->cache[1]);
       install_function_assign(assignname, "0");
+
+      STR_FORMAT(macro_name, "GET_%s_%s(v)", lc_ident, f->cache[1]);
+      STR_FORMAT(macro_def, "v->value.%s.%s_seq.%s", lc_ident, f->cache[1],
+                 f->cache[1]);
+      install_appendage_macro(macro_name, macro_def);
+
+      STR_FORMAT(macro_name, "GET_%s_%s_count(v)", lc_ident, f->cache[1]);
+      STR_FORMAT(macro_def, "v->value.%s.%s_seq.%s_count", lc_ident,
+                 f->cache[1], f->cache[1]);
+      install_appendage_macro(macro_name, macro_def);
+
       continue;
     } else if (f->kind == FIELD_OPTIONAL) {
       STR_FORMAT(assignname, "value.%s.%s_opt.%s", lc_ident, f->cache[1],
@@ -658,13 +727,28 @@ void install_constructor_function(char *id, Constructor *constructor,
       install_function_assign(assignname, f->cache[1]);
       STR_FORMAT(assignname, "value.%s.%s_opt.%s_exists", lc_ident, f->cache[1],
                  f->cache[1]);
-      STR_FORMAT(assignval, "%s_exists", f->cache[1]); 
+      STR_FORMAT(assignval, "%s_exists", f->cache[1]);
       install_function_assign(assignname, assignval);
+
+      STR_FORMAT(macro_name, "GET_%s_%s(v)", lc_ident, f->cache[1]);
+      STR_FORMAT(macro_def, "v->value.%s.%s_opt.%s", lc_ident, f->cache[1],
+                 f->cache[1]);
+      install_appendage_macro(macro_name, macro_def);
+
+      STR_FORMAT(macro_name, "GET_%s_%s_exists(v)", lc_ident, f->cache[1]);
+      STR_FORMAT(macro_def, "v->value.%s.%s_opt.%s_exists", lc_ident,
+                 f->cache[1], f->cache[1]);
+      install_appendage_macro(macro_name, macro_def);
+
       continue;
     }
 
     STR_FORMAT(assignname, "value.%s.%s", lc_ident, f->cache[1]);
     install_function_assign(assignname, f->cache[1]);
+
+    STR_FORMAT(macro_name, "GET_%s_%s(v)", lc_ident, f->cache[1]);
+    STR_FORMAT(macro_def, "v->value.%s.%s", lc_ident, f->cache[1]);
+    install_appendage_macro(macro_name, macro_def);
   }
 
   install_function_return();
@@ -721,8 +805,9 @@ void install_destroy_function(const char *id, const char *def_name) {
   install_funcdef_arg(arg_tyy, arg_name, true);
 
   INC_INDENT();
-  print_indent();  
-  PRINTF_DEFS("for (%s item = *%s; item != NULL; item = item->next) {\n", def_name, arg_name);
+  print_indent();
+  PRINTF_DEFS("for (%s item = *%s; item != NULL; item = item->next) {\n",
+              def_name, arg_name);
   INC_INDENT();
   print_indent();
   PUTS_DEFS("FREE(item);\n");
