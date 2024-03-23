@@ -98,11 +98,21 @@ struct Translator {
   char *outpath;
 };
 
+struct Symbtable {
+   char *key;
+   void *value;
+   Symtable *next;
+};
+
 TypeId *create_typeid(TypeIdKind kind, char *value);
 Field *add_field(TypeId *type_id, int opt, char *id);
 Constructor *add_constructor(char *con_id, Field *fields);
 Rule *add_sum_type(Constructor *constructors, Field *attributes);
 Rule *add_product_type(Field *fields);
+
+Symtable *create_symtable(void);
+void symtable_insert(const char *key, const void *value);
+void *symtable_retrieve(const char *key);
 
 char *gc_strndup(const char *str, size_t n);
 
