@@ -83,11 +83,11 @@ char *gc_strndup(const char *str, size_t n) {
 Symtable *stab = NULL;
 
 
-Symtable *create_symtable(void) {
+Symtable *symtable_init(void) {
    stab = (Symtable *)absyn_alloc(sizeof(Symtable));
 }
 
-void insert_symtable(const char *key, const void *value) {
+void symtable_insert(const char *key, const void *value) {
    Symtable *node = (Symtable *)absyn_alloc(sizeof(Symtable));
    node->key = gc_strndup(key, strlen(key));
    node->value = value;
@@ -95,7 +95,7 @@ void insert_symtable(const char *key, const void *value) {
    stab = node;
 }
 
-void *retrieve_symtable(const char *key) {
+void *symtable_retrieve(const char *key) {
    for (Symtable *st = stab; st != NULL; st = st->next)
 	   if (!strncmp(key, st->key, MAX_KEY))
 		   return st->value;
