@@ -55,6 +55,12 @@
 static const char *BOOL = "bool";
 static const char *INT = "intmax_t";
 static const char *UINT = "uintmax_t";
+static const char *SHORT = "int16_t";
+static const char *USHORT = "uint16_t";
+static const char *CHAR = "int8_t";
+static const char *UCHAR = "uint8_t";
+static const char *FLOAT = "float";
+static const char *DOUBLE = "double";
 static const char *SIZE = "ssize_t";
 static const char *USIZE = "size_t";
 static const char *STRING = "string_t";
@@ -63,6 +69,12 @@ static const char *IDENTIFIER = "identifier_t";
 static const char *BOOL_NAME = "boolean";
 static const char *INT_NAME = "int";
 static const char *UINT_NAME = "uint";
+static const char *SHORT_NAME = "short";
+static const char *USHORT_NAME = "ushort";
+static const char *CHAR_NAME = "char";
+static const char *UCHAR_NAME = "uchar";
+static const char *FLOAT_NAME = "float";
+static const char *DOUBLE_NAME = "double";
 static const char *SIZE_NAME = "size";
 static const char *USIZE_NAME = "usize";
 static const char *STRING_NAME = "string";
@@ -319,6 +331,18 @@ const char *get_type_id(TypeId *tyyid) {
     return INT;
   case TYYNAME_UINT:
     return UINT;
+  case TYYNAME_SHORT:
+    return SHORT;
+  case TYYNAME_USHORT:
+    return USHORT;
+  case TYYNAME_CHAR:
+    return CHAR;
+  case TYYNAME_UCHAR:
+    return UCHAR;
+  case TYYNAME_FLOAT:
+    return FLOAT;
+  case TYYNAME_DOUBLE:
+    return DOUBLE;
   case TYYNAME_SIZE:
     return SIZE;
   case TYYNAME_USIZE:
@@ -340,6 +364,18 @@ const char *get_argname(TypeId *tyyid) {
     return INT_NAME;
   case TYYNAME_UINT:
     return UINT_NAME;
+  case TYYNAME_SHORT:
+    return SHORT_NAME;
+  case TYYNAME_USHORT:
+    return USHORT_NAME;
+  case TYYNAME_CHAR:
+    return CHAR_NAME;
+  case TYYNAME_UCHAR:
+    return UCHAR_NAME;
+  case TYYNAME_FLOAT:
+    return FLOAT_NAME;
+  case TYYNAME_DOUBLE:
+    return DOUBLE_NAME;
   case TYYNAME_SIZE:
     return SIZE_NAME;
   case TYYNAME_USIZE:
