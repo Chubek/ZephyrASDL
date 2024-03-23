@@ -53,7 +53,7 @@ rules : rule
       | rules rule
       ;
 
-rule : INIT_IDENT assign type semi_opt	{ $3->id = dash_to_underscore($1); }
+rule : INIT_IDENT assign type semi_opt	{ $3->id = dash_to_underscore($1); symtable_insert($1, NULL); }
      ;
 
 semi_opt : ';'
