@@ -13,6 +13,7 @@ typedef struct GCNode GCNode;
 typedef struct Heap Heap;
 typedef struct Translator Translator;
 typedef struct TypeId TypeId;
+typedef struct Symtable Symtable;
 
 typedef enum FieldKind FieldKind;
 typedef enum TypeKind TypeKind;
@@ -27,18 +28,24 @@ struct Rule {
 struct TypeId {
   enum TypeIdKind {
     TYYNAME_STRING,
-    TYYNAME_INT,
-    TYYNAME_UINT,
-    TYYNAME_SHORT,
-    TYYNAME_USHORT,
+    TYYNAME_INT8,
+    TYYNAME_UINT8,
+    TYYNAME_INT16,
+    TYYNAME_UINT16,
+    TYYNAME_INT32,
+    TYYNAME_UINT32,
+    TYYNAME_INT64,
+    TYYNAME_UINT64,
+    TYYNAME_FLOAT32,
+    TYYNAME_FLOAT64,
+    TYYNAEM_FLOAT80,
     TYYNAME_CHAR,
     TYYNAME_UCHAR,
-    TYYNAME_FLOAT,
-    TYYNAME_DOUBLE,
     TYYNAME_SIZE,
     TYYNAME_USIZE,
     TYYNAME_BOOL,
     TYYNAME_IDENTIFIER,
+    TYYNAME_BYTEARRAY,
     TYYNAME_ID,
   } kind;
   char *value;
