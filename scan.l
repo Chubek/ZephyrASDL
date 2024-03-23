@@ -29,6 +29,12 @@ cons_id [A-Z][a-zA-Z0-9_]{1,32}
 "usize"			   { return USIZE; }
 "uint"			   { return UINT; }
 "int"			   { return INT; }
+"short"			   { return SHORT; }
+"ushort"		   { return USHORT; }
+"char"		           { return CHAR; }
+"uchar"			   { return UCHAR: }
+"float"			   { return FLOAT; }
+"double"		   { return DOUBLE; }
 "string"		   { return STRING; }
 "identifier"		   { return IDENTIFIER; }
 "attributes"               { return ATTRIBUTES; }
