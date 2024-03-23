@@ -353,10 +353,7 @@ const char *get_argname(TypeId *tyyid) {
   }
 }
 
-static inline int random_integer(void) {
-  srand(time(NULL));
-  return rand();
-}
+static inline int random_integer(void) { return rand(); }
 
 void install_stub(char *id) {
   char *enumeration = NULL;
