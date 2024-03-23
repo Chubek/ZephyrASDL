@@ -96,6 +96,8 @@ int main(int argc, char **argv) {
   parse_arguments(argc, argv);
   atexit(do_at_exit);
 
+  symtable_init();
+
   yyparse();
 
   finalize_absyn();

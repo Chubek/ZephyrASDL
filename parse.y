@@ -34,7 +34,7 @@ extern Rule *rules;
 }
 
 %token <str_val> CONS_IDENT TYPE_IDENT INIT_IDENT
-%token ATTRIBUTES BOOL SIZE USIZE INT UINT SHORT USHORT CHAR UCHAR FLOAT DOUBLE STRING IDENTIFIER
+%token ATTRIBUTES BOOLEAN SIZE USIZE INT8 UINT8 INT16 UINT16 INT32 UINT32 INT64 UINT64 FLOAT32 FLOAT64 FLOAT80 CHAR UCHAR STRING IDENTIFIER BYTEARRAY
 
 %type <str_val> name_opt
 %type <field_val> fields fields_opt attrs
@@ -53,7 +53,7 @@ rules : rule
       | rules rule
       ;
 
-rule : INIT_IDENT assign type semi_opt	{ $3->id = dash_to_underscore($1); }
+rule : INIT_IDENT assign type semi_opt	{ $3->id = dash_to_underscore($1); symtable_insert($3->id, NULL); }
      ;
 
 semi_opt : ';'
@@ -104,19 +104,24 @@ item : type_id  name_opt	 	{ add_field($1, FIELD_NORMAL, $2);	}
      ;
 
 type_id : TYPE_IDENT	{ $$ = create_typeid(TYYNAME_ID, dash_to_underscore($1)); }
-	| BOOL		{ $$ = create_typeid(TYYNAME_BOOL, NULL); }
-	| SIZE		{ $$ = create_typeid(TYYNAME_SIZE, NULL); }
-	| USIZE		{ $$ = create_typeid(TYYNAME_USIZE, NULL); }
-	| INT		{ $$ = create_typeid(TYYNAME_INT, NULL); }
-	| UINT		{ $$ = create_typeid(TYYNAME_UINT, NULL); }
-	| SHORT		{ $$ = create_typeid(TYYNAME_SHORT, NULL); }
-	| USHORT	{ $$ = create_typeid(TYYNAME_USHORT, NULL); }
+	| INT8		{ $$ = create_typeid(TYYNAME_INT8, NULL); }
+	| UINT8		{ $$ = create_typeid(TYYNAME_UINT8, NULL); }
+	| INT16		{ $$ = create_typeid(TYYNAME_INT16, NULL); }
+	| UINT16	{ $$ = create_typeid(TYYNAME_UINT16, NULL); }
+	| INT32		{ $$ = create_typeid(TYYNAME_INT32, NULL); }
+	| UINT32	{ $$ = create_typeid(TYYNAME_UINT32, NULL); }
+	| INT64		{ $$ = create_typeid(TYYNAME_INT64, NULL); }
+	| UINT64	{ $$ = create_typeid(TYYNAME_UINT64, NULL); }
+	| FLOAT32	{ $$ = create_typeid(TYYNAME_FLOAT32, NULL); }
+	| FLOAT64	{ $$ = create_typeid(TYYNAME_FLOAT64, NULL); }
+	| FLOAT80	{ $$ = create_typeid(TYYNAME_FLOAT80, NULL); }
 	| CHAR		{ $$ = create_typeid(TYYNAME_CHAR, NULL); }
 	| UCHAR		{ $$ = create_typeid(TYYNAME_UCHAR, NULL); }
-	| FLOAT		{ $$ = create_typeid(TYYNAME_FLOAT, NULL); }
-	| DOUBLE	{ $$ = create_typeid(TYYNAME_DOUBLE, NULL); }
+	| SIZE		{ $$ = create_typeid(TYYNAME_SIZE, NULL); }
+	| USIZE		{ $$ = create_typeid(TYYNAME_USIZE, NULL); }
 	| STRING	{ $$ = create_typeid(TYYNAME_STRING, NULL); }
 	| IDENTIFIER    { $$ = create_typeid(TYYNAME_IDENTIFIER, NULL); }
+	| BYTEARRAY     { $$ = create_typeid(TYYNAME_BYTEARRAY, NULL); }
 	;
 
 name_opt : TYPE_IDENT	{ $$ = dash_to_underscore($1); }

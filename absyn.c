@@ -6,6 +6,8 @@
 
 #include "asdl.h"
 
+#define MAX_KEY 32
+
 #alloc absyn_heap, absyn_alloc, absyn_realloc, absyn_dump
 #hashfunc absyn_hash
 
@@ -75,4 +77,30 @@ Rule *add_product_type(Field *fields) {
 char *gc_strndup(const char *str, size_t n) {
   char *dup = (char *)absyn_alloc(n);
   return memmove(dup, str, n);
+}
+
+Symtable *stab = NULL;
+
+Symtable *symtable_init(void) { stab = NULL; }
+
+void symtable_insert(const char *key, const void *value) {
+  Symtable *node = (Symtable *)absyn_alloc(sizeof(Symtable));
+  node->key = gc_strndup(key, strlen(key));
+  node->value = (void *)value;
+  node->next = stab;
+  stab = node;
+}
+
+void *symtable_retrieve(const char *key) {
+  for (Symtable *st = stab; st != NULL; st = st->next)
+    if (!strncmp(key, st->key, MAX_KEY))
+      return st->value;
+  return NULL;
+}
+
+bool symtable_exists(const char *key) {
+  for (Symtable *st = stab; st != NULL; st = st->next)
+    if (!strncmp(key, st->key, MAX_KEY))
+      return true;
+  return false;
 }

@@ -26,19 +26,24 @@ field-type	::= predef-type | type-id
 
 # Lexical Grammar for Zephyr ASDL
  
-predef-type	::= "int" 
-		 | "uint"
+predef-type	::= "boolean" 
+		 | "int8" 
+		 | "uint8"
+		 | "int16"
+		 | "uint16"
+		 | "int32"
+		 | "uint32"
+		 | "int64"
+		 | "uint64"
+		 | "float32"
+		 | "float64"
 		 | "char"
 		 | "uchar"
-		 | "short"
-		 | "ushort"
  		 | "size" 
 		 | "usize"
-		 | "boolean" 
 		 | "string"
-		 | "float"
-		 | "double"
 		 | "identifier"
+		 | "bytearray"
 
 name-id		::= letter { letter | digit | '_' }
 

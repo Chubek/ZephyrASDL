@@ -1,6 +1,7 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+#include <stdbool.h>
 #include <stddef.h>
 
 typedef struct Rule Rule;
@@ -13,6 +14,7 @@ typedef struct GCNode GCNode;
 typedef struct Heap Heap;
 typedef struct Translator Translator;
 typedef struct TypeId TypeId;
+typedef struct Symtable Symtable;
 
 typedef enum FieldKind FieldKind;
 typedef enum TypeKind TypeKind;
@@ -27,18 +29,24 @@ struct Rule {
 struct TypeId {
   enum TypeIdKind {
     TYYNAME_STRING,
-    TYYNAME_INT,
-    TYYNAME_UINT,
-    TYYNAME_SHORT,
-    TYYNAME_USHORT,
+    TYYNAME_INT8,
+    TYYNAME_UINT8,
+    TYYNAME_INT16,
+    TYYNAME_UINT16,
+    TYYNAME_INT32,
+    TYYNAME_UINT32,
+    TYYNAME_INT64,
+    TYYNAME_UINT64,
+    TYYNAME_FLOAT32,
+    TYYNAME_FLOAT64,
+    TYYNAME_FLOAT80,
     TYYNAME_CHAR,
     TYYNAME_UCHAR,
-    TYYNAME_FLOAT,
-    TYYNAME_DOUBLE,
     TYYNAME_SIZE,
     TYYNAME_USIZE,
-    TYYNAME_BOOL,
+    TYYNAME_BOOLEAN,
     TYYNAME_IDENTIFIER,
+    TYYNAME_BYTEARRAY,
     TYYNAME_ID,
   } kind;
   char *value;
@@ -91,11 +99,22 @@ struct Translator {
   char *outpath;
 };
 
+struct Symtable {
+  char *key;
+  void *value;
+  Symtable *next;
+};
+
 TypeId *create_typeid(TypeIdKind kind, char *value);
 Field *add_field(TypeId *type_id, int opt, char *id);
 Constructor *add_constructor(char *con_id, Field *fields);
 Rule *add_sum_type(Constructor *constructors, Field *attributes);
 Rule *add_product_type(Field *fields);
+
+Symtable *symtable_init(void);
+void symtable_insert(const char *key, const void *value);
+void *symtable_retrieve(const char *key);
+bool symtable_exists(const char *key);
 
 char *gc_strndup(const char *str, size_t n);
 

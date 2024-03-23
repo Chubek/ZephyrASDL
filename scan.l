@@ -24,18 +24,26 @@ cons_id [A-Z][a-zA-Z0-9_-]{1,32}
 <APPEND><<EOF>>		   { BEGIN(INITIAL); }
 <APPEND>.|\n		   { emit_appendage(*yytext); }
 
-"bool"			   { return BOOL; }
+"boolean"		   { return BOOLEAN; }
+"int"			   { return INT32; }
+"uint"			   { return UINT32; }
+"int8"			   { return INT8; }
+"uint8"			   { return UINT8; }
+"int16"			   { return INT16; }
+"uint16"		   { return UINT16; }
+"int32"			   { return INT32; }
+"uint32"		   { return UINT32; }
+"int64"			   { return INT64; }
+"uint64"		   { return UINT64; }
+"float32"		   { return FLOAT32; }
+"float64"		   { return FLOAT64; }
+"float80"		   { return FLOAT80; }
 "size"			   { return SIZE; }
 "usize"			   { return USIZE; }
-"uint"			   { return UINT; }
-"int"			   { return INT; }
-"short"			   { return SHORT; }
-"ushort"		   { return USHORT; }
 "char"		           { return CHAR; }
 "uchar"			   { return UCHAR; }
-"float"			   { return FLOAT; }
-"double"		   { return DOUBLE; }
 "string"		   { return STRING; }
+"bytearray"		   { return BYTEARRAY; }
 "identifier"		   { return IDENTIFIER; }
 "attributes"               { return ATTRIBUTES; }
 ^{type_id}	   	   { yylval.str_val = gc_strndup(yytext, yyleng); return INIT_IDENT; }
