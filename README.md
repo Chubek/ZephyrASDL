@@ -6,7 +6,7 @@ ASDL is a domain-specific language that is used to describe syntax of a language
 
 There are plans to add more translations. D, Rust and Python would be good.
 
-You can read the documentation for this program at `companions/MANPAGE.md`.
+You can read the documentation for this program at `extras/MANPAGE.md`.
 
 # How to Install
 
@@ -36,7 +36,7 @@ You can also view the Texinfo with:
 info asdl
 ```
 
-The manpage and the Texinfo are available in `companions` under `manual.html` and `guide.html`. After installing, these files, along with examples, and everything within `companions` will be copied to `/usr/local/share/doc/asdl`. If you install via a package manager, omitt `/local`.
+The manpage and the Texinfo are available in `extras` under `manual.html` and `guide.html`. After installing, these files, along with examples, and everything within `extras` will be copied to `/usr/local/share/doc/asdl`. If you install via a package manager, omitt `/local`.
 
 
 If you need to contact me, you can do so via email: `chubakbidpaa [at] riseup [dot] net`.
