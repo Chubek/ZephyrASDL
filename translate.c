@@ -889,6 +889,11 @@ bool install_variant_constructors(char *id, Sum *sum) {
   if (had_enums) {
     DEC_INDENT();
     install_datatype_named_end("variant");
+
+    char *macro_name = NULL;
+
+    STR_FORMAT(macro_name, "GET_%s_variant(v)", id);
+    install_locator_macro(macro_name, "v->variant");
   }
 
   return had_enums;
