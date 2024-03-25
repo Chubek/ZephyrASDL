@@ -543,11 +543,17 @@ void install_seq_field_append(char *id, char *constructor_name,
   STR_FORMAT(assign_name, "%s->value.%s.%s", arg1_name,
              to_lowercase(constructor_name), field_name);
 
+  INC_INDENT();
+
+  print_indent();
   PRINTF_DEFS("%s = (%s*)REALLOC(%s, (%s_count + 1) * sizeof(%s*));\n",
               assign_name, field_type, assign_name, assign_name, field_type);
+  print_indent();
   PRINTF_DEFS("%s[%s_count++] = %s;\n", assign_name, assign_name, arg2_name);
 
   PUTS_DEFS("\n}\n\n");
+
+  DEC_INDENT();
 }
 
 void install_seq_field_dump(char *id, char *constructor_name, char *field_type,
@@ -572,11 +578,19 @@ void install_seq_field_dump(char *id, char *constructor_name, char *field_type,
   STR_FORMAT(field_link, "%s->value.%s.%s", arg1_name,
              to_lowercase(constructor_name), field_name);
 
+  INC_INDENT();
+  print_indent();
   PRINTF_DEFS("while (%s_count--) {\n", field_link);
+  INC_INDENT();
+  print_indent();
   PRINTF_DEFS("FREE(%s[%s_count]);\n", field_link, field_link);
+  DEC_INDENT();
+  print_indent();
   PUTS_DEFS("}\n");
 
   PUTS_DEFS("}\n\n");
+
+  DEC_INDENT();
 }
 
 void install_asdl_field(Field *field, size_t num) {
