@@ -15,6 +15,7 @@ typedef struct Heap Heap;
 typedef struct Translator Translator;
 typedef struct TypeId TypeId;
 typedef struct Symtable Symtable;
+typedef struct Stub Stub;
 
 typedef enum FieldKind FieldKind;
 typedef enum TypeKind TypeKind;
@@ -76,6 +77,7 @@ struct Constructor {
   char *id;
   Field *fields;
   Constructor *next;
+  bool is_enum;
 };
 
 struct Field {
@@ -92,6 +94,7 @@ struct Field {
 
 struct Translator {
   FILE *prelude;
+  FILE *tydefs;
   FILE *decls;
   FILE *defs;
   FILE *appendage;
@@ -105,9 +108,15 @@ struct Symtable {
   Symtable *next;
 };
 
+struct Stub {
+  char *id;
+  char *constructor_id;
+  Stub *next;
+};
+
 TypeId *create_typeid(TypeIdKind kind, char *value);
 Field *add_field(TypeId *type_id, int opt, char *id);
-Constructor *add_constructor(char *con_id, Field *fields);
+Constructor *add_constructor(char *con_id, Field *fields, bool is_enum);
 Rule *add_sum_type(Constructor *constructors, Field *attributes);
 Rule *add_product_type(Field *fields);
 

@@ -42,10 +42,11 @@ Field *add_field(TypeId *type_id, int modifier, char *id) {
   return field;
 }
 
-Constructor *add_constructor(char *id, Field *fields) {
+Constructor *add_constructor(char *id, Field *fields, bool is_enum) {
   Constructor *constructor = (Constructor *)absyn_alloc(sizeof(Constructor));
   constructor->id = id;
   constructor->fields = fields;
+  constructor->is_enum = is_enum;
   constructor->next = constructors;
   constructors = constructor;
   return constructor;
