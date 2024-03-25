@@ -93,6 +93,7 @@ struct Field {
 };
 
 struct Translator {
+  FILE *locators;
   FILE *prelude;
   FILE *tydefs;
   FILE *decls;
