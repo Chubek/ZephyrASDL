@@ -84,7 +84,7 @@ constrs : constr
 	| constrs '|' constr
 	;
 
-constr : CONS_IDENT fields_opt		{ add_constructor(dash_to_underscore($1), $2); }
+constr : CONS_IDENT fields_opt		{ add_constructor(dash_to_underscore($1), $2, $2 == NULL); }
        ;
 
 fields_opt : '(' items ')'		{ $$ = fields; fields = NULL; }

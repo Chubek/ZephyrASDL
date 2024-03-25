@@ -25,22 +25,26 @@
   } while (0)
 
 #define PRINTF_PRELUDE(fmt, ...) fprintf(translator.prelude, fmt, __VA_ARGS__)
+#define PRINTF_TYDEFS(fmt, ...) fprintf(translator.tydefs, fmt, __VA_ARGS__)
 #define PRINTF_DECLS(fmt, ...) fprintf(translator.decls, fmt, __VA_ARGS__)
 #define PRINTF_DEFS(fmt, ...) fprintf(translator.defs, fmt, __VA_ARGS__)
 #define PRINTF_APPENDAGE(fmt, ...)                                             \
   fprintf(translator.appendage, fmt, __VA_ARGS__)
 
 #define PUTC_PRELUDE(c) fputc(c, translator.prelude)
+#define PUTC_TYDEFS(c) fputc(c, translator.tydefs)
 #define PUTC_DECLS(c) fputc(c, translator.decls)
 #define PUTC_DEFS(c) fputc(c, translator.defs)
 #define PUTC_APPENDAGE(c) fputc(c, translator.appendage)
 
 #define PUTS_PRELUDE(s) fputs(s, translator.prelude)
+#define PUTS_TYDEFS(s) fputs(s, translator.tydefs)
 #define PUTS_DECLS(s) fputs(s, translator.decls)
 #define PUTS_DEFS(s) fputs(s, translator.defs)
 #define PUTS_APPENDAGE(s) fputs(s, translator.appendage)
 
 #define NEWLINE_PRELUDE() fputs("\n", translator.prelude)
+#define NEWLINE_TYDEFS() fputs("\n", translator.tydefs)
 #define NEWLINE_DECLS() fputs("\n", translator.decls)
 #define NEWLINE_DEFS() fputs("\n", translator.defs)
 #define NEWLINE_APPENDAGE() fputs("\n", translator.appendage)
@@ -124,6 +128,7 @@ void assign_prefixes(char *fn) { fn_prefix = fn; }
 
 void init_translator(char *outpath) {
   translator.prelude = tmpfile();
+  translator.tydefs = tmpfile();
   translator.decls = tmpfile();
   translator.defs = tmpfile();
   translator.appendage = tmpfile();
@@ -139,6 +144,7 @@ void finalize_translator(void) {
   int c;
 
   rewind(translator.prelude);
+  rewind(translator.tydefs);
   rewind(translator.decls);
   rewind(translator.defs);
   rewind(translator.appendage);
@@ -157,6 +163,17 @@ void finalize_translator(void) {
     fputc(c, outfile);
 
   fputs("\n/*----End Prelude---*/\n", outfile);
+
+  fputc('\n', outfile);
+
+  fputs("\n/*----Begin Typedefs---*/\n", outfile);
+
+  c = 0;
+  while ((c = fgetc(translator.tydefs)) != EOF) {
+    fputc(c, outfile);
+  }
+
+  fputs("\n/*----End Typedefs----*/\n", outfile);
 
   fputc('\n', outfile);
 
@@ -234,7 +251,7 @@ void install_include(const char *file) {
 }
 
 void install_typedef(const char *original, const char *alias, bool pointer) {
-  PRINTF_PRELUDE("typedef %s%s%s;\n", original, pointer ? " *" : " ", alias);
+  PRINTF_TYDEFS("typedef %s%s%s;\n", original, pointer ? " *" : " ", alias);
 }
 
 void install_funcdecl_init(const char *returns, const char *name) {
@@ -377,8 +394,7 @@ const char *get_type_id(TypeId *tyyid) {
     return BYTEARRAY;
   default:
     if (symtable_exists(tyyid->value) == false) {
-      fprintf(stderr, "Error: undefined type `%s`\n", tyyid->value);
-      exit(EXIT_FAILURE);
+      fprintf(stderr, "Warning: undefined type `%s`\n", tyyid->value);
     }
     return tyyid->value;
   }
@@ -430,16 +446,6 @@ const char *get_argname(TypeId *tyyid) {
 }
 
 static inline int random_integer(void) { return rand(); }
-
-void install_stub(char *id) {
-  char *enumeration = NULL;
-  char *macro_name = NULL;
-
-  STR_FORMAT(enumeration, "%d", random_integer());
-  STR_FORMAT(macro_name, "ENUM_%s", to_uppercase(id));
-
-  install_macro(macro_name, enumeration);
-}
 
 void translate_product_type(char *id, Product *product) {
   char *tyy = NULL;
@@ -561,11 +567,6 @@ void install_asdl_field(Field *field, size_t num) {
 }
 
 void install_constructor(Constructor *constructor) {
-  if (constructor->fields == NULL) {
-    install_stub(constructor->id);
-    return;
-  }
-
   INC_INDENT();
 
   size_t n = 0;
@@ -605,9 +606,6 @@ void install_kinds(Constructor *constructors) {
 void install_constructor_function(char *id, Constructor *constructor,
                                   Field *attributes) {
 
-  if (constructor->fields == NULL)
-    return;
-
   char *lc_ident = to_lowercase(constructor->id);
 
   char *returns = NULL;
@@ -617,6 +615,17 @@ void install_constructor_function(char *id, Constructor *constructor,
 
   install_funcdecl_init(returns, fnname);
   install_funcdef_init(returns, fnname);
+
+  if (constructor->is_enum) {
+    PUTS_DECLS("void);\n");
+    PUTS_DEFS("void) {\n");
+    INC_INDENT();
+    install_function_alloc(returns);
+    PRINTF_DEFS("p->variant = %s_variant;\n", to_uppercase(constructor->id));
+    install_function_return();
+    DEC_INDENT();
+    return;
+  }
 
   char *argtyy = NULL;
   char *argname = NULL;
@@ -839,6 +848,35 @@ void install_constructor_function(char *id, Constructor *constructor,
   DEC_INDENT();
 }
 
+void install_enum_constructors(char *id, Sum *sum) {
+  bool had_enums = false;
+  char *name = NULL;
+  char *tyy = NULL;
+
+  for (Constructor *c = sum->constructors; c != NULL; c = c->next) {
+    if (!had_enums && c->is_enum) {
+      had_enums = true;
+      STR_FORMAT(name, "enum %s_ENUMS", to_uppercase(id));
+      STR_FORMAT(tyy, "%s_enums", id);
+      install_typedef(name, tyy, false);
+      symtable_insert(tyy, NULL);
+      STR_FORMAT(name, "%s_ENUMS", to_uppercase(id));
+      install_datatype_init("enum", name);
+      INC_INDENT();
+    }
+
+    if (c->is_enum) {
+      STR_FORMAT(name, "%s_variant", to_uppercase(c->id));
+      install_datatype_field(name, ",");
+    }
+  }
+
+  if (had_enums) {
+    DEC_INDENT();
+    install_datatype_named_end("variant");
+  }
+}
+
 void install_append_function(const char *id, const char *def_name) {
   char *fn_name = NULL;
   char *argtyy_head = NULL;
@@ -912,6 +950,7 @@ void translate_sum_type(char *id, Sum *sum) {
 
   INC_INDENT();
 
+  install_enum_constructors(id, sum);
   install_kinds(sum->constructors);
 
   if (sum->constructors == NULL) {
@@ -924,6 +963,9 @@ void translate_sum_type(char *id, Sum *sum) {
   INC_INDENT();
 
   for (Constructor *c = sum->constructors; c != NULL; c = c->next) {
+    if (c->is_enum)
+      continue;
+
     install_datatype_init("struct", c->id);
     install_constructor(c);
     install_attributes(sum->attributes);
