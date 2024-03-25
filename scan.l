@@ -5,9 +5,9 @@
 
 typedef int errcode_t;
 
-extern long line_no = 1;
-extern long token_no = 1;
-extern long char_no = 0;
+extern long line_no;
+extern long token_no;
+extern long char_no;
 
 extern void error_out(errcode_t, char *);
 
