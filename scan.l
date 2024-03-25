@@ -1,15 +1,7 @@
 %{
 #include "asdl.h"
 #include "parse.tab.h"
-
-
-typedef int errcode_t;
-
-extern long line_no;
-extern long token_no;
-extern long char_no;
-
-extern void error_out(errcode_t, char *);
+#include "errors.h"
 
 #define INC_TOKNO() token_no++
 #define INC_LINENO() line_no++
