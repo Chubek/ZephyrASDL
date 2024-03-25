@@ -534,7 +534,7 @@ void install_seq_field_append(char *id, char *constructor_name,
   install_funcdecl_param(arg1_type, arg1_name, false);
   install_funcdef_arg(arg1_type, arg1_name, false);
 
-  STR_FORMAT(arg2_type, "%s*", field_type);
+  STR_FORMAT(arg2_type, "%s", field_type);
   STR_FORMAT(arg2_name, "%s_append", field_name);
 
   install_funcdecl_param(arg2_type, arg2_name, true);
