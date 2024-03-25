@@ -46,15 +46,15 @@ clean:
 		absyn.gen.c translate.gen.c parse.tab.c parse.tab.h lex.yy.c asdl.info
 	@echo "Clean complete."
 
-install: $(BINARY) companions/asdl.1
+install: $(BINARY) extras/asdl.1
 	mkdir -p $(DESTDIR)
 	cp $(BINARY) $(DESTDIR)
 	mkdir -p $(MANDIR)
-	cp companions/asdl.1 $(MANDIR)
+	cp extras/asdl.1 $(MANDIR)
 	mandb
-	cp -r companions $(DOCDIR)
+	cp -r extras $(DOCDIR)
 	cp -r examples $(DOCDIR)/examples
-	makeinfo companions/asdl.texi
+	makeinfo extras/asdl.texi
 	mkdir -p $(INFODIR)
 	install-info --info-dir=$(INFODIR) asdl.info
 	@echo "Install complete."

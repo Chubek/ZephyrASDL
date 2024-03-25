@@ -130,8 +130,8 @@ void init_translator(char *outpath) {
   translator.outpath = outpath;
 }
 
-void emit_prelude(char c) { PUTC_PRELUDE(c); }
-void emit_appendage(char c) { PUTC_APPENDAGE(c); }
+void emit_prelude(char *s) { PUTS_PRELUDE(s); }
+void emit_appendage(char *s) { PUTS_APPENDAGE(s); }
 
 static inline void print_outfile_time_signature(FILE *outfile) {
   time_t t = time(NULL);

@@ -7,7 +7,8 @@
 #define INC_LINENO() line_no++
 #define INC_CHARNO() char_no += yyleng
 #define INC_TOKCHARNO() token_no++; char_no += yyleng
-#define INC_TOKLINENO() line_no++; char_no += yyleng
+#define INC_TOKLINENO() line_no++; token_no++
+#define INC_LINECHARNO() line_no++; char_no += yyleng
 
 %}
 
@@ -63,11 +64,11 @@ cons_id [A-Z][a-zA-Z0-9_-]{1,32}
 ^{type_id}	   	   { yylval.str_val = gc_strndup(yytext, yyleng); INC_CHARNO(); return INIT_IDENT; }
 {type_id}  	  	   { yylval.str_val = gc_strndup(yytext, yyleng); INC_CHARNO(); return TYPE_IDENT; }
 {cons_id}    		   { yylval.str_val = gc_strndup(yytext, yyleng); INC_CHARNO(); return CONS_IDENT; }
-[?*()|,:=]		   { INC_CHARNO(); return *yytext; }
+[?*()|,:=;]		   { INC_CHARNO(); return *yytext; }
 
-[ \t\r\n]                  { INC_TOKCHARNO(); }
-.			   { error_out(ERROR_UNKNOWN_SYMBOL, *yytext); }
-.+[ \t]+		   { error_out(ERROR_UNKNOWN_TOKEN, yytext); }
+[ \t]+                 	   { INC_TOKCHARNO(); }
+[\r\n]			   { INC_LINECHARNO(); }
+.			   { char ctx[2] = {0}; ctx[0] = *yytext;  error_out(ERROR_UNKNOWN_SYMBOL, &ctx[0]); }
 <<EOF>>			   yyterminate();
 
 

@@ -141,7 +141,7 @@ void init_absyn(void);
 void finalize_absyn(void);
 void dump_absyn(void);
 
-void emit_prelude(char c);
-void emit_appendage(char c);
+void emit_prelude(char *s);
+void emit_appendage(char *s);
 
 #endif
