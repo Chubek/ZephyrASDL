@@ -1,4 +1,3 @@
-#include <alloca.h>
 #include <ctype.h>
 #include <limits.h>
 #include <stdarg.h>
@@ -522,8 +521,8 @@ void install_seq_field_append(char *id, char *constructor_name,
   char *arg2_name = NULL;
   char *assign_name = NULL;
 
-  STR_FORMAT(func_name, "append_%s_%s_%s_field", id, constructor_name,
-             field_name);
+  STR_FORMAT(func_name, "append_%s_%s_%s_field", id,
+             to_lowercase(constructor_name), field_name);
 
   install_funcdecl_init("void", func_name);
   install_funcdef_init("void", func_name);
@@ -540,13 +539,13 @@ void install_seq_field_append(char *id, char *constructor_name,
   install_funcdecl_param(arg2_type, arg2_name, true);
   install_funcdef_arg(arg2_type, arg2_name, true);
 
-  STR_FORMAT(assign_name, "%s->value.%s.%s", arg1_name,
-             to_lowercase(constructor_name), field_name);
+  STR_FORMAT(assign_name, "%s->value.%s.%s_seq.%s", arg1_name,
+             to_lowercase(constructor_name), field_name, field_name);
 
   INC_INDENT();
 
   print_indent();
-  PRINTF_DEFS("%s = (%s*)REALLOC(%s, (%s_count + 1) * sizeof(%s*));\n",
+  PRINTF_DEFS("%s =\n (%s*)REALLOC(%s,\n (%s_count + 1) * sizeof(%s*));\n",
               assign_name, field_type, assign_name, assign_name, field_type);
   print_indent();
   PRINTF_DEFS("%s[%s_count++] = %s;\n", assign_name, assign_name, arg2_name);
@@ -575,8 +574,8 @@ void install_seq_field_dump(char *id, char *constructor_name, char *field_type,
   install_funcdecl_param(arg1_type, arg1_name, true);
   install_funcdef_arg(arg1_type, arg1_name, true);
 
-  STR_FORMAT(field_link, "%s->value.%s.%s", arg1_name,
-             to_lowercase(constructor_name), field_name);
+  STR_FORMAT(field_link, "%s->value.%s.%s_seq.%s", arg1_name,
+             to_lowercase(constructor_name), field_name, field_name);
 
   INC_INDENT();
   print_indent();
@@ -726,6 +725,8 @@ void install_field_declarators(char *id, char *lc_ident, Field *fields) {
       STR_FORMAT(arg_name, "%s", f->id);
     }
 
+    f->cache[2] = arg_type;
+
     if (f->kind == FIELD_SEQUENCE) {
       swap = arg_type;
       STR_FORMAT(arg_type, "%s*", swap);
@@ -781,8 +782,6 @@ void install_field_assigners(char *id, char *lc_ident, Field *fields) {
       STR_FORMAT(macro_def, "v->value.%s.%s_seq.%s_count", lc_ident,
                  f->cache[1], f->cache[1]);
       install_locator_macro(macro_name, macro_def);
-      install_seq_field_append(id, lc_ident, f->cache[0], f->cache[1]);
-      install_seq_field_dump(id, lc_ident, f->cache[0], f->cache[1]);
 
       continue;
     } else if (f->kind == FIELD_OPTIONAL) {
@@ -957,6 +956,23 @@ void install_destroy_function(const char *id, const char *def_name) {
   PUTS_DEFS("}\n\n");
 }
 
+void install_special_field_functions(char *id, Constructor *constructor,
+                                     Field *attributes) {
+  for (Field *f = constructor->fields; f != NULL; f = f->next) {
+    if (f->kind == FIELD_SEQUENCE) {
+      install_seq_field_append(id, constructor->id, f->cache[2], f->cache[1]);
+      install_seq_field_dump(id, constructor->id, f->cache[2], f->cache[1]);
+    }
+  }
+
+  for (Field *f = attributes; f != NULL; f = f->next) {
+    if (f->kind == FIELD_SEQUENCE) {
+      install_seq_field_append(id, constructor->id, f->cache[2], f->cache[1]);
+      install_seq_field_dump(id, constructor->id, f->cache[2], f->cache[1]);
+    }
+  }
+}
+
 void translate_sum_type(char *id, Sum *sum) {
   char *struct_name = NULL;
   char *def_name = NULL;
@@ -1004,6 +1020,10 @@ void translate_sum_type(char *id, Sum *sum) {
 
   for (Constructor *c = sum->constructors; c != NULL; c = c->next) {
     install_constructor_function(id, c, sum->attributes);
+  }
+
+  for (Constructor *c = sum->constructors; c != NULL; c = c->next) {
+    install_special_field_functions(id, c, sum->attributes);
   }
 
   PUTS_DEFS("\n\n");

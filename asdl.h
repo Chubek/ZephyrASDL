@@ -88,7 +88,7 @@ struct Field {
   } kind;
   TypeId *type_id;
   char *id;
-  char *cache[2];
+  char *cache[3];
   Field *next;
 };
 
