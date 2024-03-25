@@ -587,13 +587,19 @@ void install_attributes(Field *attributes) {
   DEC_INDENT();
 }
 
-void install_kinds(Constructor *constructors) {
+void install_kinds(char *id, Constructor *constructors, bool had_enums) {
   install_datatype_init("enum", " ");
+  char *kind_name = NULL;
 
   INC_INDENT();
 
+  if (had_enums) {
+    STR_FORMAT(kind_name, "%s_VARIANT_%s", to_uppercase(id), kind_suffix);
+    install_datatype_field(kind_name, ",");
+  }
+
   for (Constructor *c = constructors; c != NULL; c = c->next) {
-    char *kind_name = NULL;
+    kind_name = NULL;
     STR_FORMAT(kind_name, "%s_%s", to_uppercase(c->id), kind_suffix);
     install_datatype_field(kind_name, ",");
   }
@@ -621,6 +627,9 @@ void install_constructor_function(char *id, Constructor *constructor,
     PUTS_DEFS("void) {\n");
     INC_INDENT();
     install_function_alloc(returns);
+    print_indent();
+    PRINTF_DEFS("p->kind = %s_VARIANT_%s;\n", to_uppercase(id), kind_suffix);
+    print_indent();
     PRINTF_DEFS("p->variant = %s_variant;\n", to_uppercase(constructor->id));
     install_function_return();
     DEC_INDENT();
@@ -848,7 +857,7 @@ void install_constructor_function(char *id, Constructor *constructor,
   DEC_INDENT();
 }
 
-void install_enum_constructors(char *id, Sum *sum) {
+bool install_enum_constructors(char *id, Sum *sum) {
   bool had_enums = false;
   char *name = NULL;
   char *tyy = NULL;
@@ -875,6 +884,8 @@ void install_enum_constructors(char *id, Sum *sum) {
     DEC_INDENT();
     install_datatype_named_end("variant");
   }
+
+  return had_enums;
 }
 
 void install_append_function(const char *id, const char *def_name) {
@@ -950,8 +961,8 @@ void translate_sum_type(char *id, Sum *sum) {
 
   INC_INDENT();
 
-  install_enum_constructors(id, sum);
-  install_kinds(sum->constructors);
+  bool had_enums = install_enum_constructors(id, sum);
+  install_kinds(id, sum->constructors, had_enums);
 
   if (sum->constructors == NULL) {
     fprintf(stderr, "Error: empty tree\n");
