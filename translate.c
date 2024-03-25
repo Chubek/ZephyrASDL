@@ -20,7 +20,7 @@
 #define STR_FORMAT(dest, fmt, ...)                                             \
   do {                                                                         \
     size_t l = strlen(fmt) + UCHAR_MAX;                                        \
-    dest = alloca(l);                                                          \
+    dest = trans_alloc(l);                                                     \
     snprintf(dest, l, fmt, __VA_ARGS__);                                       \
   } while (0)
 
@@ -146,11 +146,11 @@ static inline void print_outfile_time_signature(FILE *outfile) {
 }
 
 static inline void print_outfile_start_section(char *marker, FILE *outfile) {
-  fprintf(outfile, "/*\n\t\t---BEGIN-SECTION: %s---\n\n", marker);
+  fprintf(outfile, "\n\n/*---BEGIN-SECTION: %s---*/\n\n", marker);
 }
 
 static inline void print_outfile_end_section(char *marker, FILE *outfile) {
-  fprintf(outfile, "/*\n\t\t---END-SECTION: %s---\n\n", marker);
+  fprintf(outfile, "\n\n/*---END-SECTION: %s---*/\n\n", marker);
 }
 
 static inline void print_outfile_license(FILE *outfile) {
@@ -286,7 +286,7 @@ void install_macro(const char *name, const char *def) {
 }
 
 void install_locator_macro(const char *name, const char *def) {
-  PRINTF_LOCATORS("#define %s %s", name, def);
+  PRINTF_LOCATORS("#define %s %s\n", name, def);
 }
 
 void install_field(const char *type, const char *name) {
