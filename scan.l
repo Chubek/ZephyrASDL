@@ -43,7 +43,6 @@ static inline void is_c_keyword(char *type, size_t len) {
    for (size_t i = 0; i < len; i++)
    	type_dup[i] = tolower(type_dup[i]);
 
-   fprintf(stderr, "%s\n", type_dup);
 
    if (!strncmp(type_dup, "int", len)
    	|| !strncmp(type_dup, "char", len)
