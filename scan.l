@@ -32,9 +32,10 @@ static inline void error_out(char *fmt, ...) {
 #define MODE_REC_PRAWL (1 << 1)
 #define MODE_SUM_PRAWL (1 << 2)
 #define MODE_REC_DEFINED (1 << 3)
+#define MODE_SUM_DEFINED (1 << 4)
 
 static int mode = -1;
-static bool variants_captured = false, seek_attrs = false;
+static bool variants_defined = false, seek_attrs = false;
 
 %}
 
@@ -53,6 +54,7 @@ cons_id [A-Z][a-zA-Z0-9_-]{0,16}
 
 %%
 
+<APPEND>[ \t]+		   { emit_appendage(yytext); INC_TOKCHARNO(); }
 <EMBED>[ \t]+		   { emit_prelude(yytext); INC_TOKCHARNO(); }
 <*>[ \t]+		   { INC_TOKCHARNO(); }
 
@@ -65,7 +67,6 @@ cons_id [A-Z][a-zA-Z0-9_-]{0,16}
 
 ^{type_id}	   	   { yylval.str_val = gc_strndup(yytext, yyleng); INC_CHARNO(); BEGIN(TYINIT); return RULE_NAME; }
 ^{cons_id}		   { error_out("Unexpected constructor/variant name, when expecting a rule name"); }
-[ \t]+			   { INC_TOKCHARNO(); }
 [\r\n]			   { INC_LINENO(); }
 .			   { error_out("Unexpected symbol `%c`, when expecting a rule name", *yytext); }
 <INITIAL,APPEND><<EOF>>	   { yyterminate(); }
@@ -77,7 +78,6 @@ cons_id [A-Z][a-zA-Z0-9_-]{0,16}
 <EMBED><<EOF>>		   { error_out("Unexpcted <EOF> when expecting more C code, or `%}`"); }
 
 ^"%%"$			   { BEGIN(APPEND); INC_LINECHARNO(); }
-<APPEND>[ \t]+		   { emit_appendage(yytext); INC_TOKCHARNO(); }
 <APPEND>[\r\n]		   { emit_appendage(yytext); INC_LINECHARNO(); }
 <APPEND>.+		   { emit_appendage(yytext); INC_CHARNO(); }
 
@@ -87,20 +87,20 @@ cons_id [A-Z][a-zA-Z0-9_-]{0,16}
 
 
 <PRAWL>"attributes"  	   { 
-				if (!variants_captured)
+				if (!variants_defined)
 					error_out("Unexpected <ATTRIBUTES> token, no other variants defined");
 
 				INC_TOKCHARNO(); seek_attrs = true; return ATTRIBUTES; 
 			   }
 <PRAWL>{cons_id}	   { 
-				variants_captured = true;
+				variants_defined = true;
 			   	yylval.str_val = gc_strndup(yytext, yyleng); INC_TOKCHARNO(); return VARIANT_NAME; 
 			   }
 <PRAWL>[(]	   	   { 
 				if (mode == MODE_REC_DEFINED) {
-				    error_out("Unexpected `(`, expected `;` or two <NEWLINE>s (NOTE: Cannot define more than one record (product) types)");
+				    error_out("Unexpected `(`, cannot define more than one product/record type");
 				}
-				else if (variants_captured || seek_attrs) {
+				else if (variants_defined || seek_attrs) {
 				    BEGIN(FIELDTYPE); 
 				    INC_CHARNO(); 
 				    mode = MODE_SUM_PRAWL; 
@@ -112,16 +112,25 @@ cons_id [A-Z][a-zA-Z0-9_-]{0,16}
 				    return REC_LPAREN; 
 				}
 			   }
-<PRAWL>[|]	   	   { INC_TOKCHARNO(); return *yytext; }
+<PRAWL>[|]	   	   { 
+				if (mode == MODE_REC_DEFINED)
+					error_out("Unexpected `|`, cannot define more than one product/record type");
+
+				if (!variants_defined)
+					error_out("Unexpected `|`, no variants are defined yet");
+				
+				mode = -1;
+				INC_TOKCHARNO(); return *yytext; 
+			   }
 <PRAWL>[\r\n]{1}	   { INC_LINECHARNO(); }
 <PRAWL>[\r\n]{2}|[;] 	   { 
-				if (!variants_captured && mode != MODE_REC_DEFINED)
+				if (!variants_defined && mode != MODE_REC_DEFINED)
 					error_out("Unexpected <RULE-TERMINATE>, no variants or records defined");
 				
 			 	INC_LINECHARNO(); 
 				BEGIN(INITIAL); 
 				mode = -1; 
-				variants_captured = seek_attrs = false; 
+				variants_defined = seek_attrs = false; 
 				return SUM_TERM; 
 			   }
 <PRAWL><<EOF>>	  	   { error_out("Unexpected <EOF>, when expecting records, variants, two <NEWLINE>s or `;`"); }
@@ -179,7 +188,7 @@ cons_id [A-Z][a-zA-Z0-9_-]{0,16}
 						BEGIN(PRAWL);
 						return REC_RPAREN;
 					   } else if (mode == MODE_SUM_PRAWL) {
-						mode = -1;
+						mode = MODE_SUM_DEFINED;
 						BEGIN(PRAWL);
 						return SUM_RPAREN;
 					   } else {
