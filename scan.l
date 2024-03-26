@@ -93,7 +93,7 @@ cons_id [A-Z][a-zA-Z0-9_-]{1,32}
 <ASSIGN>[\r\n]		   { INC_LINECHARNO(); }
 
 
-<CONS>[(]		   { BEGIN(SUM); BEGIN(FIELDTYPE); INC_CHARNO(); return FLD_LPAREN; }
+<CONS>[(]		   { BEGIN(SUM); BEGIN(FIELDTYPE); INC_CHARNO(); return SUM_LPAREN; }
 <CONS>[|]		   { BEGIN(SUM_VARIANT); return *yytext; }
 <CONS>[\r\n]{1}		   { error_out("Unexpected <NEWLINE>, when expecting `(`, two <NEWLINE>s or `;`"); }
 <CONS>[\r\n]{2}|[;]	   { BEGIN(INITIAL); INC_TOKCHARNO(); return SUM_TERM; }
@@ -152,7 +152,7 @@ cons_id [A-Z][a-zA-Z0-9_-]{1,32}
 
 
 <REC,FIELDTYPE,FIELDNAME,TYPEMOD>[)]		{ INC_TOKCHARNO(); BEGIN(REC_VARIANT); return REC_RPAREN; }
-<SUM,FIELDTYPE,FIELDNAME,TYPEMOD>[)]		{ INC_TOKCHARNO(); BEGIN(SUM_VARIANT); return FLD_RPAREN; }
+<SUM,FIELDTYPE,FIELDNAME,TYPEMOD>[)]		{ INC_TOKCHARNO(); BEGIN(SUM_VARIANT); return SUM_RPAREN; }
 
 
 <REC,SUM>[\r\n]				{ error_out("Unexpected <NEWLINE> at field/record, expected field type, type modifier, or field name"); }

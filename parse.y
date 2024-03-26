@@ -35,7 +35,7 @@ extern Rule *rules;
 
 %token <str_val> VARIANT_NAME FIELD_TYPE FIELD_NAME RULE_NAME
 %token ATTRIBUTES BOOLEAN SIZE USIZE INT8 UINT8 INT16 UINT16 INT32 UINT32 INT64 UINT64 FLOAT32 FLOAT64 FLOAT80 CHAR UCHAR STRING IDENTIFIER BYTEARRAY
-%token FLD_LPAREN FLD_RPAREN
+%token SUM_LPAREN SUM_RPAREN
 %token REC_LPAREN REC_RPAREN
 %token ATTR_LPAREN
 %token INIT_ASSIGN
@@ -90,15 +90,15 @@ variants : variant
 variant : VARIANT_NAME fields_sum_opt		{ add_constructor(dash_to_underscore($1), $2, $2 == NULL); }
        ;
 
-fields_sum_opt : FLD_LPAREN items FLD_RPAREN		{ $$ = fields; fields = NULL; }
+fields_sum_opt : SUM_LPAREN items SUM_RPAREN		{ $$ = fields; fields = NULL; }
                |					{ $$ = NULL; }
 	       ;
 
 
-fields_prod : REC_LPAREN items FLD_RPAREN { $$ = fields; fields = NULL; }
+fields_prod : REC_LPAREN items SUM_RPAREN { $$ = fields; fields = NULL; }
 	   ;
 
-fields_attr : ATTR_LPAREN items FLD_RPAREN { $$ = fields; fields = NULL; }
+fields_attr : ATTR_LPAREN items SUM_RPAREN { $$ = fields; fields = NULL; }
 	    ;
 
 items : item
