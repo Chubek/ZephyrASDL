@@ -406,8 +406,11 @@ const char *get_type_id(TypeId *tyyid) {
   case TYYNAME_BYTEARRAY:
     return BYTEARRAY;
   default:
-    if (symtable_exists(tyyid->value) == false) {
+    char *mentioned = NULL;
+    STR_FORMAT(mentioned, "%s_MENTIONED", tyyid->value);
+    if (symtable_exists(tyyid->value) == false && !symtable_exists(mentioned)) {
       fprintf(stderr, "Warning: undefined type `%s`\n", tyyid->value);
+      symtable_insert(mentioned, NULL);
     }
     return tyyid->value;
   }
