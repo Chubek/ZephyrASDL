@@ -1,12 +1,15 @@
 %{
+#include <stdio.h>
+#include <stdlib.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <alloca.h>
+#include <string.h>
+#include <ctype.h>
 
 #include "asdl.h"
 #include "parse.tab.h"
-
-int before_comment = -1;
 
 size_t line_no = 1;
 size_t token_no = 1;
@@ -28,6 +31,63 @@ static inline void error_out(char *fmt, ...) {
    fprintf(stderr, "\nFatal error, ZephyrASDL is exiting with status %d\n", EXIT_FAILURE);
    exit(EXIT_FAILURE);
 }
+
+static inline void is_c_keyword(char *type, size_t len) {
+   if (len < 2)
+	return;
+
+   char *type_dup = alloca(len + 1);
+   memset(&type_dup[0], 0, len + 1);
+   strncat(&type_dup[0], type, len);
+
+   for (size_t i = 0; i < len; i++)
+   	type_dup[i] = tolower(type_dup[i]);
+
+   fprintf(stderr, "%s\n", type_dup);
+
+   if (!strncmp(type_dup, "int", len)
+   	|| !strncmp(type_dup, "char", len)
+	|| !strncmp(type_dup, "unsigned", len)
+	|| !strncmp(type_dup, "long", len)
+	|| !strncmp(type_dup, "short", len)
+	|| !strncmp(type_dup, "float", len)
+	|| !strncmp(type_dup, "double", len)
+	|| !strncmp(type_dup, "struct", len)
+	|| !strncmp(type_dup, "enum", len)
+	|| !strncmp(type_dup, "union", len)
+	|| !strncmp(type_dup, "if", len)
+	|| !strncmp(type_dup, "while", len)
+	|| !strncmp(type_dup, "do", len)
+	|| !strncmp(type_dup, "for", len)
+	|| !strncmp(type_dup, "switch", len)
+	|| !strncmp(type_dup, "case", len)
+	|| !strncmp(type_dup, "default", len)
+	|| !strncmp(type_dup, "else", len)
+	|| !strncmp(type_dup, "static", len)
+	|| !strncmp(type_dup, "inline", len)
+	|| !strncmp(type_dup, "void", len)
+	|| !strncmp(type_dup, "const", len)
+	|| !strncmp(type_dup, "register", len)
+	|| !strncmp(type_dup, "volatile", len)
+	|| !strncmp(type_dup, "extern", len)
+	|| !strncmp(type_dup, "auto", len)
+	|| !strncmp(type_dup, "bool", len)
+	|| !strncmp(type_dup, "int8_t", len)
+	|| !strncmp(type_dup, "uint8_t", len)
+	|| !strncmp(type_dup, "int16_t", len)
+	|| !strncmp(type_dup, "uint16_t", len)
+	|| !strncmp(type_dup, "int32_t", len)
+	|| !strncmp(type_dup, "uint32_t", len)
+	|| !strncmp(type_dup, "int64_t", len)
+	|| !strncmp(type_dup, "uint64_t", len)
+	|| !strncmp(type_dup, "size_t", len)
+	|| !strncmp(type_dup, "ssize_t", len)
+	|| !strncmp(type_dup, "false", len)
+	|| !strncmp(type_dup, "true", len)) {
+		error_out("Type name, field name or variant name token `%s` matches C keyword (regardless of case)", type);
+	}
+}
+
 
 #define MODE_REC_PRAWL (1 << 1)
 #define MODE_SUM_PRAWL (1 << 2)
@@ -65,7 +125,8 @@ cons_id [A-Z][a-zA-Z0-9_-]{0,16}
 <COMMENT><<EOF>>	   { error_out("Unexpected <EOF> at comment when expecting <NEWLINE> to terminate it"); }
 
 
-^{type_id}	   	   { yylval.str_val = gc_strndup(yytext, yyleng); INC_CHARNO(); BEGIN(TYINIT); return RULE_NAME; }
+^{type_id}	   	   { is_c_keyword(yytext, yyleng);
+				yylval.str_val = gc_strndup(yytext, yyleng); INC_CHARNO(); BEGIN(TYINIT); return RULE_NAME; }
 ^{cons_id}		   { error_out("Unexpected constructor/variant name, when expecting a rule name"); }
 [\r\n]			   { INC_LINENO(); }
 .			   { error_out("Unexpected symbol `%c`, when expecting a rule name", *yytext); }
@@ -93,6 +154,7 @@ cons_id [A-Z][a-zA-Z0-9_-]{0,16}
 				INC_TOKCHARNO(); seek_attrs = true; return ATTRIBUTES; 
 			   }
 <PRAWL>{cons_id}	   { 
+				is_c_keyword(yytext, yyleng);
 				variants_defined = true;
 			   	yylval.str_val = gc_strndup(yytext, yyleng); INC_TOKCHARNO(); return VARIANT_NAME; 
 			   }
@@ -171,6 +233,7 @@ cons_id [A-Z][a-zA-Z0-9_-]{0,16}
  			error_out("Unexpected field name `%s`, Built-in field type names cannot serve as field names", yytext); 
                  }
 <FIELDNAME>{type_name}	       { 
+						is_c_keyword(yytext, yyleng);
 						INC_TOKCHARNO(); 
 						yylval.str_val = gc_strndup(yytext, yyleng); 
 						return FIELD_NAME; 
