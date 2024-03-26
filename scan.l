@@ -28,6 +28,12 @@ static inline void error_out(char *fmt, ...) {
    exit(EXIT_FAILURE);
 }
 
+#define MODE_REC (1 << 1)
+#define MODE_SUM (1 << 2)
+
+static int mode = -1;
+
+
 %}
 
 type_id [a-z_][a-z0-9_-]{1,32}
@@ -44,7 +50,6 @@ cons_id [A-Z][a-zA-Z0-9_-]{1,32}
 %x ATTRS
 %x SUM
 %x FIELDTYPE
-%x TYPEMOD
 %x FIELDNAME
 %x REC_VARIANT
 %x SUM_VARIANT
@@ -87,54 +92,54 @@ cons_id [A-Z][a-zA-Z0-9_-]{1,32}
 
 <ASSIGN>"attributes"	   { INC_TOKCHARNO(); BEGIN(ATTRS); return ATTRIBUTES; }
 <ASSIGN>{cons_id}	   { yylval.str_val = gc_strndup(yytext, yyleng); INC_TOKCHARNO(); BEGIN(CONS); return VARIANT_NAME; }
-<ASSIGN>[(]		   { BEGIN(REC); BEGIN(FIELDNAME); INC_CHARNO(); return REC_LPAREN; }
+<ASSIGN>[(]		   { BEGIN(REC); BEGIN(FIELDTYPE); INC_CHARNO(); mode = MODE_REC; return REC_LPAREN; }
 <ASSIGN>[|]		   { error_out("Unexpected alternator (|) character before any variants given"); }
 <ASSIGN>[;]		   { error_out("Unexpected semicolon (;) before any variants given"); }
 <ASSIGN>[\r\n]		   { INC_LINECHARNO(); }
+<ASSIGN><<EOF>>		   { error_out("Unexpected <EOF>, when expecting records, variants, two <NEWLINE>s or `;`"); }
 
 
-<CONS>[(]		   { BEGIN(SUM); BEGIN(FIELDTYPE); INC_CHARNO(); return SUM_LPAREN; }
+<CONS>[(]		   { BEGIN(SUM); BEGIN(FIELDTYPE); INC_CHARNO(); mode = MODE_SUM; return SUM_LPAREN; }
 <CONS>[|]		   { BEGIN(SUM_VARIANT); return *yytext; }
 <CONS>[\r\n]{1}		   { error_out("Unexpected <NEWLINE>, when expecting `(`, two <NEWLINE>s or `;`"); }
 <CONS>[\r\n]{2}|[;]	   { BEGIN(INITIAL); INC_TOKCHARNO(); return SUM_TERM; }
 <CONS>.			   { error_out("Unexpected symbol `%c`, when expecting `(`, two <NEWLINE>s or `;`", *yytext); }
 <CONS><<EOF>>		   { error_out("Unexpected <NEWLINE>, when expecting `(`, two <NEWLINE>s or `;`"); }
 
-<ATTRS>[(]		   { BEGIN(SUM); BEGIN(FIELDNAME); INC_CHARNO(); return ATTR_LPAREN; }
+<ATTRS>[(]		   { BEGIN(SUM); BEGIN(FIELDTYPE); INC_CHARNO(); return ATTR_LPAREN; }
 <ATTRS>.		   { error_out("Unexpected symbol `%c`, when expecting `(`", *yytext); }
 
 
-<REC,SUM,FIELDTYPE>"int"	{ INC_TOKCHARNO(); BEGIN(TYPEMOD); return INT32; }
-<REC,SUM,FIELDTYPE>"uint"	{ INC_TOKCHARNO(); BEGIN(TYPEMOD); return UINT32; }
-<REC,SUM,FIELDTYPE>"int8"	{ INC_TOKCHARNO(); BEGIN(TYPEMOD); return INT8; }
-<REC,SUM,FIELDTYPE>"uint8"	{ INC_TOKCHARNO(); BEGIN(TYPEMOD); return INT8; }
-<REC,SUM,FIELDTYPE>"int16"	{ INC_TOKCHARNO(); BEGIN(TYPEMOD); return INT16; }
-<REC,SUM,FIELDTYPE>"uint16"	{ INC_TOKCHARNO(); BEGIN(TYPEMOD); return INT16; }
-<REC,SUM,FIELDTYPE>"int32"	{ INC_TOKCHARNO(); BEGIN(TYPEMOD); return INT32; }
-<REC,SUM,FIELDTYPE>"uint32"	{ INC_TOKCHARNO(); BEGIN(TYPEMOD); return INT32; }
-<REC,SUM,FIELDTYPE>"int64"	{ INC_TOKCHARNO(); BEGIN(TYPEMOD); return INT64; }
-<REC,SUM,FIELDTYPE>"uint65"	{ INC_TOKCHARNO(); BEGIN(TYPEMOD); return INT64; }
-<REC,SUM,FIELDTYPE>"char"	{ INC_TOKCHARNO(); BEGIN(TYPEMOD); return CHAR; }
-<REC,SUM,FIELDTYPE>"uchar"	{ INC_TOKCHARNO(); BEGIN(TYPEMOD); return UCHAR; }
-<REC,SUM,FIELDTYPE>"float32"	{ INC_TOKCHARNO(); BEGIN(TYPEMOD); return FLOAT32; }
-<REC,SUM,FIELDTYPE>"float64"	{ INC_TOKCHARNO(); BEGIN(TYPEMOD); return FLOAT64; }
-<REC,SUM,FIELDTYPE>"float80"	{ INC_TOKCHARNO(); BEGIN(TYPEMOD); return FLOAT80; }
-<REC,SUM,FIELDTYPE>"size"	{ INC_TOKCHARNO(); BEGIN(TYPEMOD); return SIZE; }
-<REC,SUM,FIELDTYPE>"usize"	{ INC_TOKCHARNO(); BEGIN(TYPEMOD); return USIZE; }
-<REC,SUM,FIELDTYPE>"string"	{ INC_TOKCHARNO(); BEGIN(TYPEMOD); return STRING; }
-<REC,SUM,FIELDTYPE>"identifier"	{ INC_TOKCHARNO(); BEGIN(TYPEMOD); return IDENTIFIER; }
-<REC,SUM,FIELDTYPE>"bytearray"	{ INC_TOKCHARNO(); BEGIN(TYPEMOD); return BYTEARRAY; }
+<REC,SUM,FIELDTYPE>"int"	{ INC_TOKCHARNO(); BEGIN(FIELDNAME); return INT32; }
+<REC,SUM,FIELDTYPE>"uint"	{ INC_TOKCHARNO(); BEGIN(FIELDNAME); return UINT32; }
+<REC,SUM,FIELDTYPE>"int8"	{ INC_TOKCHARNO(); BEGIN(FIELDNAME); return INT8; }
+<REC,SUM,FIELDTYPE>"uint8"	{ INC_TOKCHARNO(); BEGIN(FIELDNAME); return INT8; }
+<REC,SUM,FIELDTYPE>"int16"	{ INC_TOKCHARNO(); BEGIN(FIELDNAME); return INT16; }
+<REC,SUM,FIELDTYPE>"uint16"	{ INC_TOKCHARNO(); BEGIN(FIELDNAME); return INT16; }
+<REC,SUM,FIELDTYPE>"int32"	{ INC_TOKCHARNO(); BEGIN(FIELDNAME); return INT32; }
+<REC,SUM,FIELDTYPE>"uint32"	{ INC_TOKCHARNO(); BEGIN(FIELDNAME); return INT32; }
+<REC,SUM,FIELDTYPE>"int64"	{ INC_TOKCHARNO(); BEGIN(FIELDNAME); return INT64; }
+<REC,SUM,FIELDTYPE>"uint65"	{ INC_TOKCHARNO(); BEGIN(FIELDNAME); return INT64; }
+<REC,SUM,FIELDTYPE>"char"	{ INC_TOKCHARNO(); BEGIN(FIELDNAME); return CHAR; }
+<REC,SUM,FIELDTYPE>"uchar"	{ INC_TOKCHARNO(); BEGIN(FIELDNAME); return UCHAR; }
+<REC,SUM,FIELDTYPE>"float32"	{ INC_TOKCHARNO(); BEGIN(FIELDNAME); return FLOAT32; }
+<REC,SUM,FIELDTYPE>"float64"	{ INC_TOKCHARNO(); BEGIN(FIELDNAME); return FLOAT64; }
+<REC,SUM,FIELDTYPE>"float80"	{ INC_TOKCHARNO(); BEGIN(FIELDNAME); return FLOAT80; }
+<REC,SUM,FIELDTYPE>"size"	{ INC_TOKCHARNO(); BEGIN(FIELDNAME); return SIZE; }
+<REC,SUM,FIELDTYPE>"usize"	{ INC_TOKCHARNO(); BEGIN(FIELDNAME); return USIZE; }
+<REC,SUM,FIELDTYPE>"string"	{ INC_TOKCHARNO(); BEGIN(FIELDNAME); return STRING; }
+<REC,SUM,FIELDTYPE>"identifier"	{ INC_TOKCHARNO(); BEGIN(FIELDNAME); return IDENTIFIER; }
+<REC,SUM,FIELDTYPE>"bytearray"	{ INC_TOKCHARNO(); BEGIN(FIELDNAME); return BYTEARRAY; }
 
 <REC,SUM,FIELDTYPE>{type_id}	{ 
 					INC_TOKCHARNO(); 
-					BEGIN(TYPEMOD); 
+					BEGIN(FIELDNAME); 
 					yylval.str_val = gc_strndup(yytext, yyleng);
 					return FIELD_TYPE; 
 				}
 
-<REC,SUM,TYPEMOD>[*?]		{ INC_TOKCHARNO(); BEGIN(FIELDNAME); return *yytext; }
-<REC,SUM,FIELDTYPE>[*?]		{ error_out("Unexpected type modifier `%c` when expecting field/record type", *yytext); }
-<REC,SUM,FIELDNAME>[*?]		{ error_out("Unexpected type modifier `%c` when expecting field/record name", *yytext); }
+<REC,SUM,FIELDNAME>[*?]		{ INC_TOKCHARNO(); return *yytext; }
+<REC,SUM,FIELDTYPE>[*?]		{ error_out("Unexpected type modifier `%c` when expecting field/record type name, `,` or `)`", *yytext); }
 
 <REC,SUM,FIELDNAME>("u")?("int")("8"|"16"|"32"|"64")|"float"("32"|"64"|"80")|("u")?"size"|("u")?"char"|"string"|"identifier"|"bytearray"		{ 
  			error_out("Unexpected field name `%s`, Built-in field type names cannot serve as field names", yytext); 
@@ -148,18 +153,30 @@ cons_id [A-Z][a-zA-Z0-9_-]{1,32}
 <REC,SUM,FIELDTYPE>{cons_id}		{ error_out("Unexpected variant name `%s`, expected field type, or type modifier", yytext); }
 <REC,SUM,FIELDNAME>{cons_id} 		{ error_out("Unexpected variant name `%s`, expected field name, or `,`", yytext); }
 
-<REC,SUM,FIELDTYPE,FIELDNAME,TYPEMOD>[,]	{ INC_TOKCHARNO(); BEGIN(FIELDTYPE); return *yytext; }
+<REC,SUM,FIELDTYPE,FIELDNAME>[,]	{ INC_TOKCHARNO(); BEGIN(FIELDTYPE); return *yytext; }
 
 
-<REC,FIELDTYPE,FIELDNAME,TYPEMOD>[)]		{ INC_TOKCHARNO(); BEGIN(REC_VARIANT); return REC_RPAREN; }
-<SUM,FIELDTYPE,FIELDNAME,TYPEMOD>[)]		{ INC_TOKCHARNO(); BEGIN(SUM_VARIANT); return SUM_RPAREN; }
+<REC,SUM,FIELDTYPE,FIELDNAME>[)]	{
+					   if (mode == MODE_REC) {
+						mode = -1;
+						BEGIN(REC_VARIANT);
+						return REC_RPAREN;
+					   } else if (mode == MODE_SUM) {
+						mode = -1;
+						BEGIN(SUM_VARIANT);
+						return SUM_RPAREN;
+					   } else {
+						error_out("Logistics error (mistmatched DFA states)");
+					   }
+
+					}
 
 
 <REC,SUM>[\r\n]				{ error_out("Unexpected <NEWLINE> at field/record, expected field type, type modifier, or field name"); }
 <REC,SUM><<EOF>>			{ error_out("Unexpected <EOF> at field/record, expected field type, type modifier, or field name"); }
 
 
-<REC,SUM,FIELDTYPE,FIELDNAME,TYPEMOD>.	{ error_out("Unexpected symbol `%c` at field/recor", *yytext);  }
+<REC,SUM,FIELDTYPE,FIELDNAME>.		{ error_out("Unexpected symbol `%c` at field/recor", *yytext);  }
 
 <REC_VARIANT>[\r\n]{2}|[;]		{ INC_TOKCHARNO(); BEGIN(INITIAL); return REC_TERM; }
 <REC_VARIANT>[(]			{ error_out("Unexpected symbol `(`, Note: multiple records cannot be assigned to one rule"); }
