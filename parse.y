@@ -95,7 +95,7 @@ fields_sum_opt : SUM_LPAREN items SUM_RPAREN		{ $$ = fields; fields = NULL; }
 	       ;
 
 
-fields_prod : REC_LPAREN items SUM_RPAREN { $$ = fields; fields = NULL; }
+fields_prod : REC_LPAREN items REC_RPAREN { $$ = fields; fields = NULL; }
 	   ;
 
 fields_attr : ATTR_LPAREN items SUM_RPAREN { $$ = fields; fields = NULL; }
