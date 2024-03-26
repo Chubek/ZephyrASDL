@@ -52,19 +52,25 @@ cons_id [A-Z][a-zA-Z0-9_-]{1,32}
 
 %%
 
-^{type_id}	   	   { yylval.str_val = gc_strndup(yytext, yyleng); INC_CHARNO(); BEGIN(TYINIT); return RULE_NAME; }
-^{cons_id}		   { error_out("Unexpected constructor/variant name, when expecting a rule name"); }
-^[^ #\r\n\t]		   { error_out("Unexpected symbol, when expecting a comment, or a rule name"); }
+<EMBED>[ \t]+		   { emit_prelude(yytext); INC_TOKCHARNO(); }
+<*>[ \t]+		   { INC_TOKCHARNO(); }
 
 
 <*>"#"[ \t]+		   { BEGIN(COMMENT); INC_TOKCHARNO(); }
-<COMMENT>[^ \t\r\n]+	   { INC_CHARNO(); }
-<COMMENT>[ \t]+		   { INC_TOKCHARNO(); }
 <COMMENT>[\r\n]		   { BEGIN(YY_START); INC_LINECHARNO(); }
+<COMMENT>.		   ;
+<COMMENT><<EOF>>	   { error_out("Unexpected <EOF> at comment when expecting <NEWLINE> to terminate it"); }
+
+
+^{type_id}	   	   { yylval.str_val = gc_strndup(yytext, yyleng); INC_CHARNO(); BEGIN(TYINIT); return RULE_NAME; }
+^{cons_id}		   { error_out("Unexpected constructor/variant name, when expecting a rule name"); }
+[ \t]+			   { INC_TOKCHARNO(); }
+[\r\n]			   { INC_LINENO(); }
+.			   { error_out("Unexpected symbol `%c`, when expecting a rule name", *yytext); }
+<INITIAL,APPEND><<EOF>>	   { yyterminate(); }
 
 ^"%{"$			   { BEGIN(EMBED); INC_LINECHARNO(); }
 <EMBED>^"%}"$		   { BEGIN(INITIAL); INC_CHARNO(); }
-<EMBED>[ \t]+		   { emit_prelude(yytext); INC_TOKCHARNO(); }
 <EMBED>[\r\n]		   { emit_prelude(yytext); INC_LINENO(); }
 <EMBED>.+	 	   { emit_prelude(yytext); INC_CHARNO(); }
 <EMBED><<EOF>>		   { error_out("Unexpcted <EOF> when expecting more C code, or `%}`"); }
@@ -73,10 +79,8 @@ cons_id [A-Z][a-zA-Z0-9_-]{1,32}
 <APPEND>[ \t]+		   { emit_appendage(yytext); INC_TOKCHARNO(); }
 <APPEND>[\r\n]		   { emit_appendage(yytext); INC_LINECHARNO(); }
 <APPEND>.+		   { emit_appendage(yytext); INC_CHARNO(); }
-<INITIAL,APPEND><<EOF>>	   { yyterminate(); }
 
 <TYINIT>"::="|[:=]	   { INC_CHARNO(); BEGIN(ASSIGN); return INIT_ASSIGN; }
-<TYINIT>[ \t]+		   { INC_TOKCHARNO(); }
 <TYINIT>[\r\n]		   { error_out("Unexpected <NEWLINE>, when expecting `=`, `:`, or `::=`"); }
 <TYINIT><<EOF>>		   { error_out("Unexpected <EOF>, when expecting `=`, `:`, or `::=`"); }
 
@@ -86,13 +90,11 @@ cons_id [A-Z][a-zA-Z0-9_-]{1,32}
 <ASSIGN>[(]		   { BEGIN(REC); BEGIN(FIELDNAME); INC_CHARNO(); return REC_LPAREN; }
 <ASSIGN>[|]		   { error_out("Unexpected alternator (|) character before any variants given"); }
 <ASSIGN>[;]		   { error_out("Unexpected semicolon (;) before any variants given"); }
-<ASSIGN>[ \t]+		   { INC_TOKCHARNO(); }
 <ASSIGN>[\r\n]		   { INC_LINECHARNO(); }
 
 
-<CONS>[(]		   { BEGIN(SUM); BEGIN(FIELDNAME); INC_CHARNO(); return FLD_LPAREN; }
+<CONS>[(]		   { BEGIN(SUM); BEGIN(FIELDTYPE); INC_CHARNO(); return FLD_LPAREN; }
 <CONS>[|]		   { BEGIN(SUM_VARIANT); return *yytext; }
-<CONS>[ \t]+		   { INC_TOKCHARNO(); }
 <CONS>[\r\n]{1}		   { error_out("Unexpected <NEWLINE>, when expecting `(`, two <NEWLINE>s or `;`"); }
 <CONS>[\r\n]{2}|[;]	   { BEGIN(INITIAL); INC_TOKCHARNO(); return SUM_TERM; }
 <CONS>.			   { error_out("Unexpected symbol `%c`, when expecting `(`, two <NEWLINE>s or `;`", *yytext); }
@@ -153,7 +155,6 @@ cons_id [A-Z][a-zA-Z0-9_-]{1,32}
 <SUM,FIELDTYPE,FIELDNAME,TYPEMOD>[)]		{ INC_TOKCHARNO(); BEGIN(SUM_VARIANT); return FLD_RPAREN; }
 
 
-<REC,SUM>[ \t]+				{ INC_TOKCHARNO(); }
 <REC,SUM>[\r\n]				{ error_out("Unexpected <NEWLINE> at field/record, expected field type, type modifier, or field name"); }
 <REC,SUM><<EOF>>			{ error_out("Unexpected <EOF> at field/record, expected field type, type modifier, or field name"); }
 
@@ -161,7 +162,6 @@ cons_id [A-Z][a-zA-Z0-9_-]{1,32}
 <REC,SUM,FIELDTYPE,FIELDNAME,TYPEMOD>.	{ error_out("Unexpected symbol `%c` at field/recor", *yytext);  }
 
 <REC_VARIANT>[\r\n]{2}|[;]		{ INC_TOKCHARNO(); BEGIN(INITIAL); return REC_TERM; }
-<REC_VARIANT>[ \t]+			{ INC_TOKCHARNO(); }
 <REC_VARIANT>[(]			{ error_out("Unexpected symbol `(`, Note: multiple records cannot be assigned to one rule"); }
 <REC_VARIANT>.				{ error_out("Unexpected symbol `%c`, expected `;`, or two <NEWLINE>s", *yytext); }
 <REC_VARIANT><<EOF>>			{ error_out("Unexpected <EOF> when expecting termination of record type"); }
