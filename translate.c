@@ -894,6 +894,9 @@ bool install_variant_constructors(char *id, Sum *sum) {
 
     STR_FORMAT(macro_name, "GET_%s_variant(v)", id);
     install_locator_macro(macro_name, "v->variant");
+
+    STR_FORMAT(macro_name, "VARIANT_%s_is(v, is)", id);
+    install_locator_macro(macro_name, "(v->variant == is)");
   }
 
   return had_enums;
@@ -1032,6 +1035,14 @@ void translate_sum_type(char *id, Sum *sum) {
   }
 
   PUTS_DEFS("\n\n");
+
+  char *macro_name = NULL;
+
+  STR_FORMAT(macro_name, "GET_%s_kind(v)", id);
+  install_locator_macro(macro_name, "v->kind");
+
+  STR_FORMAT(macro_name, "KIND_%s_is(v, is)", id);
+  install_locator_macro(macro_name, "(v->kind == is)");
 
   install_append_function(id, def_name);
   install_destroy_function(id, def_name);
