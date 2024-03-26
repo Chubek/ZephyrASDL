@@ -565,8 +565,8 @@ void install_seq_field_dump(char *id, char *constructor_name, char *field_type,
   char *arg1_name = NULL;
   char *field_link = NULL;
 
-  STR_FORMAT(func_name, "dump_%s_%s_%s_field", id, constructor_name,
-             field_name);
+  STR_FORMAT(func_name, "dump_%s_%s_%s_field", id,
+             to_lowercase(constructor_name), field_name);
 
   install_funcdecl_init("void", func_name);
   install_funcdef_init("void", func_name);
