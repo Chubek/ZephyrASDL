@@ -12,6 +12,7 @@ syn keyword asdlKeyword char uchar
 syn keyword asdlKeyword size usize
 syn keyword asdlKeyword float32 float64 float80
 syn keyword asdlKeyword boolean string identifier bytearray
+syn keyword asdlKeyword attributes
 
 
 " The operators (basically to look 'good'!)
