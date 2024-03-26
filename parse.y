@@ -37,7 +37,6 @@ extern Rule *rules;
 %token ATTRIBUTES BOOLEAN SIZE USIZE INT8 UINT8 INT16 UINT16 INT32 UINT32 INT64 UINT64 FLOAT32 FLOAT64 FLOAT80 CHAR UCHAR STRING IDENTIFIER BYTEARRAY
 %token SUM_LPAREN SUM_RPAREN
 %token REC_LPAREN REC_RPAREN
-%token ATTR_LPAREN
 %token INIT_ASSIGN
 %token REC_TERM SUM_TERM
 
@@ -98,7 +97,7 @@ fields_sum_opt : SUM_LPAREN items SUM_RPAREN		{ $$ = fields; fields = NULL; }
 fields_prod : REC_LPAREN items REC_RPAREN { $$ = fields; fields = NULL; }
 	   ;
 
-fields_attr : ATTR_LPAREN items SUM_RPAREN { $$ = fields; fields = NULL; }
+fields_attr : SUM_LPAREN items SUM_RPAREN { $$ = fields; fields = NULL; }
 	    ;
 
 items : item
