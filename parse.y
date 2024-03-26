@@ -33,11 +33,16 @@ extern Rule *rules;
    TypeId *typeid_val;
 }
 
-%token <str_val> CONS_IDENT TYPE_IDENT INIT_IDENT
+%token <str_val> VARIANT_NAME FIELD_TYPE FIELD_NAME RULE_NAME
 %token ATTRIBUTES BOOLEAN SIZE USIZE INT8 UINT8 INT16 UINT16 INT32 UINT32 INT64 UINT64 FLOAT32 FLOAT64 FLOAT80 CHAR UCHAR STRING IDENTIFIER BYTEARRAY
+%token FLD_LPAREN FLD_RPAREN
+%token REC_LPAREN REC_RPAREN
+%token ATTR_LPAREN
+%token INIT_ASSIGN
+%token REC_TERM SUM_TERM
 
 %type <str_val> name_opt
-%type <field_val> fields fields_opt attrs
+%type <field_val> fields_attr fields_prod fields_sum_opt attrs
 %type <cons_val> constructors
 %type <rule_val> sum prod type
 %type <typeid_val> type_id
@@ -53,46 +58,48 @@ rules : rule
       | rules rule
       ;
 
-rule : INIT_IDENT assign type semi_opt	{ $3->id = dash_to_underscore($1); symtable_insert($3->id, NULL); }
+rule : RULE_NAME INIT_ASSIGN type term	{ $3->id = dash_to_underscore($1); symtable_insert($3->id, NULL); }
      ;
 
-semi_opt : ';'
-	 |;
-
-assign : '=' | ':'
-       ;
+term : REC_TERM
+     | SUM_TERM
+     ;
 
 
 type  : prod	{ $$ = $1; }
       | sum	{ $$ = $1; }
       ;
 
-prod : fields				{ $$ = add_product_type($1);  }
+prod : fields_prod			{ $$ = add_product_type($1);  }
      ;
 
 sum : constructors			{ $$ = add_sum_type($1, NULL); }
     | constructors attrs		{ $$ = add_sum_type($1, $2); }
     ;
 
-attrs : ATTRIBUTES fields		{ $$ = fields; fields = NULL;  }
+attrs : ATTRIBUTES fields_attr		{ $$ = fields; fields = NULL;  }
       ;
 
-constructors : constrs			{ $$ = constructors; constructors = NULL; }
+constructors : variants			{ $$ = constructors; constructors = NULL; }
 	     ;
 
-constrs : constr
-	| constrs '|' constr
+variants : variant
+	| variants '|' variant
 	;
 
-constr : CONS_IDENT fields_opt		{ add_constructor(dash_to_underscore($1), $2, $2 == NULL); }
+variant : VARIANT_NAME fields_sum_opt		{ add_constructor(dash_to_underscore($1), $2, $2 == NULL); }
        ;
 
-fields_opt : '(' items ')'		{ $$ = fields; fields = NULL; }
-           |				{ $$ = NULL; }
+fields_sum_opt : FLD_LPAREN items FLD_RPAREN		{ $$ = fields; fields = NULL; }
+               |					{ $$ = NULL; }
+	       ;
+
+
+fields_prod : REC_LPAREN items FLD_RPAREN { $$ = fields; fields = NULL; }
 	   ;
 
-fields : '(' items ')'			{ $$ = fields; fields = NULL; }
-       ;
+fields_attr : ATTR_LPAREN items FLD_RPAREN { $$ = fields; fields = NULL; }
+	    ;
 
 items : item
       | items ',' item
@@ -103,7 +110,7 @@ item : type_id  name_opt	 	{ add_field($1, FIELD_NORMAL, $2);	}
      | type_id '?' name_opt		{ add_field($1, FIELD_OPTIONAL, $3);    }
      ;
 
-type_id : TYPE_IDENT	{ $$ = create_typeid(TYYNAME_ID, dash_to_underscore($1)); }
+type_id : FIELD_TYPE	{ $$ = create_typeid(TYYNAME_ID, dash_to_underscore($1)); }
 	| INT8		{ $$ = create_typeid(TYYNAME_INT8, NULL); }
 	| UINT8		{ $$ = create_typeid(TYYNAME_UINT8, NULL); }
 	| INT16		{ $$ = create_typeid(TYYNAME_INT16, NULL); }
@@ -124,7 +131,7 @@ type_id : TYPE_IDENT	{ $$ = create_typeid(TYYNAME_ID, dash_to_underscore($1)); }
 	| BYTEARRAY     { $$ = create_typeid(TYYNAME_BYTEARRAY, NULL); }
 	;
 
-name_opt : TYPE_IDENT	{ $$ = dash_to_underscore($1); }
+name_opt : FIELD_NAME	{ $$ = dash_to_underscore($1); }
 	 |		{ $$ = NULL; }
 	 ;
 

@@ -24,7 +24,7 @@ static inline void error_out(char *fmt, ...) {
    fprintf(stderr, "Lexical scanning error at line %lu, token %lu, symbol %lu:\n", line_no, token_no, symbol_no);
    vfprintf(stderr, fmt, ap);
    va_end(ap);
-   fprintf(stderr, "Fatal error, ZephyrASDL is exiting with status %d\n", EXIT_FAILURE);
+   fprintf(stderr, "\nFatal error, ZephyrASDL is exiting with status %d\n", EXIT_FAILURE);
    exit(EXIT_FAILURE);
 }
 
@@ -41,6 +41,7 @@ cons_id [A-Z][a-zA-Z0-9_-]{1,32}
 %x ASSIGN
 %x REC
 %x CONS
+%x ATTRS
 %x SUM
 %x FIELDTYPE
 %x TYPEMOD
@@ -51,9 +52,9 @@ cons_id [A-Z][a-zA-Z0-9_-]{1,32}
 
 %%
 
-^{type_id}	   	   { yylval.str_val = gc_strndup(yytext, yyleng); INC_CHARNO(); BEGIN(TYINIT); return INIT_IDENT; }
-^{cons_id}		   { error_out("Unexpected constructor/variant name, expecting a rule name"); }
-^[^ #\r\n\t]		   { error_out("Unexpected symbol, expecting a comment, or a rule name"); }
+^{type_id}	   	   { yylval.str_val = gc_strndup(yytext, yyleng); INC_CHARNO(); BEGIN(TYINIT); return RULE_NAME; }
+^{cons_id}		   { error_out("Unexpected constructor/variant name, when expecting a rule name"); }
+^[^ #\r\n\t]		   { error_out("Unexpected symbol, when expecting a comment, or a rule name"); }
 
 
 <*>"#"[ \t]+		   { BEGIN(COMMENT); INC_TOKCHARNO(); }
@@ -76,10 +77,12 @@ cons_id [A-Z][a-zA-Z0-9_-]{1,32}
 
 <TYINIT>"::="|[:=]	   { INC_CHARNO(); BEGIN(ASSIGN); return INIT_ASSIGN; }
 <TYINIT>[ \t]+		   { INC_TOKCHARNO(); }
-<TYINIT>[\r\n]		   { error_out("Unexpected <NEWLINE>, expecting `=`, `:`, or `::=`"); }
-<TYINIT><<EOF>>		   { error_out("Unexpected <EOF>, expecting `=`, `:`, or `::=`"); }
+<TYINIT>[\r\n]		   { error_out("Unexpected <NEWLINE>, when expecting `=`, `:`, or `::=`"); }
+<TYINIT><<EOF>>		   { error_out("Unexpected <EOF>, when expecting `=`, `:`, or `::=`"); }
 
-<ASSIGN>{cons_id}	   { yylval.str_val = gc_strndup(yytext, yyleng); INC_CHARNO(); BEGIN(CONS); return CONST_IDENT; }
+
+<ASSIGN>"attributes"	   { INC_TOKCHARNO(); BEGIN(ATTRS); return ATTRIBUTES; }
+<ASSIGN>{cons_id}	   { yylval.str_val = gc_strndup(yytext, yyleng); INC_TOKCHARNO(); BEGIN(CONS); return VARIANT_NAME; }
 <ASSIGN>[(]		   { BEGIN(REC); BEGIN(FIELDNAME); INC_CHARNO(); return REC_LPAREN; }
 <ASSIGN>[|]		   { error_out("Unexpected alternator (|) character before any variants given"); }
 <ASSIGN>[;]		   { error_out("Unexpected semicolon (;) before any variants given"); }
@@ -90,13 +93,17 @@ cons_id [A-Z][a-zA-Z0-9_-]{1,32}
 <CONS>[(]		   { BEGIN(SUM); BEGIN(FIELDNAME); INC_CHARNO(); return FLD_LPAREN; }
 <CONS>[|]		   { BEGIN(SUM_VARIANT); return *yytext; }
 <CONS>[ \t]+		   { INC_TOKCHARNO(); }
-<CONS>[\r\n]{1}		   { error_out("Unexpected <NEWLINE>, expecting `(`, two <NEWLINE>s or `;`"); }
+<CONS>[\r\n]{1}		   { error_out("Unexpected <NEWLINE>, when expecting `(`, two <NEWLINE>s or `;`"); }
 <CONS>[\r\n]{2}|[;]	   { BEGIN(INITIAL); INC_TOKCHARNO(); return SUM_TERM; }
-<CONS>.			   { error_out("Unexpected symbol `%c`, expecting `(`, two <NEWLINE>s or `;`", *yytext); }
-<CONS><<EOF>>		   { error_out("Unexpected <NEWLINE>, expecting `(`, two <NEWLINE>s or `;`"); }
+<CONS>.			   { error_out("Unexpected symbol `%c`, when expecting `(`, two <NEWLINE>s or `;`", *yytext); }
+<CONS><<EOF>>		   { error_out("Unexpected <NEWLINE>, when expecting `(`, two <NEWLINE>s or `;`"); }
 
-<REC,SUM,FIELDTYPE>"int"	{ INC_TOKCHARNO(); BEGIN(TYPEMOD); return INT; }
-<REC,SUM,FIELDTYPE>"uint"	{ INC_TOKCHARNO(); BEGIN(TYPEMOD); return UINT; }
+<ATTRS>[(]		   { BEGIN(SUM); BEGIN(FIELDNAME); INC_CHARNO(); return ATTR_LPAREN; }
+<ATTRS>.		   { error_out("Unexpected symbol `%c`, when expecting `(`", *yytext); }
+
+
+<REC,SUM,FIELDTYPE>"int"	{ INC_TOKCHARNO(); BEGIN(TYPEMOD); return INT32; }
+<REC,SUM,FIELDTYPE>"uint"	{ INC_TOKCHARNO(); BEGIN(TYPEMOD); return UINT32; }
 <REC,SUM,FIELDTYPE>"int8"	{ INC_TOKCHARNO(); BEGIN(TYPEMOD); return INT8; }
 <REC,SUM,FIELDTYPE>"uint8"	{ INC_TOKCHARNO(); BEGIN(TYPEMOD); return INT8; }
 <REC,SUM,FIELDTYPE>"int16"	{ INC_TOKCHARNO(); BEGIN(TYPEMOD); return INT16; }
@@ -115,31 +122,40 @@ cons_id [A-Z][a-zA-Z0-9_-]{1,32}
 <REC,SUM,FIELDTYPE>"string"	{ INC_TOKCHARNO(); BEGIN(TYPEMOD); return STRING; }
 <REC,SUM,FIELDTYPE>"identifier"	{ INC_TOKCHARNO(); BEGIN(TYPEMOD); return IDENTIFIER; }
 <REC,SUM,FIELDTYPE>"bytearray"	{ INC_TOKCHARNO(); BEGIN(TYPEMOD); return BYTEARRAY; }
-<REC,SUM,FIELDTYPE>{type_id}	{ INC_TOKCHARNO(); BEGIN(TYPEMOD); return TYPE_IDENT; }
+
+<REC,SUM,FIELDTYPE>{type_id}	{ 
+					INC_TOKCHARNO(); 
+					BEGIN(TYPEMOD); 
+					yylval.str_val = gc_strndup(yytext, yyleng);
+					return FIELD_TYPE; 
+				}
 
 <REC,SUM,TYPEMOD>[*?]		{ INC_TOKCHARNO(); BEGIN(FIELDNAME); return *yytext; }
 <REC,SUM,FIELDTYPE>[*?]		{ error_out("Unexpected type modifier `%c` when expecting field/record type", *yytext); }
 <REC,SUM,FIELDNAME>[*?]		{ error_out("Unexpected type modifier `%c` when expecting field/record name", *yytext); }
 
 <REC,SUM,FIELDNAME>("u")?("int")("8"|"16"|"32"|"64")|"float"("32"|"64"|"80")|("u")?"size"|("u")?"char"|"string"|"identifier"|"bytearray"		{ 
- 			error_out("Built-in field type names cannot serve as field names"); 
+ 			error_out("Unexpected field name `%s`, Built-in field type names cannot serve as field names", yytext); 
                  }
 <REC,SUM,FIELDNAME>{type_name}	       { 
 						INC_TOKCHARNO(); 
 						yylval.str_val = gc_strndup(yytext, yyleng); 
-						return SUM_NAME; 
+						return FIELD_NAME; 
 					}
 
-<REC,SUM,FIELDTYPE,FIELDNAME>[,]	{ INC_TOKCHARNO(); BEGIN(FIELDTYPE); return *yytext; }
+<REC,SUM,FIELDTYPE>{cons_id}		{ error_out("Unexpected variant name `%s`, expected field type, or type modifier", yytext); }
+<REC,SUM,FIELDNAME>{cons_id} 		{ error_out("Unexpected variant name `%s`, expected field name, or `,`", yytext); }
+
+<REC,SUM,FIELDTYPE,FIELDNAME,TYPEMOD>[,]	{ INC_TOKCHARNO(); BEGIN(FIELDTYPE); return *yytext; }
 
 
-<REC,FIELDTYPE,FIELDNAME>[)]		{ INC_TOKCHARNO(); BEGIN(REC_VARIANT); return REC_RPAREN; }
-<SUM,FIELDTYPE,FIELDNAME>[)]		{ INC_TOKCHARNO(); BEGIN(SUM_VARIANT); return FLD_RPAREN; }
+<REC,FIELDTYPE,FIELDNAME,TYPEMOD>[)]		{ INC_TOKCHARNO(); BEGIN(REC_VARIANT); return REC_RPAREN; }
+<SUM,FIELDTYPE,FIELDNAME,TYPEMOD>[)]		{ INC_TOKCHARNO(); BEGIN(SUM_VARIANT); return FLD_RPAREN; }
 
 
 <REC,SUM>[ \t]+				{ INC_TOKCHARNO(); }
-<REC,SUM>[\r\n]				{ error_out("Unexpected <NEWLINE> at field/record"); }
-<REC,SUM><<EOF>>			{ error_out("Unexpected <EOF> at field/record"); }
+<REC,SUM>[\r\n]				{ error_out("Unexpected <NEWLINE> at field/record, expected field type, type modifier, or field name"); }
+<REC,SUM><<EOF>>			{ error_out("Unexpected <EOF> at field/record, expected field type, type modifier, or field name"); }
 
 
 <REC,SUM,FIELDTYPE,FIELDNAME,TYPEMOD>.	{ error_out("Unexpected symbol `%c` at field/recor", *yytext);  }
