@@ -18,6 +18,16 @@ size_t symbol_no = 0;
 #define INC_TOKLINENO() line_no++; token_no++
 #define INC_LINECHARNO() line_no++; symbol_no += yyleng
 
+static inline void error_out(char *fmt, ...) {
+   va_list ap;
+   va_start(ap, fmt);
+   fprintf(stderr, "Lexical scanning error at line %lu, token %lu, symbol %lu:\n", line_no, token_no, symbol_no);
+   vfprintf(stderr, fmt, ap);
+   va_end(ap);
+   fprintf(stderr, "Fatal error, ZephyrASDL is exiting with status %d\n", EXIT_FAILURE);
+   exit(EXIT_FAILURE);
+}
+
 %}
 
 type_id [a-z_][a-z0-9_-]{1,32}
@@ -49,7 +59,7 @@ cons_id [A-Z][a-zA-Z0-9_-]{1,32}
 <*>"#"[ \t]+		   { BEGIN(COMMENT); INC_TOKCHARNO(); }
 <COMMENT>[^ \t\r\n]+	   { INC_CHARNO(); }
 <COMMENT>[ \t]+		   { INC_TOKCHARNO(); }
-<COMMENT>[\r\n]		   { BEGIN(YY_START()); INC_LINECHARNO(); }
+<COMMENT>[\r\n]		   { BEGIN(YY_START); INC_LINECHARNO(); }
 
 ^"%{"$			   { BEGIN(EMBED); INC_LINECHARNO(); }
 <EMBED>^"%}"$		   { BEGIN(INITIAL); INC_CHARNO(); }
