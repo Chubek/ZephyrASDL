@@ -37,6 +37,7 @@ predef-type	::= "boolean"
 		 | "uint64"
 		 | "float32"
 		 | "float64"
+		 | "float80"
 		 | "char"
 		 | "uchar"
  		 | "size" 
@@ -45,11 +46,11 @@ predef-type	::= "boolean"
 		 | "identifier"
 		 | "bytearray"
 
-name-id		::= letter { letter | digit | '_' }
+name-id		::= letter { letter | digit | '_' | '-' }
 
-con-id		::= upper { letter | digit | '_' }
+con-id		::= upper { letter | digit | '_' | '-' }
 
-type-id		::= lower { lower | digit |  '_' }
+type-id		::= lower { lower | digit |  '_' | '-' }
 
 letter		::= upper | lower
 
