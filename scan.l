@@ -44,7 +44,7 @@ cons_id [A-Z][a-zA-Z0-9_-]{1,32}
 %x APPEND
 %x COMMENT
 %x TYINIT
-%x ASSIGN
+%x SUM_VARIANT
 %x REC
 %x CONS
 %x ATTRS
@@ -52,7 +52,6 @@ cons_id [A-Z][a-zA-Z0-9_-]{1,32}
 %x FIELDTYPE
 %x FIELDNAME
 %x REC_VARIANT
-%x SUM_VARIANT
 
 
 %%
@@ -85,26 +84,27 @@ cons_id [A-Z][a-zA-Z0-9_-]{1,32}
 <APPEND>[\r\n]		   { emit_appendage(yytext); INC_LINECHARNO(); }
 <APPEND>.+		   { emit_appendage(yytext); INC_CHARNO(); }
 
-<TYINIT>"::="|[:=]	   { INC_CHARNO(); BEGIN(ASSIGN); return INIT_ASSIGN; }
+<TYINIT>"::="|[:=]	   { INC_CHARNO(); BEGIN(SUM_VARIANT); return INIT_ASSIGN; }
 <TYINIT>[\r\n]		   { error_out("Unexpected <NEWLINE>, when expecting `=`, `:`, or `::=`"); }
 <TYINIT><<EOF>>		   { error_out("Unexpected <EOF>, when expecting `=`, `:`, or `::=`"); }
 
 
-<ASSIGN>"attributes"	   { INC_TOKCHARNO(); BEGIN(ATTRS); return ATTRIBUTES; }
-<ASSIGN>{cons_id}	   { yylval.str_val = gc_strndup(yytext, yyleng); INC_TOKCHARNO(); BEGIN(CONS); return VARIANT_NAME; }
-<ASSIGN>[(]		   { BEGIN(REC); BEGIN(FIELDTYPE); INC_CHARNO(); mode = MODE_REC; return REC_LPAREN; }
-<ASSIGN>[|]		   { error_out("Unexpected alternator (|) character before any variants given"); }
-<ASSIGN>[;]		   { error_out("Unexpected semicolon (;) before any variants given"); }
-<ASSIGN>[\r\n]		   { INC_LINECHARNO(); }
-<ASSIGN><<EOF>>		   { error_out("Unexpected <EOF>, when expecting records, variants, two <NEWLINE>s or `;`"); }
+<SUM_VARIANT>"attributes"  { INC_TOKCHARNO(); BEGIN(ATTRS); return ATTRIBUTES; }
+<SUM_VARIANT>{cons_id}	   { yylval.str_val = gc_strndup(yytext, yyleng); INC_TOKCHARNO(); BEGIN(CONS); return VARIANT_NAME; }
+<SUM_VARIANT>[(]	   { BEGIN(REC); BEGIN(FIELDTYPE); INC_CHARNO(); mode = MODE_REC; return REC_LPAREN; }
+<SUM_VARIANT>[|]	   { INC_TOKCHARNO(); return *yytext; }
+<SUM_VARIANT>[\r\n]{1}	   { INC_LINECHARNO(); }
+<SUM_VARIANT>[\r\n]{2}|[;] { INC_LINECHARNO(); BEGIN(INITIAL); return SUM_TERM; }
+<SUM_VARIANT><<EOF>>	   { error_out("Unexpected <EOF>, when expecting records, variants, two <NEWLINE>s or `;`"); }
 
 
 <CONS>[(]		   { BEGIN(SUM); BEGIN(FIELDTYPE); INC_CHARNO(); mode = MODE_SUM; return SUM_LPAREN; }
 <CONS>[|]		   { BEGIN(SUM_VARIANT); return *yytext; }
-<CONS>[\r\n]{1}		   { error_out("Unexpected <NEWLINE>, when expecting `(`, two <NEWLINE>s or `;`"); }
-<CONS>[\r\n]{2}|[;]	   { BEGIN(INITIAL); INC_TOKCHARNO(); return SUM_TERM; }
-<CONS>.			   { error_out("Unexpected symbol `%c`, when expecting `(`, two <NEWLINE>s or `;`", *yytext); }
-<CONS><<EOF>>		   { error_out("Unexpected <NEWLINE>, when expecting `(`, two <NEWLINE>s or `;`"); }
+<CONS>[\r\n]{1}		   { INC_LINECHARNO(); }
+<CONS>[\r\n]{1}[(]	   { error_out("Unexpected <NEWLINE> before `(`"); }
+<CONS>[\r\n]{2}|[;]	   { BEGIN(INITIAL); INC_LINECHARNO(); return SUM_TERM; }
+<CONS>.			   { error_out("Unexpected symbol `%c`, when expecting `(`, `|`, two <NEWLINE>s or `;`", *yytext); }
+<CONS><<EOF>>		   { error_out("Unexpected <NEWLINE>, when expecting `(`, `|`, two <NEWLINE>s or `;`"); }
 
 <ATTRS>[(]		   { BEGIN(SUM); BEGIN(FIELDTYPE); INC_CHARNO(); return ATTR_LPAREN; }
 <ATTRS>.		   { error_out("Unexpected symbol `%c`, when expecting `(`", *yytext); }
@@ -178,16 +178,10 @@ cons_id [A-Z][a-zA-Z0-9_-]{1,32}
 
 <REC,SUM,FIELDTYPE,FIELDNAME>.		{ error_out("Unexpected symbol `%c` at field/recor", *yytext);  }
 
-<REC_VARIANT>[\r\n]{2}|[;]		{ INC_TOKCHARNO(); BEGIN(INITIAL); return REC_TERM; }
+<REC_VARIANT>[\r\n]{2}|[;]		{ INC_LINECHARNO(); BEGIN(INITIAL); return REC_TERM; }
 <REC_VARIANT>[(]			{ error_out("Unexpected symbol `(`, Note: multiple records cannot be assigned to one rule"); }
 <REC_VARIANT>.				{ error_out("Unexpected symbol `%c`, expected `;`, or two <NEWLINE>s", *yytext); }
 <REC_VARIANT><<EOF>>			{ error_out("Unexpected <EOF> when expecting termination of record type"); }
-
-<SUM_VARIANT>[|]			{ INC_TOKCHARNO(); BEGIN(ASSIGN); return *yytext; }
-<SUM_VARIANT>[\r\n]			{ INC_TOKCHARNO(); }
-<SUM_VARIANT>[\r\n]{2}|[;]		{ INC_TOKCHARNO(); BEGIN(INITIAL); return SUM_TERM; }
-<SUM_VARIANT>.				{ error_out("Unexpected symbol `%c`, expected `|` followed by a variant, two <NEWLINE>s or `;`"); }
-<SUM_VARIANT><<EOF>>			{ error_out("Unexpected <EOF> when expecting constructor variants, or termination of rule"); }
 
 %%
 
