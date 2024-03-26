@@ -36,9 +36,9 @@ static int mode = -1;
 
 %}
 
-type_id [a-z_][a-z0-9_-]{1,32}
-type_name [a-zA-Z_][a-zA-Z0-9-]{1,32}
-cons_id [A-Z][a-zA-Z0-9_-]{1,32}
+type_id [a-z_][a-z0-9_-]{0,16}
+type_name [a-zA-Z_][a-zA-Z0-9-]{0,16}
+cons_id [A-Z][a-zA-Z0-9_-]{0,16}
 
 %x EMBED
 %x APPEND
