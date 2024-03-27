@@ -59,7 +59,7 @@
 #define INDENT "    "
 #endif
 
-static const char *BOOLEAN = "bool";
+static const char *BOOL = "bool";
 static const char *INT8 = "int8_t";
 static const char *UINT8 = "uint8_t";
 static const char *INT16 = "int16_t";
@@ -79,7 +79,7 @@ static const char *STRING = "string_t";
 static const char *IDENTIFIER = "identifier_t";
 static const char *BYTEARRAY = "bytearray_t";
 
-static const char *BOOLEAN_NAME = "boolean";
+static const char *BOOL_NAME = "bool";
 static const char *INT8_NAME = "int8";
 static const char *UINT8_NAME = "uint8";
 static const char *INT16_NAME = "int16";
@@ -367,8 +367,8 @@ void install_function_return(void) {
 
 const char *get_type_id(TypeId *tyyid) {
   switch (tyyid->kind) {
-  case TYYNAME_BOOLEAN:
-    return BOOLEAN;
+  case TYYNAME_BOOL:
+    return BOOL;
   case TYYNAME_INT8:
     return INT8;
   case TYYNAME_UINT8:
@@ -418,8 +418,8 @@ const char *get_type_id(TypeId *tyyid) {
 
 const char *get_arg_name(TypeId *tyyid) {
   switch (tyyid->kind) {
-  case TYYNAME_BOOLEAN:
-    return BOOLEAN_NAME;
+  case TYYNAME_BOOL:
+    return BOOL_NAME;
   case TYYNAME_INT8:
     return INT8_NAME;
   case TYYNAME_UINT8:

@@ -11,7 +11,7 @@ syn keyword asdlKeyword int uint int8 uint8 int16 uint16 int32 uint32 int64 uint
 syn keyword asdlKeyword char uchar
 syn keyword asdlKeyword size usize
 syn keyword asdlKeyword float32 float64 float80
-syn keyword asdlKeyword boolean string identifier bytearray
+syn keyword asdlKeyword bool string identifier bytearray
 syn keyword asdlKeyword attributes
 
 

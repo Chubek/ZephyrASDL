@@ -197,7 +197,6 @@ cons_id [A-Z][a-zA-Z0-9_-]{0,16}
 <PRAWL><<EOF>>	  	   { error_out("Unexpected <EOF>, when expecting records, variants, two <NEWLINE>s or `;`"); }
 
 
-<FILEDTYPE>"boolean"	{ INC_TOKCHARNO(); BEGIN(FIELDNAME); return BOOLEAN; }
 <FIELDTYPE>"int"	{ INC_TOKCHARNO(); BEGIN(FIELDNAME); return INT32; }
 <FIELDTYPE>"uint"	{ INC_TOKCHARNO(); BEGIN(FIELDNAME); return UINT32; }
 <FIELDTYPE>"int8"	{ INC_TOKCHARNO(); BEGIN(FIELDNAME); return INT8; }
@@ -218,6 +217,7 @@ cons_id [A-Z][a-zA-Z0-9_-]{0,16}
 <FIELDTYPE>"string"	{ INC_TOKCHARNO(); BEGIN(FIELDNAME); return STRING; }
 <FIELDTYPE>"identifier"	{ INC_TOKCHARNO(); BEGIN(FIELDNAME); return IDENTIFIER; }
 <FIELDTYPE>"bytearray"	{ INC_TOKCHARNO(); BEGIN(FIELDNAME); return BYTEARRAY; }
+<FIELDTYPE>"bool"	{ INC_TOKCHARNO(); BEGIN(FIELDNAME); return BOOL; }
 
 <FIELDTYPE>{type_id}	{ 
 					INC_TOKCHARNO(); 
