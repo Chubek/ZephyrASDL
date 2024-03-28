@@ -1,0 +1,165 @@
+quoted_word = Escaped(uchar escchr)
+	    | SingleQuoted(string sqstr)
+	    | DoubleQuoted(shell_word* word)
+	    ;
+
+
+
+special_param = AllPosNormal 
+	      | AllPosConcat 
+	      | NumArgs
+	      | ExitStat 
+	      | OptFlags 
+	      | ProcId 
+	      | ScriptName 
+	      ;
+
+
+
+parameter = Positional(int pos)
+	  | Special(special_param sparam)
+	  | Variable(identifier name)
+	  ;
+
+
+
+param_expn = SubParam(bool colon)
+	   | AssignParam(bool colon)
+	   | ErrIfNotSet(bool colon)
+	   | UseAlt(bool colon)
+	   | RmPrefix(bool small)
+	   | RmSuffix(bool small)
+	   | StrLen
+	   ;
+
+
+arith_expr = BaseWord(shell_word baseshw)
+	   | BaseInt(int basei)
+	   | Add(arith_expr l, arith_expr r)
+	   | Sub(arith_expr l, arith_expr r)
+	   | Mul(arith_expr l, arith_expr r)
+	   | Div(arith_expr l, arith_expr r)
+	   | Mod(arith_expr l, arith_expr r)
+	   | Shl(arith_expr l, arith_expr r)
+	   | Shr(arith_expr l, arith_expr r)
+	   ;
+
+
+word_expand = TildeExpn
+	    | ParamExpn(parameter param, param_expn? kind, shell_word? word)
+	    | CommandSub(compound_list cmd)
+	    | ArithExpn(arith_expr axpr)
+	    ;
+
+
+
+shell_word = Quoted(quoted_word qw) 
+	   | Parameter(parameter param)
+	   | WordExpn(word_expand expn)
+	   | GlobPattern(glob_pattern glob)
+	   ;
+
+
+redirect = RedirIn(int? rn, shell_word rw)
+	 | RedirOut(int? rn, shell_word rw, bool clobber)
+	 | AppendOut(int? rn, shell_word rw)
+	 | HereDoc(int? rn, shell_word rw, string rdoc, shell_word rdelim, bool qrem)
+	 | HereStr(int? rn, shell_word rw, string rstr, shell_word rdelim, bool qrem)
+	 | DupIn(int? dn, shell_word dw)
+	 | DupOut(int? dn, shell_word dw)
+	 | OpenRW(int? rwn, shell_word rww)
+	 ;
+
+
+
+simple_command = ExecAssign(identifier lval, shell_word rval)
+	       | ExecSeq(shell_word* cmdseq, redirect? cmdredir)
+	       ;
+
+
+pipeline = BaseCommand(simple_command cmd)
+	 | NormalPipeline(simple_command* cmdseq)
+	 | NegatedPipeline(simple_command* cmdseq)
+	 ;
+
+
+
+list = AsyncLs(pipeline* plns)
+     | SeqLs(pipeline* plns)
+     | AndLs(pipeline* plns)
+     | OrLs(pipeline* plns)
+     | BasePipeline(pipeline pln)
+     ;
+
+
+compound_list = BaseList(list* basels)
+	      | CompoundList(compound_list* cmpls)
+	      | CompoundCommand(compound_command* ccmd)
+	      ;
+
+
+case_cond = (glob_pattern patt, compound_list body) ;
+
+
+if_cond = (compound_list cond, compound_list body) ;
+
+
+for_words = (shell_word* wordls) ;
+
+
+compound_command = BaseCompound(compound_list cls)
+		 | Subshell(compound_list ls) 
+		 | CurrShell(compound_list ls)
+		 | ForLoop(identifier name, for_words? wordls, compound_list body)
+		 | CaseCond(shell_word disc, case_cond* conds)
+		 | IfCond(if_cond base, if_cond* elifs, compound_list elsebody)
+		 | WhileLoop(compound_list cond, compound_list body)
+		 | UntilLoop(compound_list cond, compound_list body)
+		 | FuncDef(compound_command* body, redirect? redir)
+		 ;
+
+
+
+glob_wildcard = MatchAny
+	      | MatchMulti
+	      ;
+
+
+
+glob_class = Alpha
+	   | Alnum
+	   | Digit
+	   | Xdigit
+	   | Punct
+	   | Ctrl
+	   | Graph
+	   | Print
+	   | Blank
+	   | Space
+	   | Lower
+	   | Upper
+	   ;
+
+
+
+glob_bracket = ExactBrackSeq(bytearray eseq)
+	     | NegativeBrackSeq(bytearray nseq)
+	     | ClassBrackSeq(glob_class cseq)
+	     ;
+
+
+
+
+glob_element = WildChar(glob_wildcard gwc)
+	     | GlobSeq(glob_bracket gseq)
+	     | LitChar(uchar lchr)
+	     | LitString(string lstr)
+	     ;
+
+
+
+glob_pattern = (glob_element* elems) ;
+
+
+
+shell_syntax = (compound_command* shsyn) ;
