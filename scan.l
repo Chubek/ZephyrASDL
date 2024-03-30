@@ -94,6 +94,7 @@ static inline void is_c_keyword(char *type, size_t len) {
 #define MODE_SUM_DEFINED (1 << 4)
 
 static int mode = -1;
+static int comment_save = -1;
 static bool variants_defined = false, seek_attrs = false;
 
 %}
@@ -118,8 +119,15 @@ cons_id [A-Z][a-zA-Z0-9_-]{0,16}
 <*>[ \t]+		   { INC_TOKCHARNO(); }
 
 
-<*>"#"[ \t]+		   { BEGIN(COMMENT); INC_TOKCHARNO(); }
-<COMMENT>[\r\n]		   { BEGIN(YY_START); INC_LINECHARNO(); }
+<*>"#"[ \t]+		   { 
+				comment_save = YY_START;
+				BEGIN(COMMENT); 
+				INC_TOKCHARNO(); 
+			   }
+<COMMENT>[\r\n]		   { 
+				BEGIN(comment_save); 
+				INC_LINECHARNO(); 
+			   }
 <COMMENT>.		   ;
 <COMMENT><<EOF>>	   { error_out("Unexpected <EOF> at comment when expecting <NEWLINE> to terminate it"); }
 
