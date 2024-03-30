@@ -466,18 +466,15 @@ static inline int random_integer(void) { return rand(); }
 void translate_product_type(char *id, Product *product) {
   char *tyy = NULL;
   char *def = NULL;
-  char *fn = NULL;
+
   STR_FORMAT(tyy, "struct %s", id);
   STR_FORMAT(def, "%s_%s", id, def_suffix);
-  STR_FORMAT(fn, "%s_%s", id, fn_suffix);
 
   install_typedef(tyy, def, true);
-  install_funcdecl_init(def, fn);
 
   install_datatype_init("struct", id);
 
-  char *arg_type = NULL;
-  char *arg_name = NULL;
+  char *field_type = NULL;
   char *field_name = NULL;
   char *field = NULL;
 
@@ -485,28 +482,31 @@ void translate_product_type(char *id, Product *product) {
 
   size_t n = 0;
   for (Field *f = product->fields; f != NULL; f = f->next, n++) {
-    arg_type = NULL;
-    arg_name = NULL;
     field_name = NULL;
     field = NULL;
 
     if (f->type_id->kind == TYYNAME_ID) {
-      STR_FORMAT(arg_type, "%s_%s", get_type_id(f->type_id), def_suffix);
+      STR_FORMAT(field_type, "%s_%s", get_type_id(f->type_id), def_suffix);
     } else {
-      STR_FORMAT(arg_type, "%s", get_type_id(f->type_id));
+      STR_FORMAT(field_type, "%s", get_type_id(f->type_id));
     }
 
     if (f->id == NULL) {
-      STR_FORMAT(arg_name, "%s_%s%lu", get_arg_name(f->type_id), arg_suffix, n);
       STR_FORMAT(field_name, "%s%lu", get_arg_name(f->type_id), n);
     } else {
-      STR_FORMAT(arg_name, "%s_%s", f->id, arg_suffix);
       STR_FORMAT(field_name, "%s", f->id);
     }
 
-    STR_FORMAT(field, "%s %s", arg_type, field_name);
+    if (f->kind == FIELD_SEQUENCE) {
+      STR_FORMAT(field, "%s* %s;\n%ssize_t %s_count", field_type, field_name,
+                 INDENT, field_name);
+    } else if (f->kind == FIELD_OPTIONAL) {
+      STR_FORMAT(field, "%s %s;\n%sbool %s_exists", field_type, field_name,
+                 INDENT, field_name);
+    } else {
+      STR_FORMAT(field, "%s %s", field_type, field_name);
+    }
 
-    install_funcdecl_param(arg_type, arg_name, f->next == NULL);
     install_datatype_field(field, ";");
   }
 
