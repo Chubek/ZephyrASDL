@@ -514,9 +514,10 @@ void install_product_function(char *id, Product *product) {
     }
   }
 
-  DEC_INDENT();
 
   install_function_return();
+
+  DEC_INDENT();
 
   NEWLINE_DEFS();
 }
