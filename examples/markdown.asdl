@@ -1,0 +1,82 @@
+%{
+
+#include "mukette.h"
+
+
+static Arena *ast_scratch = NULL;
+
+
+#define ALLOC(size) arena_alloc(ast_scratch, size)
+
+
+%}
+
+md_linkage = Hyperlink(md_compound? name, string url)
+	   | Image(string? alt, string path)
+	   ;
+
+
+md_inline = Italic(md_compound italic)
+	  | Bold(md_compound bold)
+	  | BoldItalic(md_compound bold_italic)
+	  | Strikethrough(md_compound strike_through)
+	  | InlineCode(string inline_code)
+	  | Linkage(md_linkage linkage)
+	  | RegularText(string regular_text)
+	  ;
+
+
+md_header_level = H1 | H2 | H3 | H4 | H5 | H6 ;
+
+
+md_line = Header(md_compound text, md_header_level level)
+	| Indented(md_compound text, usize num_indents)
+	| LinkReference(identifier name, string url, string title)
+	| HorizontalLine
+	;
+
+
+md_compound = (md_inline* compound) ;
+
+
+md_table_row = (md_compound cells, size num_cell) ;
+
+
+md_table = (md_table_row* rows, size num_rows) ;
+
+
+md_ol_item = (int bullet_num, md_list_item item) ;
+
+
+md_ul_item = (char bullet_char, md_list_item item) ;
+
+
+md_list_item = TextItem(string text)
+	     | OrderedItem(md_ol_item ordered_item)
+	     | UnorderedItem(md_ul_item unordered_item)
+	     | NestedList(md_list nested_list)
+	     ;
+
+
+
+md_list = (md_list_item* items) ;
+
+
+
+md_block = Pargraph(md_compound* paragraph)
+	 | BlockQuote(md_compound* block_quote)2
+	 | CodeListing(identifier? label, string code)
+	 | Table(md_table table)
+	 | List(md_list list)
+	 | Line(md_line line)
+	 ;
+
+
+markdown = (md_block* blocks) ;
+
+
+%%
+
+
+static inline void init_tree_scratch(void) { ast_scratch = arena_init(AST_ARENA_SIZE); }
+static inline void free_tree_scratch(void) { arena_free(ast_scratch); }
