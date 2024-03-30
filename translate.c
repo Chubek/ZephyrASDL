@@ -513,6 +513,8 @@ void translate_product_type(char *id, Product *product) {
   DEC_INDENT();
 
   install_datatype_unnamed_end();
+
+  NEWLINE_DEFS();
 }
 
 void install_seq_field_append(char *id, char *constructor_name,
