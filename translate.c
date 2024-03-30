@@ -463,6 +463,64 @@ const char *get_arg_name(TypeId *tyyid) {
 
 static inline int random_integer(void) { return rand(); }
 
+void install_product_function(char *id, Product *product) {
+  char *func_name = NULL;
+  char *return_type = NULL;
+
+  STR_FORMAT(func_name, "create_%s", id);
+  STR_FORMAT(return_type, "%s_%s", id, def_suffix);
+
+  install_funcdecl_init(return_type, func_name);
+  install_funcdef_init(return_type, func_name);
+
+  char *arg_type = NULL;
+  char *arg_name = NULL;
+
+  for (Field *f = product->fields; f != NULL; f = f->next) {
+    install_funcdecl_param(f->cache[0], f->cache[1],
+                           f->next == NULL && f->cache[2] == NULL);
+    install_funcdef_arg(f->cache[0], f->cache[1],
+                        f->next == NULL && f->cache[2] == NULL);
+
+    if (f->cache[2] != NULL) {
+      arg_type = NULL;
+      arg_name = NULL;
+
+      if (!strncmp(f->cache[2], "ssize_t", MAX_TYYNAME)) {
+        arg_type = "ssize_t";
+        STR_FORMAT(arg_name, "%s_count", f->cache[1]);
+      } else {
+        arg_type = "bool";
+        STR_FORMAT(arg_name, "%s_exists", f->cache[1]);
+      }
+
+      install_funcdecl_param(arg_type, arg_name, f->next == NULL);
+      install_funcdef_arg(arg_type, arg_name, f->next == NULL);
+      f->cache[2] = arg_name;
+    }
+  }
+
+  INC_INDENT();
+
+  install_function_alloc(return_type);
+
+  for (Field *f = product->fields; f != NULL; f = f->next) {
+    print_indent();
+    PRINTF_DEFS("p->%s = %s;\n", f->cache[1], f->cache[1]);
+
+    if (f->cache[2] != NULL) {
+      print_indent();
+      PRINTF_DEFS("p->%s = %s;\n", f->cache[2], f->cache[2]);
+    }
+  }
+
+  DEC_INDENT();
+
+  install_function_return();
+
+  NEWLINE_DEFS();
+}
+
 void translate_product_type(char *id, Product *product) {
   char *tyy = NULL;
   char *def = NULL;
@@ -497,12 +555,18 @@ void translate_product_type(char *id, Product *product) {
       STR_FORMAT(field_name, "%s", f->id);
     }
 
+    f->cache[0] = field_type;
+    f->cache[1] = field_name;
+
     if (f->kind == FIELD_SEQUENCE) {
-      STR_FORMAT(field, "%s* %s;\n%ssize_t %s_count", field_type, field_name,
+      STR_FORMAT(field, "%s* %s;\n%sssize_t %s_count", field_type, field_name,
                  INDENT, field_name);
+      STR_FORMAT(f->cache[0], "%s*", field_type);
+      f->cache[2] = "ssize_t";
     } else if (f->kind == FIELD_OPTIONAL) {
       STR_FORMAT(field, "%s %s;\n%sbool %s_exists", field_type, field_name,
                  INDENT, field_name);
+      f->cache[2] = "bool";
     } else {
       STR_FORMAT(field, "%s %s", field_type, field_name);
     }
@@ -515,6 +579,8 @@ void translate_product_type(char *id, Product *product) {
   install_datatype_unnamed_end();
 
   NEWLINE_DEFS();
+
+  install_product_function(id, product);
 }
 
 void install_seq_field_append(char *id, char *constructor_name,
