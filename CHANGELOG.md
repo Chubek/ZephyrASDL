@@ -30,3 +30,7 @@ Major improvements were made to the revision 3 of ZephyrASDL, the include:
 
 
 These are just a few features added to rev. 3; please check out the git logs (`git log`) for a detailed list of changes.
+
+# Revision 3.5: Some Features, Here and There!
+
+Several features were added. Chiefly amongst them is, the generation of append/free and other such capabilities for sequential fields in product types. Previously, they were not present.
