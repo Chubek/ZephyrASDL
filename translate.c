@@ -514,10 +514,86 @@ void install_product_function(char *id, Product *product) {
     }
   }
 
-
   install_function_return();
 
   DEC_INDENT();
+
+  NEWLINE_DEFS();
+}
+
+void install_product_seq_field_append_function(char *id, char *type,
+                                               char *name) {
+  char *func_name = NULL;
+  char *arg1_type = NULL;
+  char *arg1_name = NULL;
+  char *arg2_type = NULL;
+  char *arg2_name = NULL;
+  char *locator = NULL;
+
+  STR_FORMAT(func_name, "%s_%s_append", id, name);
+  STR_FORMAT(arg1_type, "%s_%s", id, def_suffix);
+  STR_FORMAT(arg1_name, "%s_instance", id);
+  STR_FORMAT(arg2_type, "%s", type);
+  STR_FORMAT(arg2_name, "%s_appendage", name);
+
+  install_funcdecl_init("void", func_name);
+  install_funcdecl_param(arg1_type, arg1_name, false);
+  install_funcdecl_param(arg2_type, arg2_name, true);
+
+  install_funcdef_init("void", func_name);
+  install_funcdef_arg(arg1_type, arg1_name, false);
+  install_funcdef_arg(arg2_type, arg2_name, true);
+
+  STR_FORMAT(locator, "%s->%s", arg1_name, name);
+
+  INC_INDENT();
+
+  print_indent();
+  PRINTF_DEFS("%s =\n%s(%s*)REALLOC(%s, (%s_count + 1) * sizeof(%s));\n",
+              locator, INDENT, arg2_type, locator, locator, arg2_type);
+  print_indent();
+  PRINTF_DEFS("%s[%s_count++] = %s;\n", locator, locator, arg2_name);
+
+  DEC_INDENT();
+
+  PUTS_DEFS("}\n");
+
+  NEWLINE_DEFS();
+}
+
+void install_product_seq_field_free_function(char *id, char *type, char *name) {
+  char *func_name = NULL;
+  char *arg_type = NULL;
+  char *arg_name = NULL;
+  char *locator = NULL;
+
+  STR_FORMAT(func_name, "%s_%s_free", id, name);
+  STR_FORMAT(arg_type, "%s_%s", id, def_suffix);
+  STR_FORMAT(arg_name, "%s_instance", id);
+
+  STR_FORMAT(locator, "%s->%s", arg_name, name);
+
+  install_funcdecl_init("void", func_name);
+  install_funcdecl_param(arg_type, arg_name, true);
+  install_funcdef_init("void", func_name);
+  install_funcdef_arg(arg_type, arg_name, true);
+
+  INC_INDENT();
+
+  print_indent();
+  PRINTF_DEFS("while (--%s_count) {\n", locator);
+
+  INC_INDENT();
+
+  print_indent();
+  PRINTF_DEFS("FREE(%s[%s_count]);\n", locator, locator);
+
+  DEC_INDENT();
+  PUTS_DEFS("}\n");
+
+  DEC_INDENT();
+
+  PUTS_DEFS("}\n");
 
   NEWLINE_DEFS();
 }
@@ -563,6 +639,7 @@ void translate_product_type(char *id, Product *product) {
       STR_FORMAT(field, "%s* %s;\n%sssize_t %s_count", field_type, field_name,
                  INDENT, field_name);
       STR_FORMAT(f->cache[0], "%s*", field_type);
+      STR_FORMAT(f->cache[3], "%s", field_type);
       f->cache[2] = "ssize_t";
     } else if (f->kind == FIELD_OPTIONAL) {
       STR_FORMAT(field, "%s %s;\n%sbool %s_exists", field_type, field_name,
@@ -582,6 +659,13 @@ void translate_product_type(char *id, Product *product) {
   NEWLINE_DEFS();
 
   install_product_function(id, product);
+
+  for (Field *f = product->fields; f != NULL; f = f->next) {
+    if (f->kind == FIELD_SEQUENCE && f->cache[3] != NULL) {
+      install_product_seq_field_append_function(id, f->cache[3], f->cache[1]);
+      install_product_seq_field_free_function(id, f->cache[3], f->cache[1]);
+    }
+  }
 }
 
 void install_seq_field_append(char *id, char *constructor_name,
@@ -651,7 +735,7 @@ void install_seq_field_dump(char *id, char *constructor_name, char *field_type,
 
   INC_INDENT();
   print_indent();
-  PRINTF_DEFS("while (%s_count--) {\n", field_link);
+  PRINTF_DEFS("while (--%s_count) {\n", field_link);
   INC_INDENT();
   print_indent();
   PRINTF_DEFS("FREE(%s[%s_count]);\n", field_link, field_link);
