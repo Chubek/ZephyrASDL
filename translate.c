@@ -589,11 +589,86 @@ void install_product_seq_field_free_function(char *id, char *type, char *name) {
   PRINTF_DEFS("FREE(%s[%s_count]);\n", locator, locator);
 
   DEC_INDENT();
+
+  print_indent();
   PUTS_DEFS("}\n");
 
   DEC_INDENT();
 
   PUTS_DEFS("}\n");
+
+  NEWLINE_DEFS();
+}
+
+void install_product_type_chain_append(char *id) {
+  char *func_name = NULL;
+  char *arg1_type = NULL;
+  char *arg1_name = NULL;
+  char *arg2_type = NULL;
+  char *arg2_name = NULL;
+  char *locator = NULL;
+
+  STR_FORMAT(func_name, "%s_chain_append", id);
+  STR_FORMAT(arg1_type, "%s_%s*", id, def_suffix);
+  STR_FORMAT(arg1_name, "%s_head", id);
+  STR_FORMAT(arg2_type, "%s_%s", id, def_suffix);
+  STR_FORMAT(arg2_name, "%s_appendage", id);
+
+  STR_FORMAT(locator, "%s->next", arg2_name);
+
+  install_funcdecl_init("void", func_name);
+  install_funcdef_init("void", func_name);
+
+  install_funcdecl_param(arg1_type, arg1_name, false);
+  install_funcdecl_param(arg2_type, arg2_name, true);
+
+  install_funcdef_arg(arg1_type, arg1_name, false);
+  install_funcdef_arg(arg2_type, arg2_name, true);
+
+  INC_INDENT();
+
+  print_indent();
+  PRINTF_DEFS("%s = *%s;\n", locator, arg1_name);
+
+  print_indent();
+  PRINTF_DEFS("*%s = %s;\n", arg1_name, arg2_name);
+
+  DEC_INDENT();
+
+  PUTS_DEFS("\n}\n");
+
+  NEWLINE_DEFS();
+}
+
+void install_product_type_chain_dump(char *id) {
+  char *func_name = NULL;
+  char *arg_type = NULL;
+  char *arg_name = NULL;
+
+  STR_FORMAT(func_name, "%s_chain_dump", id);
+  STR_FORMAT(arg_type, "%s_%s", id, def_suffix);
+  STR_FORMAT(arg_name, "%s_chain", id);
+
+  install_funcdecl_init("void", func_name);
+  install_funcdef_init("void", func_name);
+
+  install_funcdecl_param(arg_type, arg_name, true);
+  install_funcdef_arg(arg_type, arg_name, true);
+
+  INC_INDENT();
+
+  print_indent();
+  PRINTF_DEFS("if (%s == NULL) return;\n", arg_name);
+
+  print_indent();
+  PRINTF_DEFS("%s(%s->next);\n", func_name, arg_name);
+
+  print_indent();
+  PRINTF_DEFS("FREE(%s);\n", arg_name);
+
+  DEC_INDENT();
+
+  PUTS_DEFS("\n}\n");
 
   NEWLINE_DEFS();
 }
@@ -652,6 +727,11 @@ void translate_product_type(char *id, Product *product) {
     install_datatype_field(field, ";");
   }
 
+  char *next_field = NULL;
+
+  STR_FORMAT(next_field, "%s_%s next", id, def_suffix);
+  install_datatype_field(next_field, ";");
+
   DEC_INDENT();
 
   install_datatype_unnamed_end();
@@ -666,6 +746,9 @@ void translate_product_type(char *id, Product *product) {
       install_product_seq_field_free_function(id, f->cache[3], f->cache[1]);
     }
   }
+
+  install_product_type_chain_append(id);
+  install_product_type_chain_dump(id);
 }
 
 void install_seq_field_append(char *id, char *constructor_name,
