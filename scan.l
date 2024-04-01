@@ -247,7 +247,7 @@ cons_id [A-Z][a-zA-Z0-9_-]{0,16}
 						return FIELD_NAME; 
                                }
 
-<FIELDTYPE,FIELNAME>{cons_id}		{ error_out("Unexpected variant name `%s`, expected field type, or type modifier", yytext); }
+<FIELDTYPE,FIELDNAME>{cons_id}		{ error_out("Unexpected variant name `%s`, expected field type, or type modifier", yytext); }
 
 <FIELDTYPE,FIELDNAME>[,]	{ INC_TOKCHARNO(); BEGIN(FIELDTYPE); return *yytext; }
 
