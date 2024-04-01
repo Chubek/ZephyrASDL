@@ -39,4 +39,5 @@ Several features were added. Chiefly amongst them is, the generation of append/f
 # Revision 3.6: Added Chain Append/Dump for Product Types
 
 
-Functions for appending to product type chain added.
+* Functions for appending to product type chain added.
+* Added `p->next = NULL;` to all constructors.
