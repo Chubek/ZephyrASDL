@@ -514,6 +514,9 @@ void install_product_function(char *id, Product *product) {
     }
   }
 
+  print_indent();
+  PUTS_DEFS("p->next = NULL;\n\n");
+
   install_function_return();
 
   DEC_INDENT();
@@ -1094,6 +1097,9 @@ void install_constructor_function(char *id, Constructor *constructor,
   NEWLINE_DEFS();
   STR_FORMAT(swap, "%s_%s", to_uppercase(constructor->id), kind_suffix);
   install_function_assign("kind", swap);
+
+  print_indent();
+  PUTS_DEFS("p->next = NULL;\n\n");
 
   install_field_assigners(id, lc_ident, constructor->fields);
   install_field_assigners(id, lc_ident, attributes);
