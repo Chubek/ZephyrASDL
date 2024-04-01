@@ -34,3 +34,9 @@ These are just a few features added to rev. 3; please check out the git logs (`g
 # Revision 3.5: Some Features, Here and There!
 
 Several features were added. Chiefly amongst them is, the generation of append/free and other such capabilities for sequential fields in product types. Previously, they were not present.
+
+
+# Revision 3.6: Added Chain Append/Dump for Product Types
+
+
+Functions for appending to product type chain added.
