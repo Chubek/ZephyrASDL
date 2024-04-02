@@ -176,18 +176,25 @@ static inline void print_outfile_license(FILE *outfile) {
                      "the ASDL file */\n\n");
 }
 
-static inline void print_symfile_header_guard_start(FILE *symfile) {
-  char random_string[HEADER_GUARD_LEN];
-  for (size_t i = 0; i < HEADER_GUARD_LEN; i++) {
-    random_string[i] = (rand() % 'A') - ' ';
-  }
+static inline void print_symfile_header_guard_start(FILE *symfile, char *name) {
+  char *name_dup = strndup(name, FILENAME_MAX + 1);
+  name_dup[FILENAME_MAX] = '\0';
+  size_t n;
+  for (n = 0; n < FILENAME_MAX && name_dup[n] != '.' && name_dup[n] != '\0';
+       n++)
+    name_dup[n] = toupper(name_dup[n]);
+  name_dup[n] = '\0';
 
-  fprintf(symfile, "#ifndef %s_H\n", &random_string[0]);
-  fprintf(symfile, "#define %s_H\n\n", &random_string[0]);
+  fprintf(symfile, "#ifndef %s_H\n", &name_dup[0]);
+  fprintf(symfile, "#define %s_H\n\n", &name_dup[0]);
+
+  fprintf(symfile, "\n/* Symbols Declaration File: %s */\n\n", name);
+
+  free(name_dup);
 }
 
-static inline void print_symfile_header_guard_end(FILE *symfile) {
-  fputs("\n#endif\n\n", symfile);
+static inline void print_symfile_header_guard_end(FILE *symfile, char *name) {
+  fprintf(symfile, "\n#endif /* %s */\n\n", name);
 }
 
 void finalize_translator(void) {
@@ -211,16 +218,29 @@ void finalize_translator(void) {
   print_outfile_time_signature(outfile);
 
   if (symfile != NULL)
-    print_symfile_header_guard_start(symfile);
+    print_symfile_header_guard_start(symfile, translator.sympath);
 
   print_outfile_start_section("LOCATORS", outfile);
   print_outfile_start_section("LOCATORS", symfile);
   c = 0;
+
+  int rand_guard = rand();
+  fprintf(outfile, "\n#ifndef LOCATORS_%d\n#define LOCATORS_%d\n\n", rand_guard,
+          rand_guard);
+  if (symfile != NULL)
+    fprintf(symfile, "\n#ifndef LOCATORS_%d\n#define LOCATORS_%d\n\n",
+            rand_guard, rand_guard);
+
   while ((c = fgetc(translator.locators)) != EOF) {
     fputc(c, outfile);
     if (symfile != NULL)
       fputc(c, symfile);
   }
+
+  fputs("\n#endif\n\n", outfile);
+  if (symfile != NULL)
+    fputs("\n#endif\n\n", symfile);
+
   print_outfile_end_section("LOCATORS", outfile);
   print_outfile_end_section("LOCATORS", symfile);
 
@@ -258,7 +278,7 @@ void finalize_translator(void) {
   print_outfile_end_section("DECLARATIONS", symfile);
 
   if (symfile != NULL) {
-    print_symfile_header_guard_end(symfile);
+    print_symfile_header_guard_end(symfile, translator.sympath);
     fclose(symfile);
   }
 
