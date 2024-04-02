@@ -44,3 +44,7 @@ Several features were added. Chiefly amongst them is, the generation of append/f
 
 
 # Revision 3.7: Added Symbols Declaration File
+
+* Added symbols declaration file via `-s` flag
+* Added header guards for both locators and the symbols file
+
