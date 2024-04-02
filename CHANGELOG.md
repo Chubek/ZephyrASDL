@@ -41,3 +41,6 @@ Several features were added. Chiefly amongst them is, the generation of append/f
 
 * Functions for appending to product type chain added.
 * Added `p->next = NULL;` to all constructors.
+
+
+# Revision 3.7: Added Symbols Declaration File
