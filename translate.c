@@ -15,6 +15,7 @@
 #hashfunc translate_hash
 
 #define MAX_TYYNAME 8
+#define HEADER_GUARD_LEN 5
 
 #define STR_FORMAT(dest, fmt, ...)                                             \
   do {                                                                         \
@@ -119,7 +120,7 @@ void assign_suffixes(char *def, char *fn, char *arg, char *kind) {
 
 void assign_prefixes(char *fn) { fn_prefix = fn; }
 
-void init_translator(char *outpath) {
+void init_translator(char *outpath, char *sympath) {
   translator.locators = tmpfile();
   translator.prelude = tmpfile();
   translator.tydefs = tmpfile();
@@ -128,12 +129,16 @@ void init_translator(char *outpath) {
   translator.appendage = tmpfile();
   translator.rules = NULL;
   translator.outpath = outpath;
+  translator.sympath = sympath;
 }
 
 void emit_prelude(char *s) { PUTS_PRELUDE(s); }
 void emit_appendage(char *s) { PUTS_APPENDAGE(s); }
 
 static inline void print_outfile_time_signature(FILE *outfile) {
+  if (outfile == NULL)
+    return;
+
   time_t t = time(NULL);
   struct tm tm = *localtime(&t);
 
@@ -145,14 +150,21 @@ static inline void print_outfile_time_signature(FILE *outfile) {
 }
 
 static inline void print_outfile_start_section(char *marker, FILE *outfile) {
+  if (outfile == NULL)
+    return;
   fprintf(outfile, "\n\n/*---BEGIN-SECTION: %s---*/\n\n", marker);
 }
 
 static inline void print_outfile_end_section(char *marker, FILE *outfile) {
+  if (outfile == NULL)
+    return;
   fprintf(outfile, "\n\n/*---END-SECTION: %s---*/\n\n", marker);
 }
 
 static inline void print_outfile_license(FILE *outfile) {
+  if (outfile == NULL)
+    return;
+
   char *name = NULL;
   if ((name = getenv("USER")) != NULL)
     fprintf(outfile,
@@ -164,8 +176,23 @@ static inline void print_outfile_license(FILE *outfile) {
                      "the ASDL file */\n\n");
 }
 
+static inline void print_symfile_header_guard_start(FILE *symfile) {
+  char random_string[HEADER_GUARD_LEN];
+  for (size_t i = 0; i < HEADER_GUARD_LEN; i++) {
+    random_string[i] = (rand() % 'A') - ' ';
+  }
+
+  fprintf(symfile, "#ifndef %s_H\n", &random_string[0]);
+  fprintf(symfile, "#define %s_H\n\n", &random_string[0]);
+}
+
+static inline void print_symfile_header_guard_end(FILE *symfile) {
+  fputs("\n#endif\n\n", symfile);
+}
+
 void finalize_translator(void) {
   FILE *outfile = stdout;
+  FILE *symfile = NULL;
   int c;
 
   rewind(translator.locators);
@@ -178,31 +205,62 @@ void finalize_translator(void) {
   if (translator.outpath != NULL)
     outfile = fopen(translator.outpath, "w");
 
+  if (translator.sympath != NULL)
+    symfile = fopen(translator.sympath, "w");
+
   print_outfile_time_signature(outfile);
 
+  if (symfile != NULL)
+    print_symfile_header_guard_start(symfile);
+
   print_outfile_start_section("LOCATORS", outfile);
+  print_outfile_start_section("LOCATORS", symfile);
   c = 0;
-  while ((c = fgetc(translator.locators)) != EOF)
+  while ((c = fgetc(translator.locators)) != EOF) {
     fputc(c, outfile);
+    if (symfile != NULL)
+      fputc(c, symfile);
+  }
   print_outfile_end_section("LOCATORS", outfile);
+  print_outfile_end_section("LOCATORS", symfile);
 
   print_outfile_start_section("PRELUDE", outfile);
+  print_outfile_start_section("PRELUDE", symfile);
   c = 0;
-  while ((c = fgetc(translator.prelude)) != EOF)
+  while ((c = fgetc(translator.prelude)) != EOF) {
     fputc(c, outfile);
+    if (symfile != NULL)
+      fputc(c, symfile);
+  }
   print_outfile_end_section("PRELUDE", outfile);
+  print_outfile_end_section("PRELUDE", symfile);
 
   print_outfile_start_section("TYPEDEFS", outfile);
+  print_outfile_start_section("TYPEDEFS", symfile);
   c = 0;
-  while ((c = fgetc(translator.tydefs)) != EOF)
+  while ((c = fgetc(translator.tydefs)) != EOF) {
     fputc(c, outfile);
+    if (symfile != NULL)
+      fputc(c, symfile);
+  }
   print_outfile_end_section("TYPEDEFS", outfile);
+  print_outfile_end_section("TYPEDEFS", symfile);
 
   print_outfile_start_section("DECLARATIONS", outfile);
+  print_outfile_start_section("DECLARATIONS", symfile);
   c = 0;
-  while ((c = fgetc(translator.decls)) != EOF)
+  while ((c = fgetc(translator.decls)) != EOF) {
     fputc(c, outfile);
+    if (symfile != NULL)
+      fputc(c, symfile);
+  }
   print_outfile_end_section("DECLARATIONS", outfile);
+  print_outfile_end_section("DECLARATIONS", symfile);
+
+  if (symfile != NULL) {
+    print_symfile_header_guard_end(symfile);
+    fclose(symfile);
+  }
 
   print_outfile_start_section("DEFINITIONS", outfile);
   c = 0;

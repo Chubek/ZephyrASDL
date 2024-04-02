@@ -101,6 +101,7 @@ struct Translator {
   FILE *appendage;
   Rule *rules;
   char *outpath;
+  char *sympath;
 };
 
 struct Symtable {
@@ -133,7 +134,7 @@ void translate_rule_chain(Rule *rules);
 void assign_prefixes(char *fn);
 void assign_suffixes(char *def, char *fn, char *arg, char *kind);
 
-void init_translator(char *);
+void init_translator(char *, char *);
 void finalize_translator(void);
 void dump_translator(void);
 

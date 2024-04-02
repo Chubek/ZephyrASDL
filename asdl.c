@@ -13,16 +13,18 @@ extern FILE *yyin;
 extern int yyparse(void);
 
 static inline void print_help_and_exit() {
-  printf("Usage: asdl [-o output] [-d def_suffix] [-f fn_suffix] [-k "
-         "kind_suffix] [-a arg_suffix] [-p fn_prefix] FILE\n");
+  printf(
+      "Usage: asdl [-o output] [-s symfile] [-d def_suffix] [-f fn_suffix] [-k "
+      "kind_suffix] [-a arg_suffix] [-p fn_prefix] FILE\n");
   printf("\n");
   printf("Options:\n");
-  printf("  -o output      Specify the output file\n");
-  printf("  -d def_suffix  Specify the suffix for typedefs\n");
-  printf("  -f fn_suffix   Specify the suffix for functions\n");
-  printf("  -k kind_suffix Specify the suffix for kind types\n");
-  printf("  -a arg_suffix  Specify the suffix for arguments\n");
-  printf("  -p fn_prefix   Specify the prefix for function signatures\n");
+  printf("  -o output      	Specify the output file name\n");
+  printf("  -s symfile		Specify the symbol declaration file name\n");
+  printf("  -d def_suffix  	Specify the suffix for typedefs\n");
+  printf("  -f fn_suffix   	Specify the suffix for functions\n");
+  printf("  -k kind_suffix 	Specify the suffix for kind types\n");
+  printf("  -a arg_suffix  	Specify the suffix for arguments\n");
+  printf("  -p fn_prefix   	Specify the prefix for function signatures\n");
   printf("\n");
   exit(EX_USAGE);
 }
@@ -34,12 +36,16 @@ void parse_arguments(int argc, char **argv) {
        *kind_suffix = "kind";
   char *fn_prefix = NULL;
   char *outpath = NULL;
+  char *sympath = NULL;
   yyin = stdin;
 
-  while ((c = getopt(argc, argv, "o:d:f:a:k:p:h")) != -1) {
+  while ((c = getopt(argc, argv, "o:s:d:f:a:k:p:h")) != -1) {
     switch (c) {
     case 'o':
       outpath = optarg;
+      break;
+    case 's':
+      sympath = optarg;
       break;
     case 'd':
       def_suffix = optarg;
@@ -83,7 +89,7 @@ void parse_arguments(int argc, char **argv) {
   assign_prefixes(fn_prefix);
   assign_suffixes(def_suffix, fn_suffix, arg_suffix, kind_suffix);
 
-  init_translator(outpath);
+  init_translator(outpath, sympath);
   init_absyn();
 }
 
