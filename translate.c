@@ -437,7 +437,7 @@ void install_datatype_named_end(const char *name) {
 
 void install_datatype_unnamed_end(void) {
   print_tyspecs_indent();
-  PUTS_TYSPECS("};\n");
+  PUTS_TYSPECS("};\n\n\n");
 }
 
 void install_funcdef_init(const char *func_returns, const char *name) {
