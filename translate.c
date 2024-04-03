@@ -27,6 +27,7 @@
 #define PRINTF_LOCATORS(fmt, ...) fprintf(translator.locators, fmt, __VA_ARGS__)
 #define PRINTF_PRELUDE(fmt, ...) fprintf(translator.prelude, fmt, __VA_ARGS__)
 #define PRINTF_TYDEFS(fmt, ...) fprintf(translator.tydefs, fmt, __VA_ARGS__)
+#define PRINTF_TYSPECS(fmt, ...) fprintf(translator.tyspecs, fmt, __VA_ARGS__)
 #define PRINTF_DECLS(fmt, ...) fprintf(translator.decls, fmt, __VA_ARGS__)
 #define PRINTF_DEFS(fmt, ...) fprintf(translator.defs, fmt, __VA_ARGS__)
 #define PRINTF_APPENDAGE(fmt, ...)                                             \
@@ -35,6 +36,7 @@
 #define PUTC_LOCATORS(c) fputc(c, translator.locators)
 #define PUTC_PRELUDE(c) fputc(c, translator.prelude)
 #define PUTC_TYDEFS(c) fputc(c, translator.tydefs)
+#define PUTC_TYSPECS(c) fputc(c, translator.tyspecs)
 #define PUTC_DECLS(c) fputc(c, translator.decls)
 #define PUTC_DEFS(c) fputc(c, translator.defs)
 #define PUTC_APPENDAGE(c) fputc(c, translator.appendage)
@@ -42,6 +44,7 @@
 #define PUTS_LOCATORS(s) futs(s, translator.locators)
 #define PUTS_PRELUDE(s) fputs(s, translator.prelude)
 #define PUTS_TYDEFS(s) fputs(s, translator.tydefs)
+#define PUTS_TYSPECS(s) fputs(s, translator.tyspecs)
 #define PUTS_DECLS(s) fputs(s, translator.decls)
 #define PUTS_DEFS(s) fputs(s, translator.defs)
 #define PUTS_APPENDAGE(s) fputs(s, translator.appendage)
@@ -49,6 +52,7 @@
 #define NEWLINE_LOCATORS() fputs("\n", translator.locators)
 #define NEWLINE_PRELUDE() fputs("\n", translator.prelude)
 #define NEWLINE_TYDEFS() fputs("\n", translator.tydefs)
+#define NEWLINE_TYSPECS() fputs("\n", translator.tyspecs)
 #define NEWLINE_DECLS() fputs("\n", translator.decls)
 #define NEWLINE_DEFS() fputs("\n", translator.defs)
 #define NEWLINE_APPENDAGE() fputs("\n", translator.appendage)
@@ -124,6 +128,7 @@ void init_translator(char *outpath, char *sympath) {
   translator.locators = tmpfile();
   translator.prelude = tmpfile();
   translator.tydefs = tmpfile();
+  translator.tyspecs = tmpfile();
   translator.decls = tmpfile();
   translator.defs = tmpfile();
   translator.appendage = tmpfile();
@@ -205,6 +210,7 @@ void finalize_translator(void) {
   rewind(translator.locators);
   rewind(translator.prelude);
   rewind(translator.tydefs);
+  rewind(translator.tyspecs);
   rewind(translator.decls);
   rewind(translator.defs);
   rewind(translator.appendage);
@@ -266,6 +272,17 @@ void finalize_translator(void) {
   print_outfile_end_section("TYPEDEFS", outfile);
   print_outfile_end_section("TYPEDEFS", symfile);
 
+  print_outfile_start_section("TYPESPECS", outfile);
+  print_outfile_start_section("TYPESPECS", symfile);
+  c = 0;
+  while ((c = fgetc(translator.tyspecs)) != EOF) {
+    fputc(c, outfile);
+    if (symfile != NULL)
+      fputc(c, symfile);
+  }
+  print_outfile_end_section("TYPESPECS", outfile);
+  print_outfile_end_section("TYPESPECS", symfile);
+
   print_outfile_start_section("DECLARATIONS", outfile);
   print_outfile_start_section("DECLARATIONS", symfile);
   c = 0;
@@ -304,6 +321,7 @@ void dump_translator(void) {
   fclose(translator.locators);
   fclose(translator.prelude);
   fclose(translator.tydefs);
+  fclose(translator.tyspecs);
   fclose(translator.decls);
   fclose(translator.defs);
   fclose(translator.appendage);
@@ -313,6 +331,11 @@ void dump_translator(void) {
 static inline void print_indent(void) {
   for (int i = 0; i < indent_level; i++)
     PUTS_DEFS(INDENT);
+}
+
+static inline void print_tyspecs_indent(void) {
+  for (int i = 0; i < indent_level; i++)
+    PUTS_TYSPECS(INDENT);
 }
 
 char *to_lowercase(char *str) {
@@ -367,54 +390,54 @@ void install_locator_macro(const char *name, const char *def) {
 }
 
 void install_field(const char *type, const char *name) {
-  print_indent();
-  PRINTF_DEFS("%s %s;\n", type, name);
+  print_tyspecs_indent();
+  PRINTF_TYSPECS("%s %s;\n", type, name);
 }
 
 void install_sequence_field(char *type, char *name) {
-  print_indent();
-  PUTS_DEFS("struct {\n");
+  print_tyspecs_indent();
+  PUTS_TYSPECS("struct {\n");
   INC_INDENT();
-  print_indent();
-  PRINTF_DEFS("%s %s;\n", type, name);
-  print_indent();
-  PRINTF_DEFS("ssize_t %s_count;\n", name);
+  print_tyspecs_indent();
+  PRINTF_TYSPECS("%s %s;\n", type, name);
+  print_tyspecs_indent();
+  PRINTF_TYSPECS("ssize_t %s_count;\n", name);
   DEC_INDENT();
-  print_indent();
-  PRINTF_DEFS("} %s_seq;\n", name);
+  print_tyspecs_indent();
+  PRINTF_TYSPECS("} %s_seq;\n", name);
 }
 
 void install_optional_field(char *type, char *name) {
-  print_indent();
-  PUTS_DEFS("struct {\n");
+  print_tyspecs_indent();
+  PUTS_TYSPECS("struct {\n");
   INC_INDENT();
-  print_indent();
-  PRINTF_DEFS("%s %s;\n", type, name);
-  print_indent();
-  PRINTF_DEFS("bool %s_exists;\n", name);
+  print_tyspecs_indent();
+  PRINTF_TYSPECS("%s %s;\n", type, name);
+  print_tyspecs_indent();
+  PRINTF_TYSPECS("bool %s_exists;\n", name);
   DEC_INDENT();
-  print_indent();
-  PRINTF_DEFS("} %s_opt;\n", name);
+  print_tyspecs_indent();
+  PRINTF_TYSPECS("} %s_opt;\n", name);
 }
 
 void install_datatype_init(const char *kind, const char *name) {
-  print_indent();
-  PRINTF_DEFS("%s %s {\n", kind, name);
+  print_tyspecs_indent();
+  PRINTF_TYSPECS("%s %s {\n", kind, name);
 }
 
 void install_datatype_field(const char *field, const char *end) {
-  print_indent();
-  PRINTF_DEFS("%s%s\n", field, end);
+  print_tyspecs_indent();
+  PRINTF_TYSPECS("%s%s\n", field, end);
 }
 
 void install_datatype_named_end(const char *name) {
-  print_indent();
-  PRINTF_DEFS("} %s;\n", name);
+  print_tyspecs_indent();
+  PRINTF_TYSPECS("} %s;\n", name);
 }
 
 void install_datatype_unnamed_end(void) {
-  print_indent();
-  PUTS_DEFS("};\n");
+  print_tyspecs_indent();
+  PUTS_TYSPECS("};\n");
 }
 
 void install_funcdef_init(const char *func_returns, const char *name) {
