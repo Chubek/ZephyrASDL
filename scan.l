@@ -99,9 +99,9 @@ static bool variants_defined = false, seek_attrs = false;
 
 %}
 
-type_id [a-z_][a-z0-9_-]{0,16}
-type_name [a-zA-Z_][a-zA-Z0-9_-]{0,16}
-cons_id [A-Z][a-zA-Z0-9_-]{0,16}
+type_id [a-z_][a-z0-9_-]{0,64}
+type_name [a-zA-Z_][a-zA-Z0-9_-]{0,64}
+cons_id [A-Z][a-zA-Z0-9_-]{0,64}
 
 %x EMBED
 %x APPEND
