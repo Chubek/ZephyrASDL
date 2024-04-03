@@ -96,6 +96,7 @@ struct Translator {
   FILE *locators;
   FILE *prelude;
   FILE *tydefs;
+  FILE *tyspecs;
   FILE *decls;
   FILE *defs;
   FILE *appendage;
