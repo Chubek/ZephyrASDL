@@ -48,3 +48,6 @@ Several features were added. Chiefly amongst them is, the generation of append/f
 * Added symbols declaration file via `-s` flag
 * Added header guards for both locators and the symbols file
 
+# Revision 3.8: Tyspecs Section
+
+* Added `tyspecs` section for defining types in.
