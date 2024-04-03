@@ -23,6 +23,8 @@ extern Field *fields;
 extern Constructor *constructors;
 extern Rule *rules;
 
+extern size_t line_no;
+
 %}
 
 %union {
@@ -142,6 +144,7 @@ int yyerror(const char *msg) {
    fputs("Parsing error occurred: ", stderr);
    fputs(msg, stderr);
    fputs("\n", stderr);
+   fprintf(stderr, "At line: %lu\n", line_no);
    exit(EXIT_FAILURE);
 }
 
