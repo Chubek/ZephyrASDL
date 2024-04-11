@@ -187,7 +187,8 @@ static inline void print_symfile_header_guard_start(FILE *symfile, char *name) {
   size_t n;
   for (n = 0; n < FILENAME_MAX && name_dup[n] != '.' && name_dup[n] != '\0';
        n++)
-    name_dup[n] = toupper(name_dup[n]);
+    name_dup[n] =
+        (ispunct(name[n]) || isblank(name[n])) ? '_' : toupper(name_dup[n]);
   name_dup[n] = '\0';
 
   fprintf(symfile, "#ifndef %s_H\n", &name_dup[0]);
