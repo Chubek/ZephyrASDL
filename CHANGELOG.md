@@ -51,3 +51,5 @@ Several features were added. Chiefly amongst them is, the generation of append/f
 # Revision 3.8: Tyspecs Section
 
 * Added `tyspecs` section for defining types in.
+
+# Small Revision: Exertion of illegal characters from header guards
