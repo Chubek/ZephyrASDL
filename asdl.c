@@ -19,8 +19,8 @@ static inline void print_help_and_exit() {
   printf("\n");
   printf("Options:\n");
   printf("  -o output      	Specify the output file name\n");
-  printf("  -s symfile		Specify the symbol declaration file name\n");
-  printf("  -d def_suffix  	Specify the suffix for typedefs\n");
+  printf("  -d header file	Specify the symbol declaration file header name\n");
+  printf("  -D def_suffix  	Specify the suffix for typedefs\n");
   printf("  -f fn_suffix   	Specify the suffix for functions\n");
   printf("  -k kind_suffix 	Specify the suffix for kind types\n");
   printf("  -a arg_suffix  	Specify the suffix for arguments\n");
@@ -39,15 +39,15 @@ void parse_arguments(int argc, char **argv) {
   char *sympath = NULL;
   yyin = stdin;
 
-  while ((c = getopt(argc, argv, "o:s:d:f:a:k:p:h")) != -1) {
+  while ((c = getopt(argc, argv, "o:d:f:a:k:p:h:D")) != -1) {
     switch (c) {
     case 'o':
       outpath = optarg;
       break;
-    case 's':
+    case 'd':
       sympath = optarg;
       break;
-    case 'd':
+    case 'D':
       def_suffix = optarg;
       break;
     case 'a':
@@ -61,7 +61,7 @@ void parse_arguments(int argc, char **argv) {
       break;
     case 'p':
       fn_prefix = optarg;
-      break;
+      break;    
     case 'h':
       print_help_and_exit();
       break;

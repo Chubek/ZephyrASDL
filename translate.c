@@ -14,7 +14,7 @@
 #alloc trans_heap, trans_alloc, trans_realloc, trans_dump
 #hashfunc translate_hash
 
-#define MAX_TYYNAME 8
+#define MAX_TYPENAME 8
 #define HEADER_GUARD_LEN 5
 
 #define STR_FORMAT(dest, fmt, ...)                                             \
@@ -84,25 +84,25 @@ static const char *STRING = "string_t";
 static const char *IDENTIFIER = "identifier_t";
 static const char *BYTEARRAY = "bytearray_t";
 
-static const char *BOOL_NAME = "bool";
-static const char *INT8_NAME = "int8";
-static const char *UINT8_NAME = "uint8";
-static const char *INT16_NAME = "int16";
-static const char *UINT16_NAME = "uint16";
-static const char *INT32_NAME = "int32";
-static const char *UINT32_NAME = "uint32";
-static const char *INT64_NAME = "int64";
-static const char *UINT64_NAME = "uint64";
-static const char *CHAR_NAME = "char";
-static const char *UCHAR_NAME = "uchar";
-static const char *FLOAT32_NAME = "float32";
-static const char *FLOAT64_NAME = "float64";
-static const char *FLOAT80_NAME = "float80";
-static const char *SIZE_NAME = "size";
-static const char *USIZE_NAME = "usize";
-static const char *STRING_NAME = "string";
-static const char *IDENTIFIER_NAME = "identifier";
-static const char *BYTEARRAY_NAME = "bytearray";
+static const char *BOOL_kEYWORD = "bool";
+static const char *INT8_kEYWORD = "int8";
+static const char *UINT8_kEYWORD = "uint8";
+static const char *INT16_kEYWORD = "int16";
+static const char *UINT16_kEYWORD = "uint16";
+static const char *INT32_kEYWORD = "int32";
+static const char *UINT32_kEYWORD = "uint32";
+static const char *INT64_kEYWORD = "int64";
+static const char *UINT64_kEYWORD = "uint64";
+static const char *CHAR_kEYWORD = "char";
+static const char *UCHAR_kEYWORD = "uchar";
+static const char *FLOAT32_kEYWORD = "float32";
+static const char *FLOAT64_kEYWORD = "float64";
+static const char *FLOAT80_kEYWORD = "float80";
+static const char *SIZE_kEYWORD = "size";
+static const char *USIZE_kEYWORD = "usize";
+static const char *STRING_kEYWORD = "string";
+static const char *IDENTIFIER_kEYWORD = "identifier";
+static const char *BYTEARRAY_kEYWORD = "bytearray";
 
 static char *fn_prefix = NULL;
 
@@ -467,99 +467,99 @@ void install_function_return(void) {
   PUTS_DEFS("return p;\n}\n\n");
 }
 
-const char *get_type_id(TypeId *tyyid) {
-  switch (tyyid->kind) {
-  case TYYNAME_BOOL:
+const char *get_type_id(TypeId *typeid) {
+  switch (typeid->kind) {
+  case TYPENAME_BOOL:
     return BOOL;
-  case TYYNAME_INT8:
+  case TYPENAME_INT8:
     return INT8;
-  case TYYNAME_UINT8:
+  case TYPENAME_UINT8:
     return UINT8;
-  case TYYNAME_INT16:
+  case TYPENAME_INT16:
     return INT16;
-  case TYYNAME_UINT16:
+  case TYPENAME_UINT16:
     return UINT16;
-  case TYYNAME_INT32:
+  case TYPENAME_INT32:
     return INT32;
-  case TYYNAME_UINT32:
+  case TYPENAME_UINT32:
     return UINT32;
-  case TYYNAME_INT64:
+  case TYPENAME_INT64:
     return INT64;
-  case TYYNAME_UINT64:
+  case TYPENAME_UINT64:
     return UINT64;
-  case TYYNAME_FLOAT32:
+  case TYPENAME_FLOAT32:
     return FLOAT32;
-  case TYYNAME_FLOAT64:
+  case TYPENAME_FLOAT64:
     return FLOAT64;
-  case TYYNAME_FLOAT80:
+  case TYPENAME_FLOAT80:
     return FLOAT80;
-  case TYYNAME_CHAR:
+  case TYPENAME_CHAR:
     return CHAR;
-  case TYYNAME_UCHAR:
+  case TYPENAME_UCHAR:
     return UCHAR;
-  case TYYNAME_SIZE:
+  case TYPENAME_SIZE:
     return SIZE;
-  case TYYNAME_USIZE:
+  case TYPENAME_USIZE:
     return USIZE;
-  case TYYNAME_STRING:
+  case TYPENAME_STRING:
     return STRING;
-  case TYYNAME_IDENTIFIER:
+  case TYPENAME_IDENTIFIER:
     return IDENTIFIER;
-  case TYYNAME_BYTEARRAY:
+  case TYPENAME_BYTEARRAY:
     return BYTEARRAY;
   default:
     char *mentioned = NULL;
-    STR_FORMAT(mentioned, "%s_MENTIONED", tyyid->value);
-    if (symtable_exists(tyyid->value) == false && !symtable_exists(mentioned)) {
-      fprintf(stderr, "Warning: undefined type `%s`\n", tyyid->value);
+    STR_FORMAT(mentioned, "%s_MENTIONED", typeid->value);
+    if (symtable_exists(typeid->value) == false && !symtable_exists(mentioned)) {
+      fprintf(stderr, "Warning: undefined type `%s`\n", typeid->value);
       symtable_insert(mentioned, NULL);
     }
-    return tyyid->value;
+    return typeid->value;
   }
 }
 
-const char *get_arg_name(TypeId *tyyid) {
-  switch (tyyid->kind) {
-  case TYYNAME_BOOL:
-    return BOOL_NAME;
-  case TYYNAME_INT8:
-    return INT8_NAME;
-  case TYYNAME_UINT8:
-    return UINT8_NAME;
-  case TYYNAME_INT16:
-    return INT16_NAME;
-  case TYYNAME_UINT16:
-    return UINT16_NAME;
-  case TYYNAME_INT32:
-    return INT32_NAME;
-  case TYYNAME_UINT32:
-    return UINT32_NAME;
-  case TYYNAME_INT64:
-    return INT64_NAME;
-  case TYYNAME_UINT64:
-    return UINT64_NAME;
-  case TYYNAME_FLOAT32:
-    return FLOAT32_NAME;
-  case TYYNAME_FLOAT64:
-    return FLOAT64_NAME;
-  case TYYNAME_FLOAT80:
-    return FLOAT80_NAME;
-  case TYYNAME_CHAR:
-    return CHAR_NAME;
-  case TYYNAME_UCHAR:
-    return UCHAR_NAME;
-  case TYYNAME_SIZE:
-    return SIZE_NAME;
-  case TYYNAME_USIZE:
-    return USIZE_NAME;
-  case TYYNAME_STRING:
-    return STRING_NAME;
-  case TYYNAME_IDENTIFIER:
-    return IDENTIFIER_NAME;
-  case TYYNAME_BYTEARRAY:
-    return BYTEARRAY_NAME;
+const char *get_arg_name(TypeId *typeid) {
+  switch (typeid->kind) {
+  case TYPENAME_BOOL:
+    return BOOL_kEYWORD;
+  case TYPENAME_INT8:
+    return INT8_kEYWORD;
+  case TYPENAME_UINT8:
+    return UINT8_kEYWORD;
+  case TYPENAME_INT16:
+    return INT16_kEYWORD;
+  case TYPENAME_UINT16:
+    return UINT16_kEYWORD;
+  case TYPENAME_INT32:
+    return INT32_kEYWORD;
+  case TYPENAME_UINT32:
+    return UINT32_kEYWORD;
+  case TYPENAME_INT64:
+    return INT64_kEYWORD;
+  case TYPENAME_UINT64:
+    return UINT64_kEYWORD;
+  case TYPENAME_FLOAT32:
+    return FLOAT32_kEYWORD;
+  case TYPENAME_FLOAT64:
+    return FLOAT64_kEYWORD;
+  case TYPENAME_FLOAT80:
+    return FLOAT80_kEYWORD;
+  case TYPENAME_CHAR:
+    return CHAR_kEYWORD;
+  case TYPENAME_UCHAR:
+    return UCHAR_kEYWORD;
+  case TYPENAME_SIZE:
+    return SIZE_kEYWORD;
+  case TYPENAME_USIZE:
+    return USIZE_kEYWORD;
+  case TYPENAME_STRING:
+    return STRING_kEYWORD;
+  case TYPENAME_IDENTIFIER:
+    return IDENTIFIER_kEYWORD;
+  case TYPENAME_BYTEARRAY:
+    return BYTEARRAY_kEYWORD;
   default:
-    return tyyid->value;
+    return typeid->value;
   }
 }
 
@@ -588,7 +588,7 @@ void install_product_function(char *id, Product *product) {
       arg_type = NULL;
       arg_name = NULL;
 
-      if (!strncmp(f->cache[2], "ssize_t", MAX_TYYNAME)) {
+      if (!strncmp(f->cache[2], "ssize_t", MAX_TYPENAME)) {
         arg_type = "ssize_t";
         STR_FORMAT(arg_name, "%s_count", f->cache[1]);
       } else {
@@ -779,13 +779,13 @@ void install_product_type_chain_dump(char *id) {
 }
 
 void translate_product_type(char *id, Product *product) {
-  char *tyy = NULL;
+  char *type = NULL;
   char *def = NULL;
 
-  STR_FORMAT(tyy, "struct %s", id);
+  STR_FORMAT(type, "struct %s", id);
   STR_FORMAT(def, "%s_%s", id, def_suffix);
 
-  install_typedef(tyy, def, true);
+  install_typedef(type, def, true);
 
   install_datatype_init("struct", id);
 
@@ -800,7 +800,7 @@ void translate_product_type(char *id, Product *product) {
     field_name = NULL;
     field = NULL;
 
-    if (f->type_id->kind == TYYNAME_ID) {
+    if (f->type_id->kind == TYPENAME_ID) {
       STR_FORMAT(field_type, "%s_%s", get_type_id(f->type_id), def_suffix);
     } else {
       STR_FORMAT(field_type, "%s", get_type_id(f->type_id));
@@ -937,19 +937,19 @@ void install_seq_field_dump(char *id, char *constructor_name, char *field_type,
 }
 
 void install_asdl_field(Field *field, size_t num) {
-  char *tyy = NULL;
+  char *type = NULL;
   char *name = NULL;
   char *count = NULL;
   char *exists = NULL;
 
   switch (field->kind) {
   case FIELD_NORMAL:
-    tyy = NULL;
+    type = NULL;
     name = NULL;
-    if (field->type_id->kind == TYYNAME_ID) {
-      STR_FORMAT(tyy, "%s_%s", get_type_id(field->type_id), def_suffix);
+    if (field->type_id->kind == TYPENAME_ID) {
+      STR_FORMAT(type, "%s_%s", get_type_id(field->type_id), def_suffix);
     } else {
-      STR_FORMAT(tyy, "%s", get_type_id(field->type_id));
+      STR_FORMAT(type, "%s", get_type_id(field->type_id));
     }
 
     if (field->id == NULL) {
@@ -958,16 +958,16 @@ void install_asdl_field(Field *field, size_t num) {
       STR_FORMAT(name, "%s", field->id);
     }
 
-    install_field(tyy, name);
+    install_field(type, name);
     break;
   case FIELD_SEQUENCE:
-    tyy = NULL;
+    type = NULL;
     name = NULL;
 
-    if (field->type_id->kind == TYYNAME_ID) {
-      STR_FORMAT(tyy, "%s_%s*", get_type_id(field->type_id), def_suffix);
+    if (field->type_id->kind == TYPENAME_ID) {
+      STR_FORMAT(type, "%s_%s*", get_type_id(field->type_id), def_suffix);
     } else {
-      STR_FORMAT(tyy, "%s*", get_type_id(field->type_id));
+      STR_FORMAT(type, "%s*", get_type_id(field->type_id));
     }
 
     if (field->id == NULL) {
@@ -978,16 +978,16 @@ void install_asdl_field(Field *field, size_t num) {
       STR_FORMAT(count, "%s_count", field->id);
     }
 
-    install_sequence_field(tyy, name);
+    install_sequence_field(type, name);
     break;
   case FIELD_OPTIONAL:
-    tyy = NULL;
+    type = NULL;
     name = NULL;
 
-    if (field->type_id->kind == TYYNAME_ID) {
-      STR_FORMAT(tyy, "%s_%s", get_type_id(field->type_id), def_suffix);
+    if (field->type_id->kind == TYPENAME_ID) {
+      STR_FORMAT(type, "%s_%s", get_type_id(field->type_id), def_suffix);
     } else {
-      STR_FORMAT(tyy, "%s", get_type_id(field->type_id));
+      STR_FORMAT(type, "%s", get_type_id(field->type_id));
     }
 
     if (field->id == NULL) {
@@ -998,7 +998,7 @@ void install_asdl_field(Field *field, size_t num) {
       STR_FORMAT(exists, "%s_exists", field->id);
     }
 
-    install_optional_field(tyy, name);
+    install_optional_field(type, name);
     break;
   }
 }
@@ -1057,7 +1057,7 @@ void install_field_declarators(char *id, char *lc_ident, Field *fields) {
     arg_name = NULL;
     swap = NULL;
 
-    if (f->type_id->kind == TYYNAME_ID) {
+    if (f->type_id->kind == TYPENAME_ID) {
       STR_FORMAT(arg_type, "%s_%s", get_type_id(f->type_id), def_suffix);
     } else {
       STR_FORMAT(arg_type, "%s", get_type_id(f->type_id));
@@ -1213,15 +1213,15 @@ void install_constructor_function(char *id, Constructor *constructor,
 bool install_variant_constructors(char *id, Sum *sum) {
   bool had_enums = false;
   char *name = NULL;
-  char *tyy = NULL;
+  char *type = NULL;
 
   for (Constructor *c = sum->constructors; c != NULL; c = c->next) {
     if (!had_enums && c->is_enum) {
       had_enums = true;
       STR_FORMAT(name, "enum %s_VARIANTS", to_uppercase(id));
-      STR_FORMAT(tyy, "%s_variants", id);
-      install_typedef(name, tyy, false);
-      symtable_insert(tyy, NULL);
+      STR_FORMAT(type, "%s_variants", id);
+      install_typedef(name, type, false);
+      symtable_insert(type, NULL);
       STR_FORMAT(name, "%s_VARIANTS", to_uppercase(id));
       install_datatype_init("enum", name);
       INC_INDENT();
@@ -1284,18 +1284,18 @@ void install_append_function(const char *id, const char *def_name) {
 
 void install_destroy_function(const char *id, const char *def_name) {
   char *fn_name = NULL;
-  char *arg_tyy = NULL;
+  char *arg_type = NULL;
   char *arg_name = NULL;
 
   STR_FORMAT(fn_name, "destroy_%s_chain", id);
-  STR_FORMAT(arg_tyy, "%s*", def_name);
+  STR_FORMAT(arg_type, "%s*", def_name);
   STR_FORMAT(arg_name, "%s_head", id);
 
   install_funcdecl_init("void", fn_name);
   install_funcdef_init("void", fn_name);
 
-  install_funcdecl_param(arg_tyy, arg_name, true);
-  install_funcdef_arg(arg_tyy, arg_name, true);
+  install_funcdecl_param(arg_type, arg_name, true);
+  install_funcdef_arg(arg_type, arg_name, true);
 
   INC_INDENT();
   print_indent();
